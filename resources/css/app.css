@@ -1,0 +1,1128 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+    font-weight: 700;
+  }
+  
+  /* Bordures arrondies par défaut pour tous les éléments SAUF sidebar bachelier */
+  button:not(.bachelier-sidebar *),
+  .btn:not(.bachelier-sidebar *),
+  input:not(.bachelier-sidebar *),
+  select:not(.bachelier-sidebar *),
+  textarea:not(.bachelier-sidebar *),
+  .card:not(.bachelier-sidebar *),
+  .border:not(.bachelier-sidebar *),
+  .rounded:not(.bachelier-sidebar *),
+  .bg-white:not(.bachelier-sidebar *),
+  .bg-gray-50:not(.bachelier-sidebar *),
+  .bg-gray-100:not(.bachelier-sidebar *),
+  .shadow:not(.bachelier-sidebar *),
+  .ring:not(.bachelier-sidebar *),
+  .border-gray-200:not(.bachelier-sidebar *),
+  .border-gray-300:not(.bachelier-sidebar *),
+  div[class*="bg-"]:not(.bachelier-sidebar *),
+  div[class*="border-"]:not(.bachelier-sidebar *),
+  form:not(.bachelier-sidebar *),
+  .modal:not(.bachelier-sidebar *),
+  .dropdown:not(.bachelier-sidebar *) {
+    border-radius: 0.75rem !important;
+  }
+
+  /* Forcer toutes les classes Tailwind rounded SAUF dans sidebar */
+  .rounded-sm:not(.bachelier-sidebar *),
+  .rounded:not(.bachelier-sidebar *),
+  .rounded-md:not(.bachelier-sidebar *),
+  .rounded-lg:not(.bachelier-sidebar *),
+  .rounded-xl:not(.bachelier-sidebar *) {
+    border-radius: 0.75rem !important;
+  }
+
+  /* FORCER border-radius: 0 pour TOUT dans la sidebar */
+  .bachelier-sidebar,
+  .bachelier-sidebar *,
+  .bachelier-sidebar .rounded-sm,
+  .bachelier-sidebar .rounded,
+  .bachelier-sidebar .rounded-md,
+  .bachelier-sidebar .rounded-lg,
+  .bachelier-sidebar .rounded-xl,
+  .bachelier-sidebar .rounded-full {
+    border-radius: 0 !important;
+  }
+  
+  /* Bordures très arrondies pour certains éléments SAUF sidebar */
+  .rounded-full:not(.bachelier-sidebar *),
+  .avatar:not(.bachelier-sidebar *),
+  .badge:not(.bachelier-sidebar *) {
+    border-radius: 9999px !important;
+  }
+
+  /* Bordures légèrement arrondies pour les petits éléments SAUF sidebar */
+  .text-xs:not(.bachelier-sidebar *),
+  .text-sm:not(.bachelier-sidebar *) {
+    border-radius: 0.5rem !important;
+  }
+  
+  /* Override spécifique pour les inputs du formulaire SAUF sidebar */
+  input[type="text"]:not(.bachelier-sidebar *),
+  input[type="email"]:not(.bachelier-sidebar *),
+  input[type="tel"]:not(.bachelier-sidebar *),
+  input[type="date"]:not(.bachelier-sidebar *),
+  input[type="number"]:not(.bachelier-sidebar *),
+  input[type="file"]:not(.bachelier-sidebar *),
+  select:not(.bachelier-sidebar *),
+  textarea:not(.bachelier-sidebar *) {
+    border-radius: 0.75rem !important;
+  }
+  
+  /* Mise à jour des couleurs primaires partout */
+  .text-primary-600, [class*="text-primary-6"] {
+    color: #0E7490 !important;
+  }
+  
+  .bg-primary-600, [class*="bg-primary-6"] {
+    background-color: #0E7490 !important;
+  }
+  
+  .bg-primary-100 {
+    background-color: #dbeafe !important;
+  }
+  
+  .bg-primary-50 {
+    background-color: #eff4ff !important;
+  }
+  
+  .border-primary-600, [class*="border-primary-6"] {
+    border-color: #0E7490 !important;
+  }
+  
+  .hover\:bg-primary-700:hover, [class*="hover:bg-primary-7"]:hover {
+    background-color: #0c5f7a !important;
+  }
+  
+  .ring-primary-500, .focus\:ring-primary-500:focus {
+    --tw-ring-color: #3b82f6 !important;
+  }
+  
+  /* Override pour tous les focus states avec primary */
+  .focus\:ring-primary-500:focus, [class*="focus:ring-primary"]:focus {
+    --tw-ring-color: #0E7490 !important;
+    --tw-ring-opacity: 0.2 !important;
+  }
+  
+  .focus\:border-primary-500:focus, [class*="focus:border-primary"]:focus {
+    border-color: #0E7490 !important;
+  }
+  
+  /* Suppression des border-radius à 0 */
+  .rounded-none {
+    border-radius: 0.375rem !important;
+  }
+}
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    
+    --color-primary-50: #eff4ff;
+    --color-primary-100: #dbeafe;
+    --color-primary-200: #bfdbfe;
+    --color-primary-300: #93c5fd;
+    --color-primary-400: #60a5fa;
+    --color-primary-500: #3b82f6;
+    --color-primary-600: #0E7490;
+    --color-primary-700: #0c5f7a;
+    --color-primary-800: #0a4f63;
+    --color-primary-900: #1e3a8a;
+    
+    --color-secondary-50: #fef5f0;
+    --color-secondary-100: #fdeae0;
+    --color-secondary-200: #fad6c1;
+    --color-secondary-300: #f8c1a2;
+    --color-secondary-400: #f5ad83;
+    --color-secondary-500: #f08224;
+    --color-secondary-600: #c26a1d;
+    --color-secondary-700: #914f16;
+    --color-secondary-800: #61350e;
+    --color-secondary-900: #301a07;
+}
+
+/* Smooth scroll pour toute la page */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Styles pour la vidéo de fond */
+.video-container {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+}
+
+video {
+    background-color: transparent !important;
+    z-index: 1 !important;
+}
+
+/* Overlay styles - forcer l'affichage */
+.video-overlay {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    z-index: 10 !important;
+    pointer-events: none;
+}
+
+/* Amélioration du contraste pour texte sur vidéo claire */
+.hero-text-contrast {
+    /* text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); */
+}
+
+.hero-title-contrast {
+    /* text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.8); */
+}
+
+/* Styles pour les boutons avec meilleur contraste */
+.hero-button-primary {
+    background: rgba(14, 116, 144, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-radius: 0.75rem !important;
+}
+
+.hero-button-primary:hover {
+    background: rgba(12, 95, 122, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.hero-button-secondary {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-radius: 0.75rem !important;
+}
+
+.hero-button-secondary:hover {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 1);
+}
+
+/* Assurer que la vidéo couvre tout l'espace */
+video::-webkit-media-controls {
+    display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+    display: none !important;
+}
+
+/* Styles pour améliorer les performances */
+video {
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* Animation de chargement pour la vidéo */
+@keyframes videoLoading {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+video[data-loaded="true"] {
+    animation: videoLoading 0.5s ease-in-out;
+}
+
+/* AMÉLIORATIONS MOBILE POUR LA VIDÉO */
+@media (max-width: 768px) {
+    /* Optimisations spécifiques pour la vidéo sur mobile */
+    video {
+        object-fit: cover !important;
+        width: 100% !important;
+        height: 100% !important;
+        /* Optimisations de performance mobile */
+        transform: translate3d(0, 0, 0) !important;
+        backface-visibility: hidden !important;
+        perspective: 1000px !important;
+    }
+    
+    /* Fallback amélioré pour mobile */
+    .video-fallback {
+        transition: opacity 0.5s ease-in-out !important;
+        background: linear-gradient(135deg, #122147 0%, #1e4a8c 50%, #2256a3 100%) !important;
+    }
+    
+    /* Overlay plus fort sur mobile pour améliorer la lisibilité */
+    .video-overlay {
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)) !important;
+    }
+    
+    /* Améliorer le texte sur mobile */
+    .hero-text-contrast {
+        /* text-shadow: 2px 2px 12px rgba(0, 0, 0, 0.8) !important; */
+    }
+    
+    .hero-title-contrast {
+        /* text-shadow: 3px 3px 16px rgba(0, 0, 0, 0.9) !important; */
+    }
+}
+
+@media (max-width: 480px) {
+    /* Optimisations pour très petits écrans */
+    video {
+        /* Réduire la qualité sur très petits écrans pour les performances */
+        image-rendering: optimizeSpeed !important;
+        image-rendering: -webkit-optimize-contrast !important;
+    }
+    
+    /* Container vidéo optimisé */
+    .video-container {
+        contain: layout style paint !important;
+    }
+    
+    /* Assurer un bon contraste du texte */
+    section h1 {
+        /* text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8), 0 0 16px rgba(0, 0, 0, 0.6) !important; */
+    }
+    
+    section p {
+        /* text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.7), 0 0 12px rgba(0, 0, 0, 0.5) !important; */
+    }
+}
+
+/* =================================================================
+   STYLES DU FORMULAIRE DE COMPLÉTION DE PROFIL
+   (Anciennement: Formulaire de candidature PEUB - maintenant via social auth)
+   ================================================================= */
+
+/* Harmonisation avec les formulaires auth - Override Tailwind styles */
+#candidatureForm input[type="text"], 
+#candidatureForm input[type="email"], 
+#candidatureForm input[type="tel"], 
+#candidatureForm input[type="date"], 
+#candidatureForm input[type="number"], 
+#candidatureForm select, 
+#candidatureForm textarea {
+    padding: 0.75rem !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.75rem !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    font-size: 0.875rem !important;
+}
+
+#candidatureForm input[type="text"]:focus, 
+#candidatureForm input[type="email"]:focus, 
+#candidatureForm input[type="tel"]:focus, 
+#candidatureForm input[type="date"]:focus, 
+#candidatureForm input[type="number"]:focus, 
+#candidatureForm select:focus, 
+#candidatureForm textarea:focus {
+    outline: none !important;
+    border-color: #0E7490 !important;
+    box-shadow: 0 0 0 3px rgba(38, 91, 255, 0.1) !important;
+    border-radius: 0.75rem !important;
+}
+
+/* Style des boutons */
+#candidatureForm button {
+    border-radius: 0.75rem !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+/* Style des boutons files */
+#candidatureForm input[type="file"] {
+    border: 1px solid #d1d5db !important;
+    padding: 0.75rem !important;
+    border-radius: 0.75rem !important;
+    background-color: #f9fafb !important;
+    font-size: 0.875rem !important;
+}
+
+/* Style des radio buttons et checkboxes */
+#candidatureForm input[type="radio"], 
+#candidatureForm input[type="checkbox"] {
+    border-radius: 0.375rem !important;
+}
+
+/* Labels styling */
+#candidatureForm label {
+    margin-bottom: 0.5rem !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+    font-size: 0.875rem !important;
+}
+
+/* Error states */
+#candidatureForm .border-red-500 {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Styles pour les étapes - harmonisation couleurs */
+.step-indicator-container {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.step-container {
+    transition: all 0.3s ease;
+}
+
+.step-indicator {
+    transition: all 0.3s ease;
+    background-color: #f9fafb;
+    color: #9ca3af;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.step-indicator.active {
+    background-color: #0E7490 !important;
+    color: white !important;
+    border: none !important;
+    transform: none;
+    box-shadow: none;
+    border-radius: 0.75rem !important;
+}
+
+.step-indicator.completed {
+    background-color: #059669 !important;
+    color: white !important;
+    border: none !important;
+    transform: none;
+    box-shadow: none;
+}
+
+.step-indicator.completed i {
+    display: none;
+}
+
+.step-indicator.pending {
+    background-color: #f9fafb !important;
+    color: #9ca3af !important;
+    border: none !important;
+}
+
+/* Ligne de progression */
+.progress-line {
+    transition: width 0.5s ease-in-out;
+}
+
+.step-title {
+    transition: all 0.3s ease;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+    max-width: 80px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.step-title.active {
+    color: #0E7490 !important;
+    font-weight: 600 !important;
+    text-shadow: none;
+}
+
+.step-title.completed {
+    color: #059669 !important;
+    font-weight: 500 !important;
+}
+
+.step-title.pending {
+    color: #9ca3af !important;
+}
+
+/* Animation pour les étapes */
+.step {
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 0.4s ease;
+}
+
+.step.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Force navigation buttons visibility */
+.navigation-buttons-container {
+    display: block !important;
+    visibility: visible !important;
+    position: fixed !important; /* Position fixe temporaire pour debug */
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
+    background: #fef2f2 !important; /* Rouge clair temporaire pour debug */
+    border: 3px solid #ef4444 !important; /* Border rouge pour debug */
+    min-height: 80px !important;
+    padding: 30px 24px !important;
+    height: auto !important;
+    overflow: visible !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+.navigation-buttons-container .flex {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 50px !important;
+    gap: 16px !important;
+}
+
+#prevBtn, #nextBtn, #submitBtn {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+    border-radius: 0 !important;
+    padding: 12px 24px !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-sizing: border-box !important;
+}
+
+/* Styles spécifiques aux boutons */
+#nextBtn {
+    background-color: #0E7490 !important;
+    color: white !important;
+    border: 2px solid #0E7490 !important;
+    box-shadow: 0 2px 4px rgba(14, 116, 144, 0.2);
+    border-radius: 0.75rem !important;
+}
+
+#nextBtn:hover {
+    background-color: #0c5f7a !important;
+    border-color: #0c5f7a !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(14, 116, 144, 0.3);
+}
+
+#prevBtn {
+    background-color: white !important;
+    color: #374151 !important;
+    border: 2px solid #d1d5db !important;
+    border-radius: 0.75rem !important;
+}
+
+#prevBtn:hover {
+    background-color: #f3f4f6 !important;
+    border-color: #9ca3af !important;
+    transform: translateY(-1px);
+}
+
+#submitBtn {
+    background-color: #059669 !important;
+    color: white !important;
+    border: 2px solid #059669 !important;
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+    border-radius: 0.75rem !important;
+}
+
+#submitBtn:hover {
+    background-color: #047857 !important;
+    border-color: #047857 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+}
+
+/* Classes pour cacher les boutons */
+.btn-hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Classes pour afficher les boutons */
+.btn-visible {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: #10b981 !important; /* Vert temporaire pour debug */
+    color: white !important;
+    border: 2px solid #059669 !important;
+}
+
+/* Indicateur de step amélioré */
+.step-indicator-text {
+    display: flex !important;
+    align-items: center !important;
+    font-size: 0.875rem !important;
+    color: #6b7280 !important;
+    background: white;
+    padding: 8px 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Amélioration des messages d'erreur */
+.error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive améliorations */
+@media (max-width: 768px) {
+    .step-indicator {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    .step-title {
+        font-size: 0.625rem !important;
+        max-width: 60px !important;
+    }
+    
+    .navigation-buttons-container {
+        padding: 16px !important;
+    }
+    
+    #prevBtn, #nextBtn, #submitBtn {
+        padding: 10px 16px !important;
+        font-size: 0.75rem !important;
+        min-height: 40px !important;
+    }
+}
+
+/* =================================================================
+   CLASSES POUR REMPLACER LES STYLES INLINE
+   ================================================================= */
+
+/* Navigation container */
+.nav-container {
+    background: #f3f4f6;
+    padding: 20px;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 20px;
+}
+
+.nav-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.nav-buttons-group {
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
+}
+
+/* Navigation buttons base styles */
+.nav-btn {
+    padding: 12px 24px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nav-btn-prev {
+    background: #6b7280;
+    color: white;
+    display: none;
+}
+
+.nav-btn-next {
+    background: #1e4385;
+    color: white;
+}
+
+.nav-btn-submit {
+    background: #059669;
+    color: white;
+    display: none;
+}
+
+/* Map styles */
+.map-container {
+    border-radius: 0.75rem !important;
+}
+
+/* Styles pour les cartes d'opportunités */
+.opportunity-card {
+    position: relative !important;
+    cursor: pointer !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.75rem !important;
+}
+
+/* Styles pour les cartes de type d'opportunité dans le formulaire */
+.type-card {
+    border: 2px solid #d1d5db !important;
+    background-color: white !important;
+    border-radius: 0.75rem !important;
+}
+
+.type-card.selected {
+    border-color: #0E7490 !important;
+    background-color: #eff4ff !important;
+}
+
+/* =================================================================
+   STYLES DU CHATBOX IA
+   ================================================================= */
+
+/* Animation d'entrée pour le chatbox */
+#ia-chatbox {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: bottom right;
+}
+
+#ia-chatbox:not(.hidden) {
+    animation: chatboxSlideIn 0.3s ease-out;
+}
+
+@keyframes chatboxSlideIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Styles pour les messages du chat */
+#ia-messages {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+#ia-messages::-webkit-scrollbar {
+    width: 4px;
+}
+
+#ia-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#ia-messages::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 2px;
+}
+
+#ia-messages::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.7);
+}
+
+/* Animation pour l'indicateur de frappe */
+.typing-indicator .animate-bounce {
+    animation: typingBounce 1.4s infinite ease-in-out;
+}
+
+@keyframes typingBounce {
+    0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Effet de focus amélioré pour l'input */
+#ia-input:focus {
+    box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-radius: 0.75rem !important;
+}
+
+/* Animation du bouton send */
+#ia-form button[type="submit"]:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(14, 116, 144, 0.3);
+}
+
+/* Styles pour les messages avec effet de survol */
+#ia-messages .inline-block {
+    transition: all 0.2s ease;
+}
+
+#ia-messages .inline-block:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive design pour le chatbox */
+@media (max-width: 640px) {
+    #ia-chatbox {
+        width: calc(100vw - 2rem) !important;
+        right: 1rem !important;
+        left: 1rem !important;
+    }
+    
+    #ia-fab {
+        right: 1rem !important;
+        bottom: 1rem !important;
+    }
+}
+
+/* Effet de glassmorphism pour le header */
+#ia-chatbox .bg-gradient-to-r {
+    backdrop-filter: blur(10px);
+    background: linear-gradient(135deg, rgba(14, 116, 144, 0.95), rgba(12, 95, 122, 0.95));
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+}
+
+/* Animation pour les nouveaux messages */
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#ia-messages > div:last-child {
+    animation: messageSlideIn 0.3s ease-out;
+}
+
+/* Styles pour le mode sombre */
+@media (prefers-color-scheme: dark) {
+    #ia-chatbox {
+        background: #1f2937;
+        border-color: #374151;
+    }
+    
+    #ia-messages {
+        background: linear-gradient(to bottom, #111827, #1f2937);
+    }
+    
+    #ia-input {
+        background: #374151;
+        border-color: #4b5563;
+        color: #f9fafb;
+    }
+    
+    #ia-input::placeholder {
+        color: #9ca3af;
+    }
+}
+
+/* =================================================================
+   OPTIMISATIONS MOBILE ET PERFORMANCE
+   ================================================================= */
+
+/* Optimisations générales pour mobile */
+@media (max-width: 640px) {
+    /* Désactiver les animations coûteuses sur mobile */
+    .group:hover .group-hover\:scale-105 {
+        transform: none !important;
+    }
+    
+    /* Réduire les transitions pour économiser la batterie */
+    * {
+        transition-duration: 0.15s !important;
+    }
+    
+    /* Optimiser les transforms pour la performance */
+    .hover\:scale-105:hover {
+        transform: scale(1.02) !important;
+    }
+    
+    /* Améliorer la lisibilité du texte */
+    body {
+        -webkit-text-size-adjust: 100%;
+        text-rendering: optimizeLegibility;
+    }
+    
+    /* Optimiser les images */
+    img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+    
+    /* Améliorer les performances de scroll */
+    .overflow-hidden {
+        overscroll-behavior: contain;
+    }
+    
+    /* CORRECTION: Assurer que le gradient s'affiche sur mobile */
+    body {
+        background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #e0f2fe 100%) !important;
+        background-attachment: scroll !important; /* Important sur mobile */
+        min-height: 100vh !important;
+        min-height: 100dvh !important; /* Support des nouvelles unités */
+    }
+    
+    /* Assurer que les containers auth prennent la bonne hauteur */
+    .min-h-screen {
+        min-height: 100vh !important;
+        min-height: 100dvh !important;
+    }
+    
+    /* Améliorer l'affichage des formulaires d'auth sur mobile */
+    .max-w-md {
+        width: calc(100vw - 2rem) !important;
+        max-width: 28rem !important;
+    }
+
+    /* FIX CRITIQUE: Forcer font-size 16px sur TOUS les inputs pour éviter le zoom auto sur iOS */
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    input[type="url"],
+    input[type="search"],
+    select,
+    textarea {
+        font-size: 16px !important;
+        min-height: 48px !important;
+        position: relative !important;
+        z-index: 1 !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+        -webkit-user-select: text !important;
+        user-select: text !important;
+    }
+
+    /* Assurer que les boutons submit sont aussi bien dimensionnés */
+    button[type="submit"],
+    button[type="button"] {
+        min-height: 48px !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+
+    /* Forcer pointer-events none sur les icônes */
+    .input-icon-wrapper,
+    .input-icon-wrapper *,
+    .input-icon-wrapper svg,
+    [data-lucide] {
+        pointer-events: none !important;
+    }
+}
+
+/* Corrections spécifiques pour le mode sombre sur mobile */
+@media (max-width: 640px) and (prefers-color-scheme: dark) {
+    body.dark {
+        background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%) !important;
+        background-attachment: scroll !important;
+    }
+}
+
+/* Styles pour améliorer l'expérience mobile des pages d'auth */
+@media (max-width: 480px) {
+    /* Forcer le gradient sur très petits écrans */
+    html {
+        background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #e0f2fe 100%) !important;
+        min-height: 100vh !important;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #e0f2fe 100%) !important;
+        background-attachment: scroll !important;
+    }
+    
+    /* Ajuster l'espacement pour les formulaires */
+    .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 1.5rem !important;
+    }
+    
+    /* Améliorer les boutons sur petits écrans */
+    button[type="submit"] {
+        min-height: 48px !important;
+        font-size: 1rem !important;
+    }
+}
+
+/* Utility classes pour le responsive design */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Touch optimizations */
+@media (pointer: coarse) {
+    /* Augmenter la zone de clic sur mobile */
+    button, 
+    a,
+    .cursor-pointer {
+        min-height: 44px;
+        min-width: 44px;
+        position: relative;
+    }
+    
+    /* Améliorer le feedback tactile */
+    button:active,
+    a:active {
+        opacity: 0.7;
+        transform: scale(0.98);
+    }
+}
+
+/* Optimisations de performance pour les cartes */
+.group {
+    contain: layout style;
+}
+
+/* Préchargement critique des images */
+.hero-image,
+.opportunity-image {
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+/* Optimisation des gradients */
+.bg-gradient-to-br,
+.bg-gradient-to-b {
+    background-attachment: fixed;
+}
+
+@media (max-width: 768px) {
+    .bg-gradient-to-br,
+    .bg-gradient-to-b {
+        background-attachment: scroll; /* Éviter fixed sur mobile */
+    }
+}
+
+/* Styles pour les interactions mobiles */
+@media (hover: none) and (pointer: coarse) {
+    /* Remplacer les effets hover par des états actifs sur mobile */
+    .hover\:shadow-xl:hover {
+        box-shadow: none;
+    }
+    
+    .hover\:shadow-xl:active {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Désactiver les animations de hover sur mobile */
+    .group-hover\:scale-105 {
+        transform: none;
+    }
+    
+    .hover\:scale-105 {
+        transform: none;
+    }
+    
+    /* Désactiver les translations complexes */
+    .hover\:-translate-y-1 {
+        transform: none;
+    }
+}
+
+/* Optimisations pour les petits écrans */
+@media (max-width: 480px) {
+    /* Réduire l'espacement pour gagner de la place */
+    .py-12 {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+    
+    .py-16 {
+        padding-top: 2.5rem !important;
+        padding-bottom: 2.5rem !important;
+    }
+    
+    /* Optimiser les textes pour les très petits écrans */
+    .text-3xl {
+        font-size: 1.5rem !important;
+        line-height: 2rem !important;
+    }
+    
+    .text-xl {
+        font-size: 1rem !important;
+        line-height: 1.5rem !important;
+    }
+}
+
+/* Préloadings et optimisations de performance */
+.video-container video {
+    content-visibility: auto;
+    contain-intrinsic-size: 100vw 100vh;
+}
+
+/* Lazy loading pour les images non critiques */
+img[loading="lazy"] {
+    content-visibility: auto;
+    contain-intrinsic-size: 300px 200px;
+}
+
+/* =================================================================
+   EXCEPTION FINALE - SIDEBAR BACHELIER SANS BORDURES
+   ================================================================= */
+/* Règle ultime : TOUT dans la sidebar doit avoir border-radius: 0 */
+.bachelier-sidebar,
+.bachelier-sidebar *,
+.bachelier-sidebar button,
+.bachelier-sidebar a,
+.bachelier-sidebar nav,
+.bachelier-sidebar nav *,
+.bachelier-sidebar div,
+.bachelier-sidebar input,
+.bachelier-sidebar select,
+.bachelier-sidebar textarea,
+.bachelier-sidebar form,
+.bachelier-sidebar img,
+.bachelier-sidebar .rounded-sm,
+.bachelier-sidebar .rounded,
+.bachelier-sidebar .rounded-md,
+.bachelier-sidebar .rounded-lg,
+.bachelier-sidebar .rounded-xl,
+.bachelier-sidebar .rounded-full,
+.bachelier-sidebar .border,
+.bachelier-sidebar .border-b,
+.bachelier-sidebar .border-t,
+.bg-\[#0A2540\],
+.bg-\[#0A2540\] *,
+header.bg-\[#0A2540\],
+header.bg-\[#0A2540\] * {
+    border-radius: 0 !important;
+}

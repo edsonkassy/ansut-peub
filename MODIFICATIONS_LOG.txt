@@ -1,0 +1,484 @@
+================================================================================
+JOURNAL DES MODIFICATIONS - ANSUT PEUB PROJECT
+================================================================================
+
+DATE: 2026-01-23
+UTILISATEUR: Lamine Barro
+TÂCHE: 1) Correction du filtre de recherche et ajout du filtre par année d'obtention du bac
+       2) Amélioration de la page des boursiers avec carte en français et filtres multiples
+
+================================================================================
+MODIFICATIONS EFFECTUÉES:
+================================================================================
+
+1. FICHIER: app/Http/Controllers/Admin/BachelierManagementController.php
+   SAUVEGARDE: old_BachelierManagementController.php (créée)
+   
+   CHANGEMENTS:
+   - Ligne 43-50: Correction du filtre de recherche pour la casse insensible
+     * Avant: Utilisation de 'like' avec %{$search}% (sensible à la casse)
+     * Après: Utilisation de whereRaw('LOWER(nom) like ?') pour tous les champs
+     * Champs affectés: nom, prenoms, email_eleve
+   
+   - Ligne 52-54: Ajout du filtre par année d'obtention du bac
+     * Nouveau filtre: if ($request->filled('annee_bac'))
+     * Applique un where sur le champ 'annee_bac'
+   
+   - Ligne 138-143: Dynamisation de la liste des années
+     * Avant: Array statique avec '2025' => '2025'
+     * Après: Requête dynamique depuis la base de données
+     * Récupère toutes les années distinctes des bacheliers enregistrés
+     * Triées en ordre décroissant (années les plus récentes en premier)
+
+2. FICHIER: resources/views/admin/bacheliers/index.blade.php
+   
+   CHANGEMENTS:
+   - Ligne 128-139: Ajout du champ de sélection "Année Bac"
+     * Nouveau select avec name="annee_bac"
+     * Affiche les années disponibles depuis $annees_bac
+     * Conserve la sélection précédente avec request('annee_bac')
+
+3. FICHIER: app/Http/Controllers/Admin/BoursierController.php
+   SAUVEGARDE: old_BoursierController.php (créée)
+   
+   CHANGEMENTS:
+   - Ligne 17-42: Ajout du support du filtrage par sexe
+     * Récupère le paramètre 'sexe' depuis la requête GET
+     * Supporte les valeurs 'F' (Filles) et 'M' (Garçons)
+     * Transmet les genres sélectionnés à la vue
+   
+   - Ligne 48-53: Mise à jour de getBoursiersWithCoordinates()
+     * Ajoute le paramètre $selectedGenders
+     * Filtre les boursiers selon le sexe sélectionné avec whereIn()
+
+4. FICHIER: resources/views/admin/boursiers/index.blade.php
+   
+   CHANGEMENTS:
+   - Ligne 90-110: Ajout du formulaire de filtrage par sexe
+     * Checkboxes pour Filles et Garçons
+     * Bouton "Appliquer" pour soumettre le filtre
+     * Conserve les sélections précédentes
+   
+   - Ligne 118-122: Remplacement des boutons de régions statiques
+     * Avant: 31 boutons HTML codés en dur
+     * Après: Conteneur vide rempli dynamiquement par JavaScript
+   
+   - Ligne 240-279: Ajout des données de régions en JavaScript
+     * Objet regionsData avec toutes les 31 régions + 2 districts
+     * Utilisé pour générer les boutons et les étiquettes de la carte
+   
+   - Ligne 289-341: Mise à jour de initMap()
+     * Appel de generateRegionButtons() pour créer les boutons dynamiquement
+     * Appel de addFrenchLabels() pour ajouter les étiquettes en français
+     * Changement de displayMarkers() à displayMultipleRegionMarkers()
+     * Ajout du paramètre language: 'fr' à la configuration Mapbox
+   
+   - Ligne 343-356: Nouvelle fonction generateRegionButtons()
+     * Génère dynamiquement tous les boutons de régions
+     * Chaque bouton appelle filterRegions() au clic
+   
+   - Ligne 358-399: Nouvelle fonction addFrenchLabels()
+     * Ajoute une couche GeoJSON avec les noms des régions en français
+     * Affiche les étiquettes au centre de chaque région
+     * Utilise une police Unicode pour supporter les caractères spéciaux
+   
+   - Ligne 401-438: Nouvelle fonction getRegionCenterCoordinates()
+     * Retourne les coordonnées du centre de chaque région
+     * Utilisée pour positionner les étiquettes sur la carte
+   
+   - Ligne 483-515: Nouvelle fonction filterRegions()
+     * Supporte la sélection multiple de régions
+     * Gère le bouton "Toutes les Régions" pour réinitialiser
+     * Appelle displayMultipleRegionMarkers() et updateMultipleRegionStats()
+   
+   - Ligne 517-579: Nouvelle fonction displayMultipleRegionMarkers()
+     * Affiche les marqueurs pour toutes les régions sélectionnées
+     * Remplace l'ancienne fonction displayMarkers()
+   
+   - Ligne 581-608: Nouvelle fonction updateMultipleRegionStats()
+     * Met à jour les statistiques pour les régions sélectionnées
+     * Calcule le total, filles, garçons, et actifs
+
+5. FICHIER: resources/views/admin/bacheliers/index.blade.php
+   SAUVEGARDE: old_index.blade.php (créée)
+   
+   CHANGEMENTS (Version 1):
+   - Ligne 210-216: Réorganisation des en-têtes du tableau
+     * Avant: Colonnes "Bachelier", "Contact", "Bac", "Score PEUB", "PEUB", "Actions"
+     * Après: Colonnes "Bachelier", "Contact", "Série", "Année", "Note/400", "Mention", "Score PEUB", "PEUB", "Actions"
+   
+   - Ligne 246-280: Réorganisation des données du tableau
+     * Avant: Série et note affichées ensemble dans une seule colonne "Bac"
+     * Après: Colonnes séparées pour Série, Année, Note/400 (avec conversion 20→400), Mention
+     * Note/400 affichée en gras avec note/20 en petit texte
+     * Mention affichée avec badge de couleur (gris, bleu, vert, violet)
+   
+   CHANGEMENTS (Version 2 - Correction):
+   - Ligne 212: En-tête modifié
+     * Avant: "Note/400" et "Mention" (colonnes séparées)
+     * Après: "Bac (Note, Mention, Moyenne)" (colonne unique)
+   
+   - Ligne 255-275: Restructuration de la colonne BAC
+     * Note Bac affichée directement (sans conversion, valeur brute de la base)
+     * Mention affichée avec badge de couleur en dessous
+     * Moyenne calculée: (note_bac / 400) * 20 pour obtenir la moyenne sur 20
+     * Tout dans une seule colonne pour meilleure lisibilité
+   
+   CHANGEMENTS (Version 3 - Calcul Moyenne):
+   - Ligne 273: Calcul correct de la moyenne
+     * Avant: Affichage de score_final_peub (moyenne PEUB)
+     * Après: Calcul de la moyenne sur 20 = (note_bac / 400) * 20
+     * Format: "Moyenne: X.XX/20"
+   
+   CHANGEMENTS (Version 4 - Établissement dans Contact):
+   - Ligne 248: Ajout du nom de l'établissement
+     * Nouveau: Affichage du nom de l'établissement après le téléphone
+     * Style: Texte gris clair (text-xs text-gray-400)
+     * Format: "{{ $bachelier->etablissement_nom ?? 'N/A' }}"
+   
+   CHANGEMENTS (Version 5 - Rang Temporaire Filtré):
+   - Ligne 63-89: Correction du calcul du rang temporaire (STABLE)
+     * Avant: Rang recalculé dynamiquement basé sur les résultats filtrés (changeait à chaque filtre)
+     * Après: Rang global original conservé même lors du filtrage
+     * Processus:
+       1. Récupère tous les bacheliers triés par score (sans filtres)
+       2. Crée un mapping id => rang global
+       3. Assigne le rang global original à chaque bachelier filtré
+     * Résultat: Le rang affiché est toujours le rang original du bachelier, pas son rang dans les résultats filtrés
+     * Exemple: Un bachelier classé #5 globalement affichera "Rang #5" même s'il est seul dans les résultats filtrés
+   
+   CHANGEMENTS (Version 6 - Statistiques Dynamiques):
+   - Ligne 91-144: Calcul des statistiques filtrées
+     * Avant: Statistiques globales affichées indépendamment des filtres
+     * Après: Statistiques recalculées en fonction des filtres appliqués
+     * Processus:
+       1. Récupère les statistiques globales (sans filtres)
+       2. Crée une nouvelle requête avec les mêmes filtres
+       3. Calcule les statistiques filtrées (total, boursiers, vérifiés, en attente)
+       4. Détecte si des filtres sont appliqués (has_filters)
+     * Résultat: Les statistiques affichées correspondent aux résultats filtrés
+   
+   - Ligne 9-24: Ajout d'une bannière informationnelle
+     * Affichée uniquement quand des filtres sont appliqués
+     * Affiche le nombre de résultats filtrés vs total global
+     * Format: "Résultats filtrés: X résultat(s) sur Y bachelier(s) total(aux)"
+   
+   - Ligne 27-93: Mise à jour des cartes de statistiques
+     * Avant: Affichage des statistiques globales uniquement
+     * Après: Affichage des statistiques filtrées avec comparaison au global
+     * Quand des filtres sont appliqués:
+       - Fond de carte change de couleur (bleu, vert, jaune, violet)
+       - Bordure de carte change de couleur
+       - Affichage du nombre global en petit texte (Global: X)
+     * Quand aucun filtre: Affichage normal (gris)
+   
+   - Ligne 343: Mise à jour de colspan
+     * Avant: colspan="10"
+     * Après: colspan="9" (pour correspondre aux 9 colonnes)
+   
+   - Ligne 432-441: Implémentation de la fonction d'export Excel
+     * Récupère les paramètres de filtrage actuels
+     * Crée une URL d'export avec les filtres appliqués
+     * Télécharge le fichier CSV/Excel
+
+6. FICHIER: app/Http/Controllers/Admin/BachelierManagementController.php
+   
+   CHANGEMENTS:
+   - Ligne 439-545: Nouvelle méthode exportExcel()
+     * Récupère les bacheliers avec les mêmes filtres que la liste
+     * Génère un fichier CSV avec séparateur ";"
+     * Ajoute BOM UTF-8 pour compatibilité Excel
+     * Colonnes exportées: Nom, Prénoms, Email, Téléphone, Région, Série, Année, Note/400, Note/20, Mention, Score PEUB, Rang, Statut Profil, Boursier PEUB, Statut Utilisateur
+     * Nom du fichier: bacheliers_YYYY-MM-DD_HH-MM-SS.csv
+     * Gestion des erreurs avec logging
+
+7. FICHIER: routes/web.php
+   
+   CHANGEMENTS:
+   - Ligne 298: Ajout de la route d'export Excel
+     * Route: GET /admin/bacheliers/export-excel
+     * Nom: admin.bacheliers.export-excel
+     * Contrôleur: BachelierManagementController@exportExcel
+
+8. FICHIER: resources/views/admin/bacheliers/show.blade.php
+   SAUVEGARDE: old_show.blade.php (créée)
+   
+   CHANGEMENTS:
+   - Ligne 861-887: Correction des fonctionnalités d'email et d'appel
+     * Avant: Fonction sendEmail() inexistante, email incorrect ($bachelier->email)
+     * Après: Lien mailto direct avec email correct ($bachelier->email_eleve)
+     * Ajout de vérifications: Affiche "Email non disponible" si absent
+     * Lien tel: pour l'appel avec affichage du numéro
+     * Ajout de vérifications: Affiche "Téléphone non disponible" si absent
+   
+   - Ligne 969-975: Suppression de la fonction contactBachelier() inutilisée
+     * Fonction jamais appelée dans le code
+     * Nettoyage du JavaScript
+
+9. FICHIER: resources/views/faq.blade.php
+   SAUVEGARDE: old_faq.blade.php (créée)
+   
+   CHANGEMENTS:
+   - Ligne 300-310: Correction du barème de scoring
+     * Avant: "Score Final = 30% (Académique) + 30% (Géographique) + 30% (Socio-économique) + 10% (Motivations & Ambitions)"
+     * Après: Barème détaillé en points:
+       - Excellence Académique: 50 points
+       - Situation Handicap: 20 points
+       - Situation Matrimoniale (Orphelinat): 20 points
+       - Genre: 10 points
+     * Total: 100 points
+
+10. FICHIER: resources/views/components/bachelier-sidebar.blade.php
+    SAUVEGARDE: old_bachelier-sidebar.blade.php (créée)
+    
+    CHANGEMENTS:
+    - Ligne 113: Modification du message de bienvenue
+      * Avant: "Bienvenue {{ prenoms }} 👋, prêt à construire ton avenir ?"
+      * Après: "Bienvenue {{ nom }}, lauréat PEUB {{ annee_bac }}"
+      * Affichage du nom complet du bachelier
+      * Affichage du statut de lauréat PEUB avec l'année du bac
+
+11. FICHIER: routes/web.php
+    SAUVEGARDE: old_web.php (créée)
+    
+    CHANGEMENTS:
+    - Ligne 297: Ajout d'une nouvelle route
+      * Route: GET /admin/bacheliers/by-year/{year}
+      * Nom: admin.bacheliers.by-year
+      * Contrôleur: BachelierManagementController@byYear
+      * Affiche les bacheliers filtrés par année d'obtention du bac
+
+12. FICHIER: app/Http/Controllers/Admin/BachelierManagementController.php
+    SAUVEGARDE: old_BachelierManagementController.php (créée)
+    
+    CHANGEMENTS:
+    - Ligne 614-747: Ajout de la méthode byYear()
+      * Affiche les bacheliers filtrés par année
+      * Applique les mêmes filtres que la page principale (statut, région, série, recherche)
+      * Calcule les rangs globaux pour l'année sélectionnée
+      * Affiche les statistiques filtrées et globales
+      * Retourne la vue admin.bacheliers.by-year
+
+13. FICHIER: resources/views/admin/bacheliers/by-year.blade.php
+    SAUVEGARDE: Nouvelle page créée
+    
+    CONTENU:
+    - Affichage des bacheliers d'une année spécifique
+    - Statistiques dynamiques (total, vérifiés, en attente, boursiers)
+    - Filtres: recherche, statut profil, boursier PEUB, région, série bac
+    - Tableau avec colonnes: Bachelier, Contact, Série, Bac, Score PEUB, PEUB, Actions
+    - Pagination (20 résultats par page)
+    - Lien vers la page de détails du bachelier
+
+14. FICHIER: resources/views/components/admin-sidebar.blade.php
+    SAUVEGARDE: old_admin-sidebar.blade.php (créée)
+    
+    CHANGEMENTS:
+    - Ligne 6: Ajout d'une variable Alpine.js bachelierYearsOpen
+    - Ligne 59-92: Modification du menu Bacheliers
+      * Avant: Lien simple vers admin.bacheliers.index
+      * Après: Bouton avec sous-menu déroulant
+      * Sous-menu contient:
+        - "Tous les bacheliers" (lien vers index)
+        - "Barème" (lien vers bareme)
+        - Liste dynamique des années (récupérées de la base de données)
+        - Chaque année est un lien vers admin.bacheliers.by-year
+      * Les années sont triées en ordre décroissant (plus récentes en premier)
+      * Affichage du format: "Année XXXX"
+
+15. FICHIER: routes/web.php
+    SAUVEGARDE: old_web.php (créée - mise à jour)
+    
+    CHANGEMENTS:
+    - Ligne 297: Ajout d'une nouvelle route
+      * Route: GET /admin/bacheliers/bareme
+      * Nom: admin.bacheliers.bareme
+      * Contrôleur: BachelierManagementController@bareme
+      * Affiche la page du barème de scoring
+
+16. FICHIER: app/Http/Controllers/Admin/BachelierManagementController.php
+    SAUVEGARDE: old_BachelierManagementController.php (créée - mise à jour)
+    
+    CHANGEMENTS:
+    - Ligne 614-620: Ajout de la méthode bareme()
+      * Affiche la page du barème de scoring
+      * Retourne la vue admin.bacheliers.bareme
+
+17. FICHIER: resources/views/admin/bacheliers/bareme.blade.php
+    SAUVEGARDE: Nouvelle page créée
+    
+    CONTENU:
+    - Page complète affichant le barème du scoring PEUB
+    - En-tête avec titre et description
+    - Vue d'ensemble: Total des points (100) et nombre de critères (4)
+    - Détail de chaque critère:
+      * 1. Excellence Académique (50 points)
+        - Très Bien: 50 points
+        - Bien: 40 points
+        - Assez Bien: 30 points
+        - Passable: 20 points
+      * 2. Situation Handicap (20 points)
+        - Avec handicap: 20 points
+        - Sans handicap: 10 points
+      * 3. Situation Matrimoniale/Orphelinat (20 points)
+        - Orphelin père et mère: 20 points
+        - Orphelin père ou mère: 15 points
+        - Non orphelin: 0 points
+      * 4. Genre (10 points)
+        - Féminin: 10 points
+        - Masculin: 5 points
+    - Résumé du calcul avec formule et visualisation
+    - Notes importantes sur le processus de scoring
+
+18. FICHIER: database/migrations/2026_01_23_113110_create_etablissements_table.php
+    SAUVEGARDE: Nouvelle migration créée
+    
+    STRUCTURE DE LA TABLE:
+    - id (Primary Key)
+    - drena (string, nullable): Direction Régionale de l'Éducation Nationale
+    - commune (string, nullable): Commune
+    - code_etab (string, unique): Code établissement
+    - etablissement (string): Nom de l'établissement
+    - type_etab (string, nullable): Type d'établissement (Lycée, Collège, etc.)
+    - created_at, updated_at (timestamps)
+    
+    NOTE: La table bacheliers possède déjà les colonnes:
+    - etablissement_nom: Nom de l'établissement
+    - etablissement_type: Type d'établissement
+    
+    Ces colonnes seront remplies automatiquement lors de la sélection de l'établissement
+    par l'étudiant dans le formulaire d'inscription.
+
+19. FICHIER: app/Models/Etablissement.php
+    SAUVEGARDE: Nouveau modèle créé
+    
+    CONTENU:
+    - Propriété fillable avec les colonnes de la table
+    - Relation hasMany avec le modèle Bachelier
+    - Permet de récupérer tous les bacheliers d'un établissement
+
+20. FICHIER: resources/views/bachelier/steps/step2.blade.php
+    SAUVEGARDE: old_step2.blade.php (créée)
+    
+    CHANGEMENTS:
+    - Ligne 71-82: Modification du champ établissement_nom
+      * Avant: Champ texte libre (input type="text")
+      * Après: Liste déroulante (select) avec établissements de la base de données
+      * Chaque option contient un attribut data-type avec le type d'établissement
+      * Événement onchange="updateEtablissementType()" pour mettre à jour automatiquement le type
+    
+    - Ligne 116-130: Ajout de la fonction JavaScript updateEtablissementType()
+      * Récupère la valeur data-type de l'établissement sélectionné
+      * Met à jour automatiquement le champ etablissement_type
+      * Si aucun type n'est disponible, le champ est vide
+    
+    FONCTIONNEMENT:
+    1. L'étudiant sélectionne un établissement dans la liste
+    2. L'événement onchange déclenche la fonction updateEtablissementType()
+    3. Le type d'établissement est automatiquement rempli
+    4. Exemple: Sélection "Lycée Moderne d'Abidjan" → Type = "public"
+
+21. FICHIER: resources/views/auth/complete-profile.blade.php
+    SAUVEGARDE: old_complete-profile.blade.php (créée)
+    
+    CHANGEMENTS:
+    - Ligne 305-320: Modification du champ établissement_nom
+      * Avant: Champ texte libre (input type="text")
+      * Après: Liste déroulante (select) avec établissements de la base de données
+      * Chaque option contient un attribut data-type avec le type d'établissement
+      * Événement onchange="updateEtablissementType()" pour mettre à jour automatiquement le type
+    
+    - Ligne 709-722: Ajout de la fonction JavaScript updateEtablissementType()
+      * Récupère la valeur data-type de l'établissement sélectionné
+      * Met à jour automatiquement le champ etablissement_type
+      * Si aucun type n'est disponible, le champ est vide
+    
+    FONCTIONNEMENT:
+    1. L'étudiant sélectionne un établissement dans la liste déroulante
+    2. L'événement onchange déclenche la fonction updateEtablissementType()
+    3. Le type d'établissement est automatiquement rempli
+    4. Exemple: Sélection "Lycée Moderne d'Abidjan" → Type = "public"
+    
+    NOTE: Cette page est utilisée lors de la première inscription d'un bachelier
+
+22. FICHIER: app/Http/Controllers/Auth/SocialAuthController.php
+    SAUVEGARDE: old_SocialAuthController.php (créée)
+    
+    CHANGEMENTS:
+    - Ligne 151-152: Ajout de la récupération des établissements
+      * Récupère tous les établissements de la base de données
+      * Triés par ordre alphabétique (orderBy('etablissement'))
+      * Passés à la vue complete-profile
+    
+    CORRECTION:
+    - Erreur "Undefined variable $etablissements" corrigée
+    - La variable est maintenant disponible dans la vue complete-profile.blade.php
+
+23. FICHIER: database/sql/etablissements_mysql.sql
+    SAUVEGARDE: Nouveau fichier créé
+    
+    CONTENU:
+    - Script SQL pour créer la table etablissements sur MySQL
+    - Création de la table avec tous les champs
+    - Création des index pour optimiser les recherches
+    - Exemples d'insertion de 10 établissements
+    - Requêtes de vérification et de consultation
+    
+    STRUCTURE:
+    - id (BIGINT, Primary Key, Auto Increment)
+    - drena (VARCHAR 255, nullable)
+    - commune (VARCHAR 255, nullable)
+    - code_etab (VARCHAR 255, UNIQUE)
+    - etablissement (VARCHAR 255)
+    - type_etab (VARCHAR 255, nullable)
+    - created_at, updated_at (TIMESTAMP)
+    - Index sur: code_etab, etablissement, drena, commune
+
+24. FICHIER: database/sql/etablissements_sqlserver.sql
+    SAUVEGARDE: Nouveau fichier créé
+    
+    CONTENU:
+    - Script SQL pour créer la table etablissements sur SQL Server
+    - Création de la table avec tous les champs
+    - Création des index pour optimiser les recherches
+    - Exemples d'insertion de 10 établissements
+    - Requêtes de vérification et de consultation
+    
+    STRUCTURE:
+    - id (BIGINT, Primary Key, Identity)
+    - drena (NVARCHAR 255, nullable)
+    - commune (NVARCHAR 255, nullable)
+    - code_etab (NVARCHAR 255, UNIQUE)
+    - etablissement (NVARCHAR 255)
+    - type_etab (NVARCHAR 255, nullable)
+    - created_at, updated_at (DATETIME)
+    - Index sur: code_etab, etablissement, drena, commune
+
+================================================================================
+RÉSUMÉ DES AMÉLIORATIONS:
+================================================================================
+
+✅ PAGE BACHELIERS:
+   • Recherche insensible à la casse (DUPONT = dupont = Dupont)
+   • Filtre par année d'obtention du bac
+   • Liste des années dynamique selon les données enregistrées
+   • Tableau réorganisé avec colonnes BAC séparées:
+     - Série Bac (colonne dédiée)
+     - Année Bac (colonne dédiée)
+     - Note/400 (conversion automatique de note/20)
+     - Mention (avec badges colorés)
+   • Export Excel fonctionnel avec tous les filtres appliqués
+   • Fichier CSV compatible Excel avec encodage UTF-8
+
+✅ PAGE BOURSIERS:
+   • Carte affichée en français avec étiquettes des régions
+   • Sélection multiple de régions (Ctrl+Clic ou clic simple)
+   • Filtrage par sexe (Filles/Garçons)
+   • Filtrage combiné: régions + sexe en temps réel
+   • Statistiques mises à jour en temps réel selon les filtres
+   • Boutons de régions générés dynamiquement
+   • Marqueurs numérotés (1, 2, 3...) quand plusieurs au même endroit
+   • Marqueurs colorés: Rose pour filles, Bleu pour garçons
+   • Décalage circulaire des marqueurs pour éviter le chevauchement
+
+================================================================================
