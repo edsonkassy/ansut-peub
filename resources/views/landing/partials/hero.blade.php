@@ -8,7 +8,7 @@
             class="absolute inset-0 w-full h-full object-cover">
 
         <!-- Overlay pour améliorer la lisibilité du texte -->
-        <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/45 z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/45 z-10 pointer-events-none"></div>
     </div>
     
     <!-- Contenu de la section hero -->
