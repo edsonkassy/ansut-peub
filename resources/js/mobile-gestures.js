@@ -123,7 +123,6 @@ class MobileGestures {
             const pullDistance = currentY - startY;
 
             if (pullDistance > 0 && window.scrollY === 0) {
-                e.preventDefault();
                 const progress = Math.min(pullDistance / pullThreshold, 1);
                 this.updateRefreshIndicator(refreshIndicator, progress);
             }
@@ -235,9 +234,7 @@ class MobileGestures {
         document.addEventListener('touchend', (event) => {
             const now = Date.now();
 
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
+            // double-tap zoom disabled via meta viewport
 
             lastTouchEnd = now;
         }, { passive: false });
