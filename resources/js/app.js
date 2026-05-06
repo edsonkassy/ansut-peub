@@ -1,2 +1,2 @@
 import './bootstrap';
-import './mobile-gestures';
+// import './mobile-gestures'; // disabled - blocks scroll

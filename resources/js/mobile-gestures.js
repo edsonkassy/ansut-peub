@@ -33,10 +33,7 @@ class MobileGestures {
             deltaX = e.touches[0].clientX - startX;
             deltaY = e.touches[0].clientY - startY;
 
-            // Prevent default scroll if horizontal swipe is dominant
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
-                e.preventDefault();
-            }
+            // Horizontal swipe detection - no preventDefault to allow native scroll
         }, { passive: false });
 
         swipeContainer.addEventListener('touchend', (e) => {
@@ -123,7 +120,6 @@ class MobileGestures {
             const pullDistance = currentY - startY;
 
             if (pullDistance > 0 && window.scrollY === 0) {
-                e.preventDefault();
                 const progress = Math.min(pullDistance / pullThreshold, 1);
                 this.updateRefreshIndicator(refreshIndicator, progress);
             }
@@ -201,8 +197,7 @@ class MobileGestures {
         const interactiveElements = document.querySelectorAll('button, a, [onclick], .cursor-pointer');
         
         interactiveElements.forEach(element => {
-            // Add touch-action for better touch handling
-            element.style.touchAction = 'manipulation';
+            // touch-action manipulation removed - blocks scroll on links
             
             // Add touch feedback
             element.addEventListener('touchstart', () => {
@@ -235,9 +230,7 @@ class MobileGestures {
         document.addEventListener('touchend', (event) => {
             const now = Date.now();
 
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
+            // double-tap zoom disabled via meta viewport
 
             lastTouchEnd = now;
         }, { passive: false });
