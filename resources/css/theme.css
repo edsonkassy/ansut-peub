@@ -1,0 +1,390 @@
+/**
+ * PEUB Design System - Theme Configuration
+ * Programme d Excellence Universelle pour les Bacheliers - Cote d Ivoire
+ *
+ * REGLE D OR (lecture indispensable avant toute modification de couleur) :
+ *
+ *   COUCHE 1  PRIMITIVES        seul endroit ou vit une valeur hex.
+ *                               Pour changer une couleur de marque,
+ *                               modifier UNIQUEMENT une ligne ici.
+ *   COUCHE 2  ROLES (clair)     pointent vers la couche 1 via var().
+ *                               Aucun hex. Les composants n utilisent
+ *                               QUE ces variables de role.
+ *   COUCHE 3  ROLES (sombre)    reecrivent uniquement les roles.
+ *                               Les primitives restent inchangees.
+ *
+ * Un composant n ecrit jamais une couleur, seulement un role
+ * (ex: color: var(--text-primary)). Le mode sombre devient gratuit.
+ */
+
+:root {
+  /* ======================================================================
+     COUCHE 1  -  PRIMITIVES  (SOURCE UNIQUE DES COULEURS)
+     Modifier une couleur du projet = modifier une ligne ci-dessous.
+     ====================================================================== */
+
+  /* Marque */
+  --peub-ink: #14263A;        /* bleu nuit profond, ancre institutionnelle */
+  --peub-azur: #1B7BA8;       /* bleu vif, action principale */
+  --peub-lagune: #2DA8A0;     /* turquoise, accent secondaire */
+  --peub-mangue: #F5A524;     /* orange chaud, energie et celebration */
+  --peub-craie: #F7F5F1;      /* blanc casse chaud, fond de page */
+  --peub-white: #FFFFFF;
+
+  /* Echelle azur (action) */
+  --peub-azur-50: #EEF7FB;
+  --peub-azur-100: #D3EBF5;
+  --peub-azur-200: #A8D6EA;
+  --peub-azur-300: #6FBADB;
+  --peub-azur-400: #3B9AC7;
+  --peub-azur-500: #1B7BA8;
+  --peub-azur-600: #15628A;
+  --peub-azur-700: #134E6E;
+  --peub-azur-800: #143F58;
+  --peub-azur-900: #14344A;
+
+  /* Echelle lagune (accent secondaire) */
+  --peub-lagune-50: #EBFAF8;
+  --peub-lagune-100: #CDF2ED;
+  --peub-lagune-200: #9CE4DC;
+  --peub-lagune-300: #63CEC5;
+  --peub-lagune-400: #38B4AC;
+  --peub-lagune-500: #2DA8A0;
+  --peub-lagune-600: #1E7D78;
+  --peub-lagune-700: #1B6462;
+  --peub-lagune-800: #19504F;
+  --peub-lagune-900: #174342;
+
+  /* Echelle mangue (celebration, mise en avant) */
+  --peub-mangue-50: #FEF6E7;
+  --peub-mangue-100: #FCE8BF;
+  --peub-mangue-200: #F9D183;
+  --peub-mangue-300: #F7BC4C;
+  --peub-mangue-400: #F5A524;
+  --peub-mangue-500: #E08A0B;
+  --peub-mangue-600: #B96A08;
+  --peub-mangue-700: #94510C;
+  --peub-mangue-800: #7A4110;
+  --peub-mangue-900: #663710;
+
+  /* Echelle neutres jour (gris legerement chauds, jamais froids) */
+  --peub-slate-50: #F7F5F1;
+  --peub-slate-100: #EFEDE8;
+  --peub-slate-200: #E2DFD8;
+  --peub-slate-300: #CBC7BE;
+  --peub-slate-400: #9E9A91;
+  --peub-slate-500: #6F6C64;
+  --peub-slate-600: #55534D;
+  --peub-slate-700: #403E3A;
+  --peub-slate-800: #2C2B28;
+  --peub-slate-900: #1C1B19;
+
+  /* Echelle nuit (ardoise froide neutre, l azur et le mangue restent
+     les seules couleurs chaudes). */
+  --peub-night-900: #101418;   /* fond page nuit */
+  --peub-night-850: #14181D;   /* surface bloc secondaire nuit */
+  --peub-night-800: #191E24;   /* surface surelevee nuit */
+  --peub-night-700: #222830;   /* surface overlay nuit, surface haute */
+  --peub-night-line: #2B323B;  /* bordure nuit */
+  --peub-mist-100: #EBEEF1;    /* texte principal nuit */
+  --peub-mist-300: #A5ADB6;    /* texte secondaire nuit */
+  --peub-mist-500: #6E7780;    /* texte attenue nuit */
+
+  /* Etats jour */
+  --peub-success-light: #1E7D4F;
+  --peub-warning-light: #C07A0A;
+  --peub-error-light: #C0392B;
+  --peub-info-light: #1B7BA8;
+
+  /* Etats nuit */
+  --peub-success-dark: #4FBF88;
+  --peub-warning-dark: #E5A93C;
+  --peub-error-dark: #E57368;
+  --peub-info-dark: #5FB4DC;
+
+  /* Sous-tons d etat jour (fond, bordure, texte, pastille) */
+  --peub-success-bg-jour: #E7F3EC; --peub-success-bd-jour: #8FC5A8; --peub-success-tx-jour: #145436;
+  --peub-warning-bg-jour: #FBF0DC; --peub-warning-bd-jour: #E2BC72; --peub-warning-tx-jour: #7A4E06;
+  --peub-error-bg-jour: #FAE7E4;   --peub-error-bd-jour: #DFA098;   --peub-error-tx-jour: #7E2419;
+  --peub-info-bg-jour: #E9F3F9;    --peub-info-bd-jour: #9AC7DF;    --peub-info-tx-jour: #10486A;
+
+  /* Champ de formulaire et bouton primaire (jour) */
+  --peub-field-jour: #FCFBF9;
+  --peub-field-bd-jour: rgba(20, 38, 58, 0.14);
+  --peub-btn-primary-jour: var(--peub-azur-500);
+  --peub-btn-primary-tx-jour: #FFFFFF;
+
+  /* Degrade de marque pour scenes immersives (accueil, connexion) */
+  --peub-brand-grad-from: #14263A;
+  --peub-brand-grad-to: #0C1A28;
+  --peub-brand-grad-tx: #F2F5F8;
+
+  /* ======================================================================
+     COUCHE 2  -  ROLES SEMANTIQUES  (MODE CLAIR)
+     Les composants utilisent UNIQUEMENT ces variables.
+     ====================================================================== */
+
+  /* Surfaces */
+  --surface: var(--peub-craie);
+  --surface-raised: var(--peub-white);
+  --surface-secondary: var(--peub-slate-100);
+  --surface-hover: var(--peub-slate-200);
+  --surface-overlay: var(--peub-white);
+  --surface-inverse: var(--peub-ink);
+
+  /* Texte. Deux niveaux : primaire fort, secondaire unique.
+     text-muted est un alias de text-secondary, conserve pour compat. */
+  --text-primary: var(--peub-ink);
+  --text-secondary: var(--peub-slate-500);
+  --text-muted: var(--peub-slate-500);
+  --text-on-accent: var(--peub-white);
+  --text-on-color: var(--peub-white);
+
+  /* Bordures et action */
+  --border-default: var(--peub-slate-200);
+  --border-strong: var(--peub-slate-300);
+  --accent: var(--peub-azur-500);
+  --accent-2: var(--peub-lagune-500);
+  --accent-highlight: var(--peub-mangue-400);
+
+  /* Teintes accent derivees (surfaces, bordure, survol) */
+  --accent-surface-faint: color-mix(in srgb, var(--peub-azur-500) 6%, transparent);
+  --accent-surface: color-mix(in srgb, var(--peub-azur-500) 12%, transparent);
+  --accent-surface-strong: color-mix(in srgb, var(--peub-azur-500) 20%, transparent);
+  --accent-hover: color-mix(in srgb, var(--peub-azur-500) 9%, transparent);
+  --accent-border: color-mix(in srgb, var(--peub-azur-500) 38%, transparent);
+
+  /* Champ de formulaire */
+  --field-bg: var(--peub-field-jour);
+  --field-border: var(--peub-field-bd-jour);
+  --field-border-dashed: var(--peub-slate-300);
+  --field-placeholder: var(--peub-slate-400);
+
+  /* Bouton primaire */
+  --btn-primary-bg: var(--peub-btn-primary-jour);
+  --btn-primary-text: var(--peub-btn-primary-tx-jour);
+  --btn-primary-hover: var(--peub-azur-600);
+
+  /* Scene de marque immersive */
+  --brand-gradient-from: var(--peub-brand-grad-from);
+  --brand-gradient-to: var(--peub-brand-grad-to);
+  --brand-text: var(--peub-brand-grad-tx);
+
+  /* Sous-tons d etat (alertes, badges) */
+  --success-surface: var(--peub-success-bg-jour); --success-border: var(--peub-success-bd-jour); --success-text: var(--peub-success-tx-jour); --success-dot: var(--peub-success-light);
+  --warning-surface: var(--peub-warning-bg-jour); --warning-border: var(--peub-warning-bd-jour); --warning-text: var(--peub-warning-tx-jour); --warning-dot: var(--peub-warning-light);
+  --error-surface: var(--peub-error-bg-jour);     --error-border: var(--peub-error-bd-jour);     --error-text: var(--peub-error-tx-jour);     --error-dot: var(--peub-error-light);
+  --info-surface: var(--peub-info-bg-jour);       --info-border: var(--peub-info-bd-jour);       --info-text: var(--peub-info-tx-jour);       --info-dot: var(--peub-info-light);
+
+  /* Etats */
+  --success: var(--peub-success-light);
+  --warning: var(--peub-warning-light);
+  --error: var(--peub-error-light);
+  --info: var(--peub-info-light);
+
+  /* Statuts de candidature (roles metier) */
+  --status-draft-surface: var(--peub-slate-100);   --status-draft-text: var(--peub-slate-600);
+  --status-pending-surface: var(--warning-surface); --status-pending-text: var(--warning-text);
+  --status-review-surface: var(--info-surface);     --status-review-text: var(--info-text);
+  --status-accepted-surface: var(--success-surface);--status-accepted-text: var(--success-text);
+  --status-rejected-surface: var(--error-surface);  --status-rejected-text: var(--error-text);
+
+  /* Interaction et profondeur */
+  --focus-ring: var(--peub-azur-500);
+  --focus-ring-halo: color-mix(in srgb, var(--peub-azur-500) 20%, transparent);
+  --overlay-scrim: rgba(20, 38, 58, 0.48);
+  --disabled-opacity: 0.42;
+
+  /* Compat : anciens roles */
+  --background: var(--surface);
+  --foreground: var(--text-primary);
+
+  /* ======================================================================
+     TYPOGRAPHIE
+     ====================================================================== */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Inter Tight', 'Inter', -apple-system, sans-serif;
+
+  --text-display: 44px;   /* titre de page d accueil, chiffre marquant */
+  --text-h1: 32px;
+  --text-h2: 24px;
+  --text-h3: 19px;
+  --text-body: 16px;
+  --text-caption: 14px;
+  --text-label: 13px;
+  --text-button: 15px;
+
+  --font-bold: 700;
+  --font-semibold: 600;
+  --font-medium: 500;
+  --font-regular: 400;
+
+  --tracking-tight: -0.022em;
+  --tracking-base: 0em;
+  --tracking-wide: 0.06em;
+
+  --line-height-tight: 1.18;
+  --line-height-base: 1.55;
+
+  /* ======================================================================
+     ESPACEMENT  -  grille 4pt
+     ====================================================================== */
+  --space-0-5: 4px;
+  --space-1: 8px;
+  --space-1-5: 12px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --space-7: 56px;
+  --space-8: 64px;
+  --space-10: 80px;
+  --space-12: 96px;
+
+  /* ======================================================================
+     RAYONS
+     ====================================================================== */
+  --radius-card: 16px;
+  --radius-button: 12px;
+  --radius-input: 12px;
+  --radius-chip: 8px;
+  --radius-pill: 999px;
+
+  /* ======================================================================
+     OMBRES (mode clair uniquement ; en nuit l elevation passe par la
+     luminosite de la surface, voir COUCHE 3)
+     ====================================================================== */
+  --shadow-soft: 0 4px 20px rgba(20, 38, 58, 0.07);
+  --shadow-card: 0 1px 3px rgba(20, 38, 58, 0.06), 0 6px 16px rgba(20, 38, 58, 0.05);
+  --shadow-raised: 0 12px 28px rgba(20, 38, 58, 0.10);
+  --shadow-overlay: 0 24px 48px rgba(20, 38, 58, 0.16);
+
+  /* Echelle courte pour box-shadow ponctuelles */
+  --shadow-05: rgba(20, 38, 58, 0.05);
+  --shadow-10: rgba(20, 38, 58, 0.10);
+  --shadow-20: rgba(20, 38, 58, 0.20);
+  --shadow-30: rgba(20, 38, 58, 0.30);
+  --shadow-50: rgba(20, 38, 58, 0.50);
+
+  /* ======================================================================
+     ANIMATION
+     ====================================================================== */
+  --duration-instant: 120ms;
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 450ms;
+  --duration-counter: 1000ms;
+  --easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ======================================================================
+     Z-INDEX  -  echelle d empilement
+     ====================================================================== */
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-overlay: 1200;
+  --z-modal: 1300;
+  --z-toast: 1400;
+}
+
+/* ========================================================================
+   COUCHE 3  -  ROLES SEMANTIQUES  (MODE SOMBRE)
+   On reecrit UNIQUEMENT les roles. Aucune primitive n est touchee.
+   Active par <html data-theme="dark">.
+   ======================================================================== */
+[data-theme="dark"] {
+  /* Surfaces */
+  --surface: var(--peub-night-900);
+  --surface-raised: var(--peub-night-800);
+  --surface-secondary: var(--peub-night-850);
+  --surface-hover: var(--peub-night-700);
+  --surface-overlay: var(--peub-night-700);
+  --surface-inverse: var(--peub-mist-100);
+
+  /* Texte */
+  --text-primary: var(--peub-mist-100);
+  --text-secondary: var(--peub-mist-300);
+  --text-muted: var(--peub-mist-500);
+  --text-on-accent: var(--peub-night-900);
+  /* Texte pose sur un element colore : reste clair en nuit aussi. */
+  --text-on-color: var(--peub-white);
+
+  /* Bordures et action. L azur s eclaircit pour rester lisible sur fond
+     sombre, le mangue reste la seule autre couleur chaude. */
+  --border-default: var(--peub-night-line);
+  --border-strong: #3A424C;
+  --accent: var(--peub-azur-300);
+  --accent-2: var(--peub-lagune-300);
+  --accent-highlight: var(--peub-mangue-300);
+
+  --accent-surface-faint: color-mix(in srgb, var(--peub-azur-300) 10%, transparent);
+  --accent-surface: color-mix(in srgb, var(--peub-azur-300) 16%, transparent);
+  --accent-surface-strong: color-mix(in srgb, var(--peub-azur-300) 26%, transparent);
+  --accent-hover: color-mix(in srgb, var(--peub-azur-300) 14%, transparent);
+  --accent-border: color-mix(in srgb, var(--peub-azur-300) 45%, transparent);
+
+  /* Champ de formulaire */
+  --field-bg: var(--peub-night-900);
+  --field-border: var(--peub-night-line);
+  --field-border-dashed: var(--peub-night-line);
+  --field-placeholder: var(--peub-mist-500);
+
+  /* Bouton primaire */
+  --btn-primary-bg: var(--peub-azur-400);
+  --btn-primary-text: var(--peub-night-900);
+  --btn-primary-hover: var(--peub-azur-300);
+
+  /* Scene de marque immersive */
+  --brand-gradient-from: var(--peub-night-800);
+  --brand-gradient-to: var(--peub-night-900);
+  --brand-text: var(--peub-mist-100);
+
+  /* Sous-tons d etat : fond translucide, bordure et texte eclaircis */
+  --success-surface: color-mix(in srgb, var(--peub-success-dark) 16%, transparent);
+  --success-border: color-mix(in srgb, var(--peub-success-dark) 45%, transparent);
+  --success-text: var(--peub-success-dark); --success-dot: var(--peub-success-dark);
+
+  --warning-surface: color-mix(in srgb, var(--peub-warning-dark) 16%, transparent);
+  --warning-border: color-mix(in srgb, var(--peub-warning-dark) 45%, transparent);
+  --warning-text: var(--peub-warning-dark); --warning-dot: var(--peub-warning-dark);
+
+  --error-surface: color-mix(in srgb, var(--peub-error-dark) 16%, transparent);
+  --error-border: color-mix(in srgb, var(--peub-error-dark) 45%, transparent);
+  --error-text: var(--peub-error-dark);     --error-dot: var(--peub-error-dark);
+
+  --info-surface: color-mix(in srgb, var(--peub-info-dark) 16%, transparent);
+  --info-border: color-mix(in srgb, var(--peub-info-dark) 45%, transparent);
+  --info-text: var(--peub-info-dark);       --info-dot: var(--peub-info-dark);
+
+  /* Etats */
+  --success: var(--peub-success-dark);
+  --warning: var(--peub-warning-dark);
+  --error: var(--peub-error-dark);
+  --info: var(--peub-info-dark);
+
+  /* Statuts de candidature */
+  --status-draft-surface: var(--peub-night-700);
+  --status-draft-text: var(--peub-mist-300);
+
+  /* Interaction et profondeur */
+  --focus-ring: var(--peub-azur-300);
+  --focus-ring-halo: color-mix(in srgb, var(--peub-azur-300) 24%, transparent);
+  --overlay-scrim: rgba(0, 0, 0, 0.62);
+
+  --background: var(--surface);
+  --foreground: var(--text-primary);
+
+  /* En nuit, pas d ombre portee (invisible sur fond sombre) : l elevation
+     est portee par surface-raised, plus claire que surface. */
+  --shadow-soft: none;
+  --shadow-card: none;
+
+  /* Ombres nuit : plus profondes, teinte neutre. */
+  --shadow-05: rgba(0, 0, 0, 0.22);
+  --shadow-10: rgba(0, 0, 0, 0.28);
+  --shadow-20: rgba(0, 0, 0, 0.38);
+  --shadow-30: rgba(0, 0, 0, 0.48);
+  --shadow-50: rgba(0, 0, 0, 0.66);
+}

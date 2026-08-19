@@ -534,3 +534,7 @@ Route::prefix('api')->middleware(['auth', 'verified'])->group(function () {
 Route::post('/generate-opportunity-image', [ImageGenerationController::class, 'generateOpportunityImage'])
     ->name('generate.opportunity.image')
     ->middleware(['auth', 'verified']);
+
+// Page de reference du design system, hors production
+Route::get('/design-system', fn () => view('design.system'))
+     ->name('design.system');

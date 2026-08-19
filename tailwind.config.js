@@ -1,4 +1,10 @@
 /** @type {import('tailwindcss').Config} */
+//
+// Les couleurs du projet vivent dans resources/css/theme.css (3 couches).
+// Ce fichier expose les ROLES a Tailwind pour pouvoir ecrire bg-surface,
+// text-secondary, border-default, etc. Il ne definit aucune valeur hex,
+// sauf dans le bloc de compat, qui disparaitra apres migration des vues.
+//
 module.exports = {
   content: [
     "./resources/**/*.blade.php",
@@ -8,60 +14,81 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // ---- Roles (basculent automatiquement en mode sombre) ----
+        surface: {
+          DEFAULT:   'var(--surface)',
+          raised:    'var(--surface-raised)',
+          secondary: 'var(--surface-secondary)',
+          hover:     'var(--surface-hover)',
+          overlay:   'var(--surface-overlay)',
+          inverse:   'var(--surface-inverse)',
+        },
+        content: {
+          DEFAULT:   'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          muted:     'var(--text-muted)',
+          'on-accent': 'var(--text-on-accent)',
+          'on-color':  'var(--text-on-color)',
+        },
+        line: {
+          DEFAULT: 'var(--border-default)',
+          strong:  'var(--border-strong)',
+        },
+        accent: {
+          DEFAULT:   'var(--accent)',
+          2:         'var(--accent-2)',
+          highlight: 'var(--accent-highlight)',
+          surface:   'var(--accent-surface)',
+          border:    'var(--accent-border)',
+        },
+        state: {
+          success: 'var(--success)',
+          warning: 'var(--warning)',
+          error:   'var(--error)',
+          info:    'var(--info)',
+        },
+
+        // ---- Compat : anciennes classes des 25 vues non migrees. ----
+        // A supprimer une fois toutes les vues passees aux roles.
         primary: {
-          50: '#eff4ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#0E7490', // Couleur primaire - Bleu Aqua
-          700: '#0c5f7a',
-          800: '#0a4f63',
-          900: '#1e3a8a',
+          50: '#EEF7FB', 100: '#D3EBF5', 200: '#A8D6EA', 300: '#6FBADB',
+          400: '#3B9AC7', 500: '#1B7BA8', 600: '#0E7490', 700: '#134E6E',
+          800: '#143F58', 900: '#14344A',
         },
         secondary: {
-          50: '#fef6f0',
-          100: '#fdeae0',
-          200: '#fad2c0',
-          300: '#f7b391',
-          400: '#f38a60',
-          500: '#f08224', // Nouveau orange
-          600: '#e06a1c',
-          700: '#ba5118',
-          800: '#944119',
-          900: '#773617',
-        },
-        // Couleurs utilitaires selon votre palette
-        white: '#ffffff',
-        black: '#1d1d1b',
-        gray: {
-          50: '#f9f9f9',
-          100: '#f3f3f3',
-          200: '#e7e7e7',
-          300: '#d1d1d1',
-          400: '#b4b4b4',
-          500: '#878787', // Votre gris
-          600: '#737373',
-          700: '#525252',
-          800: '#404040',
-          900: '#1d1d1b', // Votre noir
+          50: '#FEF6E7', 100: '#FCE8BF', 200: '#F9D183', 300: '#F7BC4C',
+          400: '#F5A524', 500: '#f08224', 600: '#B96A08', 700: '#94510C',
+          800: '#7A4110', 900: '#663710',
         },
       },
       fontFamily: {
-        'sans': ['Poppins', 'system-ui', '-apple-system', 'sans-serif'],
-        'script': ['Pacifico', 'cursive'],
+        sans:    ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Inter Tight"', 'Inter', 'system-ui', 'sans-serif'],
       },
-    },
-    borderRadius: {
-      'none': '0',
-      'sm': '0.375rem',
-      DEFAULT: '0.5rem',
-      'md': '0.625rem',
-      'lg': '1rem',
-      'xl': '1.25rem',
-      '2xl': '1.5rem',
-      'full': '9999px',
+      borderRadius: {
+        card:   'var(--radius-card)',
+        button: 'var(--radius-button)',
+        input:  'var(--radius-input)',
+        chip:   'var(--radius-chip)',
+        pill:   'var(--radius-pill)',
+      },
+      boxShadow: {
+        soft:    'var(--shadow-soft)',
+        card:    'var(--shadow-card)',
+        raised:  'var(--shadow-raised)',
+        overlay: 'var(--shadow-overlay)',
+      },
+      transitionTimingFunction: {
+        DEFAULT: 'var(--easing)',
+        out:     'var(--easing-out)',
+      },
+      zIndex: {
+        dropdown: 'var(--z-dropdown)',
+        sticky:   'var(--z-sticky)',
+        overlay:  'var(--z-overlay)',
+        modal:    'var(--z-modal)',
+        toast:    'var(--z-toast)',
+      },
     },
   },
   plugins: [
