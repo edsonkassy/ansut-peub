@@ -25,8 +25,10 @@
     text-wrap: balance;
   }
 
-  [data-ds] h1 { font-size: var(--text-h1); font-weight: var(--font-bold); }
-  [data-ds] h2 { font-size: var(--text-h2); font-weight: var(--font-semibold); }
+  /* Tailles fluides : la borne basse vaut a 360px, la haute a partir
+     d environ 1100px. Aucune media query necessaire dans les vues. */
+  [data-ds] h1 { font-size: clamp(var(--text-h1), 7vw, var(--text-display)); font-weight: var(--font-bold); }
+  [data-ds] h2 { font-size: clamp(var(--text-h2), 5vw, var(--text-h1)); font-weight: var(--font-semibold); }
   [data-ds] h3 { font-size: var(--text-h3); font-weight: var(--font-semibold); }
 
   [data-ds] :focus-visible {
@@ -52,9 +54,11 @@
 @layer components {
 
   /* ================= Titres ================= */
-  .ds-display {
+  /* Selecteur double : (0,2,0) bat [data-ds] h1|h2|h3 (0,1,1), ce qui
+     rend la classe utilisable directement sur un titre. */
+  .ds-display.ds-display {
     font-family: var(--font-display);
-    font-size: var(--text-display);
+    font-size: clamp(var(--text-h1), 8.5vw, var(--text-display));
     font-weight: var(--font-bold);
     letter-spacing: var(--tracking-tight);
     line-height: var(--line-height-tight);
@@ -181,6 +185,81 @@
   .ds-surface-brand {
     background: linear-gradient(150deg, var(--brand-gradient-from), var(--brand-gradient-to));
     color: var(--brand-text);
+  }
+
+  /* ================= Formes de fond =================
+     Aplats colores tres transparents, poses en pseudo-elements : aucune
+     balise a ajouter dans les vues, aucune image a charger. La couleur
+     vient des roles, donc la bascule sombre est gratuite.
+     A poser sur une <section>, qui doit porter position:relative et
+     overflow:hidden via .ds-bloom. */
+  .ds-bloom {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .ds-bloom > * { position: relative; z-index: 1; }
+
+  .ds-bloom::before,
+  .ds-bloom::after {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    border-radius: var(--radius-pill);
+    pointer-events: none;
+    filter: blur(72px);
+    opacity: .5;
+  }
+
+  /* Aplat principal, en haut a droite. */
+  .ds-bloom::before {
+    width: 42vw;
+    min-width: 260px;
+    aspect-ratio: 1;
+    top: -14%;
+    right: -12%;
+    background: var(--accent-2);
+  }
+
+  /* Contrepoint, en bas a gauche, plus petit et plus discret. */
+  .ds-bloom::after {
+    width: 30vw;
+    min-width: 200px;
+    aspect-ratio: 1;
+    bottom: -18%;
+    left: -10%;
+    background: var(--accent-highlight);
+    opacity: .28;
+  }
+
+  /* Variante inversee, pour alterner d une section a l autre. */
+  .ds-bloom-alt::before { right: auto; left: -12%; }
+  .ds-bloom-alt::after  { left: auto;  right: -10%; }
+
+  /* Sur le degrade de marque, les aplats doivent rester lisibles sans
+     laver le fond : opacite reduite, flou plus large. */
+  .ds-surface-brand.ds-bloom::before {
+    opacity: .30;
+    filter: blur(96px);
+  }
+  .ds-surface-brand.ds-bloom::after {
+    opacity: .22;
+    filter: blur(96px);
+  }
+
+  /* En sombre les aplats doivent rester des lueurs, jamais des taches. */
+  [data-theme="dark"] .ds-bloom::before { opacity: .20; }
+  [data-theme="dark"] .ds-bloom::after  { opacity: .14; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ds-bloom::before { animation: ds-float 14s ease-in-out infinite; }
+    .ds-bloom::after  { animation: ds-float 18s ease-in-out infinite reverse; }
+  }
+
+  @keyframes ds-float {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50%      { transform: translate3d(-3%, 4%, 0) scale(1.06); }
   }
 
   .ds-divider {

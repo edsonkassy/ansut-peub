@@ -38,6 +38,7 @@
   --peub-azur-300: #6FBADB;
   --peub-azur-400: #3B9AC7;
   --peub-azur-500: #1B7BA8;
+  --peub-azur-550: #17688F;   /* azur lisible sur craie et blanc, 5.65:1 */
   --peub-azur-600: #15628A;
   --peub-azur-700: #134E6E;
   --peub-azur-800: #143F58;
@@ -143,8 +144,11 @@
   /* Bordures et action */
   --border-default: var(--peub-slate-200);
   --border-strong: var(--peub-slate-300);
-  --accent: var(--peub-azur-500);
-  --accent-2: var(--peub-lagune-500);
+  /* --accent porte du texte et des traits fins : il doit tenir AA sur
+     --surface et --surface-raised. Les aplats pleins (bouton primaire,
+     pastilles) utilisent le 500, non soumis a cette contrainte. */
+  --accent: var(--peub-azur-550);
+  --accent-2: var(--peub-lagune-700);
   --accent-highlight: var(--peub-mangue-400);
 
   /* Teintes accent derivees (surfaces, bordure, survol) */

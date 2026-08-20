@@ -1,6 +1,6 @@
 {{-- Hero : scene de marque en degrade de role, sans image de fond.
      L image plein ecran precedente pesait 2,2 Mo et degradait le scroll sur Chrome Android. --}}
-<section class="ds-surface-brand" style="padding-block: clamp(var(--space-8), 14vw, var(--space-12))">
+<section class="ds-surface-brand ds-bloom" style="padding-block: clamp(var(--space-8), 14vw, var(--space-12))">
     <div class="ds-container" style="text-align: center">
 
         <h1 style="font-size: clamp(var(--text-h1), 9vw, var(--text-display))">

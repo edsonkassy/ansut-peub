@@ -54,7 +54,7 @@
     ];
 @endphp
 
-<section id="opportunities" class="ds-bg-raised" style="padding-block: clamp(var(--space-6), 9vw, var(--space-10))">
+<section id="opportunities" class="ds-bg-raised ds-bloom ds-bloom-alt" style="padding-block: clamp(var(--space-6), 9vw, var(--space-10))">
     <div class="ds-container ds-stack-lg">
 
         <header style="text-align: center; max-width: 62ch; margin-inline: auto">
