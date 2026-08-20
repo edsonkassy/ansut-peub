@@ -1,111 +1,135 @@
-<!-- Actualités Section -->
-<section id="news" class="py-12 sm:py-16 lg:py-20 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12 sm:mb-16">
-            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#0E7490] mb-3">
+{{-- Actualites : les trois derniers articles publies.
+     ANSUT : le sous-titre script « Confiance » a ete retire ici, c etait un copier-coller
+     de partners.blade.php sous un titre « ACTUALITÉS PEUB ». Mot a fournir si le motif
+     en deux lignes doit revenir sur cette section. --}}
+@php
+    $newsCategories = [
+        'annonce' => ['ds-badge-accent', 'Annonce'],
+        'success' => ['ds-badge-success', 'Réussite'],
+        'evenement' => ['ds-badge-info', 'Événement'],
+        'partenariat' => ['ds-badge-accent', 'Partenariat'],
+        'formation' => ['ds-badge-neutral', 'Formation'],
+        'conseil' => ['ds-badge-warning', 'Conseil'],
+        'interview' => ['ds-badge-neutral', 'Interview'],
+        'actualite' => ['ds-badge-neutral', 'Actualité'],
+    ];
+@endphp
+
+<section id="news" class="ds-bg-raised" style="padding-block: clamp(var(--space-6), 9vw, var(--space-10))">
+    <div class="ds-container ds-stack-lg">
+
+        <header style="text-align: center; max-width: 62ch; margin-inline: auto">
+            <h2 style="font-size: clamp(var(--text-h2), 6.5vw, var(--text-display))">
                 ACTUALITÉS PEUB
             </h2>
-            <div class="font-script text-4xl sm:text-5xl lg:text-6xl text-orange-500 mb-6">
-                Confiance
-            </div>
-            <p class="mt-4 text-base sm:text-lg text-gray-600 font-semibold tracking-wide">
+            <p class="ds-overline" style="margin-top: var(--space-1-5)">
                 RESTEZ INFORMÉ DES DERNIÈRES NOUVELLES ET ÉVÉNEMENTS
             </p>
-            <div class="mt-6 sm:mt-8">
-                <a href="{{ route('actualites') }}" class="inline-flex items-center bg-[#0E7490] hover:bg-cyan-800 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold transition-all duration-300 hover:scale-105 text-sm sm:text-base shadow-lg">
-                    <i data-lucide="newspaper" class="w-4 h-4 sm:w-5 sm:h-5 mr-2"></i>
+            <div style="margin-top: var(--space-3)">
+                <a href="{{ route('actualites') }}" class="ds-btn ds-btn-primary ds-btn-lg">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                        <path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9h4M18 14h-8M15 18h-5M10 6h8v4h-8V6z"/>
+                    </svg>
                     Voir toutes les actualités
                 </a>
             </div>
-        </div>
-        
+        </header>
+
         @if($featured_articles->isNotEmpty())
-            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <div style="display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))">
                 @foreach($featured_articles as $article)
-                    <article class="bg-white shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1">
-                        <div class="h-40 sm:h-48 relative overflow-hidden">
+                    @php
+                        [$badgeClass, $badgeLabel] = $newsCategories[$article->categorie] ?? $newsCategories['actualite'];
+                    @endphp
+                    <a href="{{ route('actualite', $article->slug) }}"
+                       class="ds-card-interactive"
+                       style="display: flex; flex-direction: column; overflow: hidden; text-decoration: none; color: inherit">
+
+                        <div style="position: relative; aspect-ratio: 16 / 9; background: var(--surface-secondary)">
                             @if($article->image_principale)
-                                <img src="{{ asset('storage/' . $article->image_principale) }}" 
-                                     alt="{{ $article->titre }}" 
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <img src="{{ asset('storage/' . $article->image_principale) }}"
+                                     alt=""
+                                     loading="lazy" decoding="async"
+                                     style="width: 100%; height: 100%; object-fit: cover; display: block">
                             @else
-                                <div class="w-full h-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
-                                    <i data-lucide="file-text" class="w-12 h-12 sm:w-16 sm:h-16 text-white opacity-50"></i>
-                                </div>
-                            @endif
-                            
-                            @if($article->featured)
-                                <div class="absolute top-2 sm:top-4 left-2 sm:left-4">
-                                    <span class="bg-secondary-500 text-white px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium">
-                                        À la une
-                                    </span>
-                                </div>
-                            @endif
-                        </div>
-                        
-                        <div class="p-4 sm:p-6">
-                            <div class="flex items-center mb-2 sm:mb-3">
-                                @php
-                                    $categoryConfig = [
-                                        'annonce' => ['bg-primary-100', 'text-primary-700', 'bell'],
-                                        'success' => ['bg-green-100', 'text-green-700', 'trophy'],
-                                        'evenement' => ['bg-purple-100', 'text-purple-700', 'calendar'],
-                                        'partenariat' => ['bg-secondary-100', 'text-secondary-700', 'handshake'],
-                                        'formation' => ['bg-cyan-100', 'text-cyan-700', 'graduation-cap'],
-                                        'conseil' => ['bg-amber-100', 'text-amber-700', 'lightbulb'],
-                                        'interview' => ['bg-pink-100', 'text-pink-700', 'mic'],
-                                        'actualite' => ['bg-gray-100', 'text-gray-700', 'newspaper']
-                                    ];
-                                    $config = $categoryConfig[$article->categorie] ?? $categoryConfig['actualite'];
-                                @endphp
-                                
-                                <span class="inline-flex items-center px-2 sm:px-3 py-1 text-xs font-medium {{ $config[0] }} {{ $config[1] }} rounded-full">
-                                    <i data-lucide="{{ $config[2] }}" class="w-3 h-3 mr-1"></i>
-                                    {{ ucfirst($article->categorie) }}
+                                <span style="position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-secondary)">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                                    </svg>
                                 </span>
-                                <span class="mx-2 text-gray-300">•</span>
-                                <span class="text-xs sm:text-sm text-gray-500">{{ $article->date_publication->format('d M Y') }}</span>
-                            </div>
-                            
-                            <h3 class="text-base sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 group-hover:text-primary-600 transition-colors line-clamp-2">
-                                {{ $article->titre }}
-                            </h3>
-                            
-                            <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 line-clamp-3">
-                                {{ $article->resume ?: Str::limit(strip_tags($article->contenu), 120) }}
-                            </p>
-                            
-                            <a href="{{ route('actualite', $article->slug) }}" class="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium group-hover:underline text-sm sm:text-base">
-                                Lire la suite 
-                                <i data-lucide="arrow-right" class="w-3 h-3 sm:w-4 sm:h-4 ml-1 group-hover:translate-x-1 transition-transform"></i>
-                            </a>
+                            @endif
+
+                            @if($article->featured)
+                                <span class="ds-badge ds-badge-solid" style="position: absolute; top: var(--space-1); left: var(--space-1)">
+                                    À la une
+                                </span>
+                            @endif
                         </div>
-                    </article>
+
+                        <div style="padding: var(--space-2); display: flex; flex-direction: column; gap: var(--space-1); flex: 1">
+
+                            <div style="display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap">
+                                <span class="ds-badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
+                                <time datetime="{{ $article->date_publication->toDateString() }}"
+                                      class="ds-text-secondary"
+                                      style="font-size: var(--text-caption)">
+                                    {{ $article->date_publication->locale('fr')->translatedFormat('j F Y') }}
+                                </time>
+                            </div>
+
+                            <h3 class="line-clamp-2">{{ $article->titre }}</h3>
+
+                            <p class="ds-text-secondary line-clamp-3" style="font-size: var(--text-caption)">
+                                {{ $article->excerpt }}
+                            </p>
+
+                            <span style="margin-top: auto; padding-top: var(--space-1); display: inline-flex; align-items: center; gap: var(--space-0-5); font-size: var(--text-caption); font-weight: var(--font-semibold)">
+                                Lire la suite
+                                <span class="ds-text-accent" style="display: inline-flex">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                        <path d="M5 12h14M13 6l6 6-6 6"/>
+                                    </svg>
+                                </span>
+                            </span>
+
+                        </div>
+                    </a>
                 @endforeach
             </div>
         @else
-            <!-- Fallback si aucun article -->
-            <div class="text-center py-8 sm:py-12">
-                <i data-lucide="newspaper" class="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4"></i>
-                <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-2">Aucun article disponible</h3>
-                <p class="text-sm sm:text-base text-gray-600">Les dernières actualités seront bientôt disponibles.</p>
+            <div class="ds-panel" style="padding: var(--space-6); text-align: center">
+                <span class="ds-text-secondary" style="display: inline-flex">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                        <path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9h4M18 14h-8M15 18h-5M10 6h8v4h-8V6z"/>
+                    </svg>
+                </span>
+                <h3 style="margin-top: var(--space-2)">Aucun article disponible</h3>
+                <p class="ds-text-secondary" style="margin-top: var(--space-1)">
+                    Les dernières actualités seront bientôt disponibles.
+                </p>
             </div>
         @endif
-    </div>
 
-    <!-- Newsletter -->
-    <div class="mt-12 sm:mt-16 bg-primary-600 py-8 sm:py-12">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
-                <h3 class="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Restez informé</h3>
-                <p class="text-base sm:text-xl text-primary-100 mb-6 sm:mb-8 px-4 sm:px-0">Abonnez-vous à notre newsletter pour recevoir les dernières actualités PEUB</p>
-                <div class="max-w-md mx-auto flex flex-col sm:flex-row gap-3 sm:gap-4 px-4 sm:px-0">
-                    <input type="email" placeholder="Votre adresse email" class="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-transparent focus:ring-2 focus:ring-white focus:border-transparent text-sm sm:text-base">
-                    <button class="bg-white hover:bg-gray-100 text-primary-600 px-4 sm:px-6 py-2.5 sm:py-3 font-medium transition-colors text-sm sm:text-base">
-                        S'abonner
-                    </button>
-                </div>
+        {{-- Newsletter : le formulaire n a jamais eu de backend (ni <form>, ni route).
+             Conserve tel quel, le libelle etant valide par ANSUT. --}}
+        <div class="ds-surface-brand" style="border-radius: var(--radius-card); padding: clamp(var(--space-3), 6vw, var(--space-6)); text-align: center">
+            <h3 style="font-size: clamp(var(--text-h2), 6vw, var(--text-display))">Restez informé</h3>
+            <p style="margin-top: var(--space-1); margin-inline: auto; max-width: 52ch; opacity: .85">
+                Abonnez-vous à notre newsletter pour recevoir les dernières actualités PEUB
+            </p>
+            <div style="margin-top: var(--space-3); margin-inline: auto; max-width: 520px; display: grid; gap: var(--space-1-5); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))">
+                <label for="newsletter-email" class="sr-only">Votre adresse email</label>
+                <input id="newsletter-email"
+                       type="email"
+                       name="email"
+                       autocomplete="email"
+                       class="ds-field"
+                       placeholder="Votre adresse email">
+                <button type="button" class="ds-btn ds-btn-highlight ds-btn-md" style="height: 48px">
+                    S'abonner
+                </button>
             </div>
         </div>
+
     </div>
-</section> 
+</section>

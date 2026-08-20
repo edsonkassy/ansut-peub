@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: false }" x-bind:class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @yield('html-attrs')>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -145,6 +145,51 @@
     
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    {{-- Neutralisation ciblee des regles globales heritees (le <style> ci-dessus et app.css).
+         Portee : uniquement les vues migrees, celles qui posent data-ds sur <html>.
+         Les autres vues du layout guest ne sont pas touchees. Roles uniquement, aucun hex.
+         Chaque regle gagne par SPECIFICITE et non par ordre source : le bloc reste donc
+         valable avec `npm run dev`, ou Vite injecte app.css par JS apres le parsing du head. --}}
+    <style>
+        /* 1. Fond de page.
+           Adverse : `html, body { background: linear-gradient(...) !important }` du bloc
+           <style> ci-dessus (trois copies) et ses jumelles dans app.css a <=640px et <=480px,
+           toutes de specificite (0,0,1) avec !important.
+           Ici : html[data-ds] = (0,1,1) et html[data-ds] body = (0,1,2).
+           Sans cette regle, --surface est ignore et le mode sombre ne peut pas exister. */
+        html[data-ds],
+        html[data-ds] body {
+            background: var(--surface) !important;
+        }
+
+        /* 2. Rayons des surfaces du design system.
+           Adverse le plus fort : `div[class*="bg-"]:not(.bachelier-sidebar *)` et son jumeau
+           border-*, de specificite (0,2,1) avec !important (div = 1 type, [class*=] = 1 classe,
+           :not() prend la specificite de son argument). Ils imposent 0.75rem des qu une carte
+           porte une utilitaire bg-* ou border-*, ce qui ecrase --radius-card (16px).
+           Ici : html[data-ds] body .ds-card = (0,2,2), strictement superieur. */
+        html[data-ds] body .ds-card,
+        html[data-ds] body .ds-card-flat,
+        html[data-ds] body .ds-card-interactive,
+        html[data-ds] body .ds-panel {
+            border-radius: var(--radius-card) !important;
+        }
+
+        /* 3. touch-action.
+           Adverses : app.css a <=640px impose touch-action: manipulation !important sur
+           input[type=...] (0,2,1) et sur button[type=submit|button] (0,1,1) ; le bloc <style>
+           ci-dessus l impose sur input[type=...] (0,1,1) ; et resources/js/mobile-gestures.js
+           l ecrit en style inline sur chaque a et chaque button de la page.
+           Une declaration auteur !important bat un style inline : c est le seul moyen de tenir
+           la charte de scroll depuis les fichiers de vue. */
+        html[data-ds] body a,
+        html[data-ds] body button,
+        html[data-ds] body .ds-field {
+            touch-action: auto !important;
+        }
+    </style>
+
     @livewireStyles
     
     @stack('styles')
