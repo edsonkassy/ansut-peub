@@ -17,8 +17,7 @@
     <div class="mb-6">
         <nav class="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide" style="scrollbar-width: none; -ms-overflow-style: none;">
             <a href="{{ route('bachelier.forum.index') }}" 
-               class="px-4 py-2 rounded-full font-medium text-sm transition-colors whitespace-nowrap {{ request()->routeIs('bachelier.forum.index') && !request()->has('filter') ? 'bg-[#00BFA5] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
-               style="touch-action: manipulation;">
+               class="px-4 py-2 rounded-full font-medium text-sm transition-colors whitespace-nowrap {{ request()->routeIs('bachelier.forum.index') && !request()->has('filter') ? 'bg-[#00BFA5] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="message-circle" class="w-4 h-4"></i>
                     <span>Discussions</span>
@@ -26,8 +25,7 @@
             </a>
             
             <a href="{{ route('bachelier.forum.favorites') }}" 
-               class="px-4 py-2 rounded-full font-medium text-sm transition-colors whitespace-nowrap {{ request()->routeIs('bachelier.forum.favorites') ? 'bg-[#00BFA5] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
-               style="touch-action: manipulation;">
+               class="px-4 py-2 rounded-full font-medium text-sm transition-colors whitespace-nowrap {{ request()->routeIs('bachelier.forum.favorites') ? 'bg-[#00BFA5] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="heart" class="w-4 h-4"></i>
                     <span>Mes favoris</span>
@@ -35,8 +33,7 @@
             </a>
             
             <a href="{{ route('bachelier.forum.members') }}" 
-               class="px-4 py-2 rounded-full font-medium text-sm transition-colors whitespace-nowrap {{ request()->routeIs('bachelier.forum.members') ? 'bg-[#00BFA5] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
-               style="touch-action: manipulation;">
+               class="px-4 py-2 rounded-full font-medium text-sm transition-colors whitespace-nowrap {{ request()->routeIs('bachelier.forum.members') ? 'bg-[#00BFA5] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="users" class="w-4 h-4"></i>
                     <span>Membres</span>

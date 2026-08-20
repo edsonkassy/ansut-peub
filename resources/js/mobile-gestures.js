@@ -14,7 +14,10 @@ class MobileGestures {
 
     // Swipe navigation between tabs/pages
     setupSwipeNavigation() {
-        const swipeContainer = document.querySelector('.swipe-container, .md\\:flex');
+        // Cible explicite uniquement. Le selecteur precedent incluait
+        // `.md\\:flex`, qui attrapait la barre de navigation et tout
+        // conteneur flex de la page, y compris hors espace bachelier.
+        const swipeContainer = document.querySelector('.swipe-container');
         if (!swipeContainer) return;
 
         let startX = 0;
@@ -33,11 +36,10 @@ class MobileGestures {
             deltaX = e.touches[0].clientX - startX;
             deltaY = e.touches[0].clientY - startY;
 
-            // Prevent default scroll if horizontal swipe is dominant
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
-                e.preventDefault();
-            }
-        }, { passive: false });
+            // Aucun preventDefault ici : un touchmove non passif qui annule
+            // le geste bloque le defilement vertical de la page entiere.
+            // La detection du swipe se fait a touchend, sur les deltas.
+        }, { passive: true });
 
         swipeContainer.addEventListener('touchend', (e) => {
             if (!startX || !startY) return;
@@ -126,7 +128,7 @@ class MobileGestures {
                 const progress = Math.min(pullDistance / pullThreshold, 1);
                 this.updateRefreshIndicator(refreshIndicator, progress);
             }
-        }, { passive: false });
+        }, { passive: true });
 
         document.addEventListener('touchend', (e) => {
             if (!pulling) return;
@@ -200,8 +202,9 @@ class MobileGestures {
         const interactiveElements = document.querySelectorAll('button, a, [onclick], .cursor-pointer');
         
         interactiveElements.forEach(element => {
-            // Add touch-action for better touch handling
-            element.style.touchAction = 'manipulation';
+            // Pas de touch-action ici : pose en style inline, il ne peut
+            // etre annule que par une declaration auteur !important, et il
+            // gene le defilement quand le doigt part d un lien.
             
             // Add touch feedback
             element.addEventListener('touchstart', () => {
@@ -229,15 +232,10 @@ class MobileGestures {
 
         window.__preventDoubleTapInstalled = true;
 
-        let lastTouchEnd = 0;
-
-        document.addEventListener('touchend', (event) => {
-            const now = Date.now();
-
-            // double-tap zoom disabled via meta viewport
-
-            lastTouchEnd = now;
-        }, { passive: false });
+        // Le zoom par double tap est deja neutralise par la meta viewport
+        // du layout. Aucun ecouteur n est necessaire ici : celui qui s y
+        // trouvait n avait plus de corps depuis le retrait du
+        // preventDefault, et restait attache pour rien.
     }
 
     // Handle virtual keyboard appearance
@@ -300,24 +298,41 @@ class MobileGestures {
     }
 }
 
-// Initialize mobile gestures when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Only initialize on mobile devices
-    if (window.innerWidth < 768 || 'ontouchstart' in window) {
-        new MobileGestures();
+// Activation cantonnee.
+//
+// Ce module est concu pour l espace bachelier : navigation par swipe entre
+// onglets, tirer pour rafraichir, retour tactile. Il etait jusqu ici
+// installe sur toutes les pages du site, y compris la page d accueil et
+// les pages d authentification, ou il n a aucun sens et ou il a bloque le
+// defilement en production.
+//
+// Il ne s active desormais que si la page le demande explicitement, en
+// posant `data-mobile-gestures` sur la balise <body> :
+//
+//     <body data-mobile-gestures>
+//
+// L instance est unique : une seule construction par page, jamais de
+// reconstruction au redimensionnement. L ancien code en creait une
+// nouvelle a chaque resize sans retirer les ecouteurs precedents, qui
+// s empilaient donc indefiniment.
+function initMobileGestures() {
+    if (window.__mobileGesturesInstance) {
+        return;
     }
-});
+    if (!document.body || !document.body.hasAttribute('data-mobile-gestures')) {
+        return;
+    }
+    if (window.innerWidth >= 768 && !('ontouchstart' in window)) {
+        return;
+    }
+    window.__mobileGesturesInstance = new MobileGestures();
+}
 
-// Re-initialize on window resize (orientation change)
-window.addEventListener('resize', () => {
-    if (window.innerWidth < 768 || 'ontouchstart' in window) {
-        // Debounce to avoid multiple initializations
-        clearTimeout(window.gestureInitTimeout);
-        window.gestureInitTimeout = setTimeout(() => {
-            new MobileGestures();
-        }, 200);
-    }
-});
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMobileGestures);
+} else {
+    initMobileGestures();
+}
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

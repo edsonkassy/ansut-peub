@@ -37,7 +37,7 @@
                     <div class="conversation-item border-b border-gray-100 p-4 md:p-4 py-5 hover:bg-gray-50 cursor-pointer transition {{ $loop->first ? 'bg-[#00BFA5]/5 border-l-4 border-l-[#00BFA5]' : '' }} active:bg-gray-100"
                          data-conversation-id="{{ $conversation->id }}"
                          onclick="loadConversation({{ $conversation->id }})"
-                         style="min-height: 76px; touch-action: manipulation;">
+                         style="min-height: 76px">
                         <div class="flex items-start gap-3">
                             <!-- Avatar -->
                             <div class="w-10 h-10 bg-[#00BFA5]/10 flex items-center justify-center text-[#00BFA5] font-semibold text-sm flex-shrink-0 rounded-full">
@@ -145,8 +145,7 @@
                                      style="min-height: 40px; max-height: 120px;"></textarea>
                         </div>
                         <button type="submit" 
-                                class="px-4 py-3 bg-[#00BFA5] text-white rounded-lg hover:bg-[#00BFA5]/90 active:bg-[#00BFA5]/80 transition disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] min-w-[48px] flex items-center justify-center"
-                                style="touch-action: manipulation;">
+                                class="px-4 py-3 bg-[#00BFA5] text-white rounded-lg hover:bg-[#00BFA5]/90 active:bg-[#00BFA5]/80 transition disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] min-w-[48px] flex items-center justify-center">
                             <i data-lucide="send" class="w-4 h-4"></i>
                         </button>
                     </form>
@@ -226,13 +225,11 @@
 
                 <!-- Actions -->
                 <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200 sticky bottom-0 bg-white md:static">
-                    <button type="button" onclick="closeNewMessageModal()" class="px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100 min-h-[48px]"
-                            style="touch-action: manipulation;">
+                    <button type="button" onclick="closeNewMessageModal()" class="px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100 min-h-[48px]">
                         Annuler
                     </button>
                     <button type="submit" 
-                            class="px-6 py-3 bg-[#00BFA5] border border-transparent rounded-lg text-sm font-medium text-white hover:bg-[#00BFA5]/90 active:bg-[#00BFA5]/80 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
-                            style="touch-action: manipulation;">
+                            class="px-6 py-3 bg-[#00BFA5] border border-transparent rounded-lg text-sm font-medium text-white hover:bg-[#00BFA5]/90 active:bg-[#00BFA5]/80 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]">
                         <span id="send-button-text">Envoyer</span>
                         <i data-lucide="loader" class="w-4 h-4 ml-2 animate-spin hidden" id="send-button-loader"></i>
                     </button>

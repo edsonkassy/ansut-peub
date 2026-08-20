@@ -93,7 +93,6 @@
                 min-height: 48px !important;
                 position: relative !important;
                 z-index: 1 !important;
-                touch-action: manipulation !important;
                 -webkit-tap-highlight-color: transparent !important;
                 -webkit-user-select: text !important;
                 user-select: text !important;
@@ -102,7 +101,6 @@
             button[type="submit"],
             button[type="button"] {
                 min-height: 48px !important;
-                touch-action: manipulation !important;
             }
 
             /* Forcer pointer-events none sur les icônes */

@@ -22,8 +22,7 @@
                         <input type="text" id="search" name="search" 
                                placeholder="Rechercher des opportunités..." 
                                value="{{ request('search') }}"
-                               class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:border-[#00BFA5] focus:ring-1 focus:ring-[#00BFA5] transition-all"
-                               style="touch-action: manipulation;">
+                               class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:border-[#00BFA5] focus:ring-1 focus:ring-[#00BFA5] transition-all">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
                         </div>

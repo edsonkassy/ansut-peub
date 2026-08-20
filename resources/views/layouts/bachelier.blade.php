@@ -89,7 +89,11 @@
     <!-- Additional Styles -->
     @stack('styles')
 </head>
-<body class="font-sans antialiased bg-gray-50">
+{{-- data-mobile-gestures active resources/js/mobile-gestures.js.
+     Ce module est inerte sur toute page qui ne porte pas cet
+     attribut : il a bloque le defilement en production quand il
+     etait installe globalement. --}}
+<body class="font-sans antialiased bg-gray-50" data-mobile-gestures>
     @include('components.bachelier-sidebar')
 
     @livewireScripts

@@ -119,7 +119,6 @@
         select {
             position: relative;
             z-index: 1;
-            touch-action: manipulation;
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
         }
 
@@ -177,10 +176,10 @@
         }
 
         /* 3. touch-action.
-           Adverses : app.css a <=640px impose touch-action: manipulation !important sur
-           input[type=...] (0,2,1) et sur button[type=submit|button] (0,1,1) ; le bloc <style>
-           ci-dessus l impose sur input[type=...] (0,1,1) ; et resources/js/mobile-gestures.js
-           l ecrit en style inline sur chaque a et chaque button de la page.
+           Adversaire restant : app.css impose touch-action: manipulation !important a
+           <=640px sur input[type=...] (0,2,1) et sur button[type=submit|button] (0,1,1).
+           Les deux autres sources ont ete traitees a la racine : le bloc <style> ci-dessus
+           ne le pose plus, et mobile-gestures.js ne l ecrit plus en style inline.
            Une declaration auteur !important bat un style inline : c est le seul moyen de tenir
            la charte de scroll depuis les fichiers de vue. */
         html[data-ds] body a,

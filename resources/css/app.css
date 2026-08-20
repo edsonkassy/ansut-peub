@@ -923,7 +923,8 @@ video[data-loaded="true"] {
         min-height: 48px !important;
         position: relative !important;
         z-index: 1 !important;
-        touch-action: manipulation !important;
+        /* touch-action retire : il bloquait le defilement vertical des que
+           le doigt partait d un champ. Cause du bug corrige le 06/05/2026. */
         -webkit-tap-highlight-color: transparent !important;
         -webkit-user-select: text !important;
         user-select: text !important;
@@ -933,7 +934,8 @@ video[data-loaded="true"] {
     button[type="submit"],
     button[type="button"] {
         min-height: 48px !important;
-        touch-action: manipulation !important;
+        /* touch-action retire : meme cause, le defilement se bloquait des
+           que le doigt partait d un bouton. */
         -webkit-tap-highlight-color: transparent !important;
     }
 
