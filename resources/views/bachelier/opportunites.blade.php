@@ -387,6 +387,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
-@endsection
 
-@include('bachelier.candidature-confirm-modal') 
+{{-- La modale doit rester dans la section : placee apres @endsection, elle
+     etait rendue avant le <!DOCTYPE> et basculait la page en mode quirks
+     (document.compatMode === "BackCompat"). Corrige le 20/08/2026. --}}
+@include('bachelier.candidature-confirm-modal')
+@endsection 
