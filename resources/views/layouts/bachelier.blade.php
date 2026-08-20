@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr" x-data="{ darkMode: false }" x-bind:class="{ 'dark': darkMode }">
+<html lang="fr" @yield('html-attrs')>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -22,6 +22,44 @@
 
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    {{-- Neutralisation ciblee des regles globales heritees de app.css.
+         Portee : uniquement les vues migrees, celles qui posent data-ds sur <html>.
+         Les 24 autres vues bachelier ne portent pas cet attribut : ce bloc y est inerte.
+         Roles uniquement, aucun hex. Chaque regle gagne par SPECIFICITE, jamais par ordre
+         source : elle reste donc valable avec `npm run dev`, ou Vite injecte app.css par JS
+         apres le parsing du head.
+
+         Note : aucune regle de propriete tactile ici. app.css et mobile-gestures.js ont
+         ete purges de leurs contraintes de geste et de leurs ecouteurs non passifs ; il n y
+         a plus d adversaire a neutraliser sur ce point. Ne pas en reintroduire. --}}
+    <style>
+        /* 1. Fond de page.
+           Adverse : `body { background: linear-gradient(...) !important }` (app.css, <=640px)
+           et `html { ... !important }` + `body { ... !important }` (app.css, <=480px),
+           toutes de specificite (0,0,1) avec !important.
+           Ici : html[data-ds] = (0,1,1) et html[data-ds] body = (0,1,2).
+           Sans cette regle, --surface est ignore sous 640px et le mode sombre est impossible. */
+        html[data-ds],
+        html[data-ds] body {
+            background: var(--surface) !important;
+        }
+
+        /* 2. Rayons des surfaces du design system dans le contenu principal.
+           Adverse : `div[class*="bg-"]:not(.bachelier-sidebar *)` et son jumeau border-*,
+           de specificite (0,2,1) avec !important (div = 1 type, [class*=] = 1 classe,
+           :not() prend la specificite de son argument). Ils imposent 0.75rem des qu une
+           carte porte une utilitaire bg-* ou border-*, ce qui ecrase --radius-card (16px).
+           Ici : html[data-ds] body .ds-card = (0,2,2), strictement superieur.
+           La sidebar est deja exclue par le :not() et reste volontairement a angles droits. */
+        html[data-ds] body .ds-card,
+        html[data-ds] body .ds-card-flat,
+        html[data-ds] body .ds-card-interactive,
+        html[data-ds] body .ds-panel {
+            border-radius: var(--radius-card) !important;
+        }
+    </style>
+
     @livewireStyles
 
     <!-- Mobile Webview Optimizations -->
@@ -93,7 +131,7 @@
      Ce module est inerte sur toute page qui ne porte pas cet
      attribut : il a bloque le defilement en production quand il
      etait installe globalement. --}}
-<body class="font-sans antialiased bg-gray-50" data-mobile-gestures>
+<body class="font-sans antialiased" data-mobile-gestures>
     @include('components.bachelier-sidebar')
 
     @livewireScripts
