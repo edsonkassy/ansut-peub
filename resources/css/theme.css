@@ -74,7 +74,7 @@
   --peub-slate-200: #E2DFD8;
   --peub-slate-300: #CBC7BE;
   --peub-slate-400: #9E9A91;
-  --peub-slate-500: #6F6C64;
+  --peub-slate-500: #67645C;   /* texte secondaire : 5.05:1 sur --surface-secondary, contre 4.48 avant */
   --peub-slate-600: #55534D;
   --peub-slate-700: #403E3A;
   --peub-slate-800: #2C2B28;
