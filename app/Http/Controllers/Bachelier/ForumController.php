@@ -69,15 +69,10 @@ class ForumController extends Controller
         return view('bachelier.forum.category', compact('category', 'threads'));
     }
 
-    public function createThread(ForumCategory $category = null)
-    {
-        $categories = ForumCategory::where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
-
-        return view('bachelier.forum.create-thread', compact('categories', 'category'));
-    }
+    // createThread et sa vue ont ete supprimes le 20/08/2026 : la methode
+    // n avait aucune route et rendait une vue vide, donc une page blanche.
+    // La creation de discussion se fait par la modale de forum/index, qui
+    // poste sur storeThread ci-dessous.
 
     public function storeThread(Request $request)
     {

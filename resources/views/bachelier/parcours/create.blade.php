@@ -31,7 +31,6 @@
     <section class="ds-card" style="padding: var(--space-3)">
         <form action="{{ route('bachelier.parcours.store') }}" method="POST" enctype="multipart/form-data" class="ds-stack-sm">
             @csrf
-METHODE_SPOOFEE
                 <div style="display:grid; gap:var(--space-2); grid-template-columns:repeat(auto-fit, minmax(240px, 1fr))">
 
                     <div style="grid-column:1 / -1">
