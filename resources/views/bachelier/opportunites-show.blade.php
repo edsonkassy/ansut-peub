@@ -1,395 +1,347 @@
 @extends('layouts.bachelier')
 
+{{-- Active le design system PEUB sur cette vue uniquement. --}}
+@section('html-attrs', 'data-ds')
+
 @section('title', $opportunite->titre . ' - Opportunité')
 
+@php
+    $typeIcones = [
+        'bourse' => ['M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z', 'M22 10v6', 'M6 12.5V16a6 3 0 0 0 12 0v-3.5'],
+        'stage' => ['M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16', 'M4 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z'],
+        'emploi' => ['M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2', 'M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8', 'M22 21v-2a4 4 0 0 0-3-3.87'],
+        'formation' => ['M12 7v14', 'M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z'],
+        'concours' => ['M6 9H4.5a2.5 2.5 0 0 1 0-5H6', 'M18 9h1.5a2.5 2.5 0 0 0 0-5H18', 'M4 22h16', 'M18 2H6v7a6 6 0 0 0 12 0z'],
+        'event' => ['M8 2v4', 'M16 2v4', 'M3 10h18', 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'],
+        'promotion' => ['m3 11 18-5v12L3 14v-3z', 'M11.6 16.8a3 3 0 1 1-5.8-1.6'],
+        'defaut' => ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20', 'M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12', 'M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4'],
+    ];
+    $paths = $typeIcones[$opportunite->type] ?? $typeIcones['defaut'];
+
+    $limite = $opportunite->date_limite_candidature
+        ? \Carbon\Carbon::parse($opportunite->date_limite_candidature)
+        : null;
+    $joursRestants = $limite ? (int) now()->startOfDay()->diffInDays($limite->copy()->startOfDay(), false) : null;
+
+    $etapes = [
+        ['Candidature en ligne', 'Remplissez le formulaire de candidature avec vos informations'],
+        ['Évaluation IA', 'Notre IA analyse votre profil et calcule un score de compatibilité'],
+        ['Sélection', 'Le partenaire examine les candidatures et sélectionne les meilleurs profils'],
+        ['Notification', 'Vous recevez une notification du résultat de votre candidature'],
+    ];
+@endphp
+
 @section('content')
-<div class="p-4 lg:p-8">
-    <!-- Breadcrumb -->
-    <div class="mb-6">
-        <div class="flex items-center gap-2">
-            <a href="{{ route('bachelier.opportunites') }}" class="text-sm text-gray-500 hover:text-[#00BFA5] font-medium uppercase tracking-wider">
+<div class="ds-container ds-stack" style="padding-block: var(--space-4)">
+
+    <header>
+        {{-- Le lien de retour est une cible tactile a part entiere, pas un mot de 16px. --}}
+        <p class="ds-overline" style="display:flex; align-items:center; gap:var(--space-0-5); flex-wrap:wrap">
+            <a href="{{ route('bachelier.opportunites') }}"
+               style="display:inline-flex; align-items:center; gap:var(--space-0-5); min-height:44px; color:inherit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
                 OPPORTUNITÉS
             </a>
-            <span class="text-sm text-gray-400">/</span>
-            <span class="text-sm text-gray-700 font-medium uppercase tracking-wider">{{ Str::limit($opportunite->titre, 30) }}</span>
-        </div>
-    </div>
+        </p>
+        <h1 style="margin-top: var(--space-1)">{{ $opportunite->titre }}</h1>
+        <p class="ds-text-secondary" style="margin-top: var(--space-1)">{{ $opportunite->partenaire->nom_organisation }}</p>
 
-    <!-- Header avec titre et actions -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ $opportunite->titre }}</h1>
-                <p class="text-gray-600">{{ $opportunite->partenaire->nom_organisation }}</p>
-            </div>
-            <div class="flex items-center space-x-3 self-end sm:self-center">
-                <button class="favorite-btn p-2 hover:bg-gray-100 rounded-lg transition-colors" data-opportunite-id="{{ $opportunite->id }}">
-                    <i data-lucide="heart" class="w-6 h-6 text-gray-400 hover:text-red-500 transition-colors
-                        {{ $opportunite->isFavorited ? 'text-red-500 fill-current' : '' }}"></i>
-                </button>
-                <button class="share-btn p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <i data-lucide="share-2" class="w-6 h-6 text-gray-400 hover:text-gray-600"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Image d'illustration -->
-    <div class="bg-white rounded-lg border border-gray-200 mb-6 overflow-hidden">
-            @if($opportunite->illustration)
-                <img src="{{ asset('storage/' . $opportunite->illustration) }}" 
-                     alt="{{ $opportunite->titre }}" 
-                     class="w-full h-64 md:h-80 object-cover">
-            @else
-                <!-- Placeholder avec icône selon le type -->
-                <div class="w-full h-64 md:h-80 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-                    <div class="text-center">
-                        <div class="w-20 h-20 mx-auto mb-4 bg-[#00BFA5]/10 rounded-full flex items-center justify-center">
-                            @switch($opportunite->type)
-                                @case('bourse')
-                                    <i data-lucide="graduation-cap" class="w-10 h-10 text-[#00BFA5]"></i>
-                                    @break
-                                @case('stage')
-                                    <i data-lucide="briefcase" class="w-10 h-10 text-[#00BFA5]"></i>
-                                    @break
-                                @case('formation')
-                                    <i data-lucide="book-open" class="w-10 h-10 text-[#00BFA5]"></i>
-                                    @break
-                                @case('concours')
-                                    <i data-lucide="trophy" class="w-10 h-10 text-[#00BFA5]"></i>
-                                    @break
-                                @case('event')
-                                    <i data-lucide="calendar" class="w-10 h-10 text-[#00BFA5]"></i>
-                                    @break
-                                @case('promotion')
-                                    <i data-lucide="megaphone" class="w-10 h-10 text-[#00BFA5]"></i>
-                                    @break
-                                @default
-                                    <i data-lucide="target" class="w-10 h-10 text-[#00BFA5]"></i>
-                            @endswitch
-                        </div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">{{ ucfirst($opportunite->type) }}</h3>
-                        <p class="text-sm text-gray-500">{{ $opportunite->partenaire->nom_organisation }}</p>
-                    </div>
-                </div>
+        <div style="margin-top: var(--space-2); display:flex; align-items:center; gap:var(--space-1); flex-wrap:wrap">
+            <span class="ds-badge ds-badge-neutral">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    @foreach ($paths as $d)<path d="{{ $d }}"/>@endforeach
+                </svg>
+                {{ ucfirst($opportunite->type) }}
+            </span>
+            @if(!is_null($joursRestants))
+                @if($joursRestants < 0)
+                    <span class="ds-badge ds-badge-neutral">Clôturée</span>
+                @elseif($joursRestants <= 7)
+                    <span class="ds-badge ds-badge-warning">
+                        {{ $joursRestants === 0 ? 'Dernier jour' : 'Plus que ' . $joursRestants . ' jour' . ($joursRestants > 1 ? 's' : '') }}
+                    </span>
+                @endif
             @endif
+        </div>
+    </header>
+
+    {{-- Bloc d action remonte : postuler est l objet de la page.
+         Il vivait auparavant dans la colonne laterale, donc sous trois blocs de texte
+         a 360px. --}}
+    <div class="ds-card" style="padding: var(--space-3)">
+        @if(!$hasApplied)
+            <button type="button"
+                    onclick="openCandidatureConfirmModal({{ $opportunite->id }}, '{{ addslashes($opportunite->titre) }}', '{{ addslashes($opportunite->partenaire->nom_organisation) }}', '{{ $opportunite->type }}', false)"
+                    class="ds-btn ds-btn-primary ds-btn-lg ds-btn-block">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>
+                </svg>
+                Postuler maintenant
+            </button>
+        @else
+            <p class="ds-alert ds-alert-success">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="flex-shrink:0">
+                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20"/><path d="m9 12 2 2 4-4"/>
+                </svg>
+                <span>
+                    Vous avez déjà postulé à cette opportunité.
+                    @if($candidature)
+                        <a href="{{ route('bachelier.candidatures.show', $candidature) }}" style="color:inherit; font-weight:var(--font-semibold)">Suivre ma candidature</a>
+                    @endif
+                </span>
+            </p>
+        @endif
+
+        <div style="margin-top: var(--space-2); display:flex; gap:var(--space-1); flex-wrap:wrap">
+            <button type="button"
+                    class="favorite-btn ds-btn ds-btn-secondary ds-btn-md"
+                    data-opportunite-id="{{ $opportunite->id }}"
+                    aria-pressed="{{ $opportunite->isFavorited ? 'true' : 'false' }}"
+                    style="flex:1">
+                <svg id="favorite-icon" width="16" height="16" viewBox="0 0 24 24" fill="{{ $opportunite->isFavorited ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/>
+                </svg>
+                <span id="favorite-label">{{ $opportunite->isFavorited ? 'En favori' : 'Ajouter aux favoris' }}</span>
+            </button>
+            <button type="button" class="share-btn ds-btn ds-btn-secondary ds-btn-md" style="flex:1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>
+                </svg>
+                Partager
+            </button>
+        </div>
+
+        @if($limite)
+        <p class="ds-text-secondary" style="margin-top: var(--space-2); font-size:var(--text-caption); text-align:center">
+            Date limite de candidature : <strong style="color:var(--text-primary)">{{ $limite->format('d/m/Y') }}</strong>
+        </p>
+        @endif
     </div>
 
-    <!-- Contenu principal avec sidebar -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Contenu principal -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- Description -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Description</h2>
-                <div class="prose max-w-none text-gray-700">
+    @if($opportunite->illustration)
+    <img src="{{ asset('storage/' . $opportunite->illustration) }}"
+         alt="{{ $opportunite->titre }}"
+         width="1200" height="600" loading="lazy" decoding="async"
+         style="width:100%; height:auto; max-height:320px; object-fit:cover; display:block; border-radius:var(--radius-card)">
+    @endif
+
+    <div style="display:grid; gap:var(--space-3); grid-template-columns:repeat(auto-fit, minmax(280px, 1fr))">
+
+        <div class="ds-stack-sm" style="min-width:0">
+
+            <section class="ds-card" style="padding: var(--space-3)">
+                <h2 style="font-size: var(--text-h3)">Description</h2>
+                <div class="ds-text-secondary" style="margin-top: var(--space-1-5); font-size:var(--text-caption)">
                     {!! nl2br(e($opportunite->description)) !!}
                 </div>
-            </div>
+            </section>
 
-            <!-- Compétences requises -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Compétences requises</h2>
-                <div class="flex flex-wrap gap-2">
-                    @if(is_array($opportunite->competences_requises))
-                        @foreach($opportunite->competences_requises as $competence)
-                            <span class="inline-flex items-center px-2.5 py-0.5 text-sm font-medium bg-gray-100 text-gray-800 rounded-full">
-                                {{ trim($competence) }}
-                            </span>
-                        @endforeach
-                    @elseif($opportunite->competences_requises)
-                        @foreach(explode(',', $opportunite->competences_requises) as $competence)
-                            <span class="inline-flex items-center px-2.5 py-0.5 text-sm font-medium bg-gray-100 text-gray-800 rounded-full">
-                                {{ trim($competence) }}
-                            </span>
-                        @endforeach
-                    @endif
+            @if($opportunite->competences_requises)
+            @php
+                $competences = is_array($opportunite->competences_requises)
+                    ? $opportunite->competences_requises
+                    : explode(',', $opportunite->competences_requises);
+            @endphp
+            <section class="ds-card" style="padding: var(--space-3)">
+                <h2 style="font-size: var(--text-h3)">Compétences requises</h2>
+                <div style="margin-top: var(--space-1-5); display:flex; flex-wrap:wrap; gap:var(--space-0-5)">
+                    @foreach($competences as $competence)
+                        <span class="ds-badge ds-badge-neutral">{{ trim($competence) }}</span>
+                    @endforeach
                 </div>
-            </div>
-
-            <!-- Critères d'éligibilité -->
-            @if($opportunite->criteres_eligibilite)
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Critères d'éligibilité</h2>
-                <div class="prose max-w-none text-gray-700">
-                    @if(is_array($opportunite->criteres_eligibilite))
-                        <ul class="list-disc pl-5 space-y-2">
-                            @foreach($opportunite->criteres_eligibilite as $critere)
-                                <li>{{ $critere }}</li>
-                            @endforeach
-                        </ul>
-                    @else
-                        {!! nl2br(e($opportunite->criteres_eligibilite)) !!}
-                    @endif
-                </div>
-            </div>
+            </section>
             @endif
 
-            <!-- Processus de candidature -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Processus de candidature</h2>
-                <div class="space-y-4">
-                    <div class="flex items-start space-x-3">
-                        <div class="w-8 h-8 bg-[#00BFA5]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <span class="text-sm font-bold text-[#00BFA5]">1</span>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-gray-900">Candidature en ligne</h3>
-                            <p class="text-sm text-gray-600">Remplissez le formulaire de candidature avec vos informations</p>
-                        </div>
+            @if($opportunite->criteres_eligibilite)
+            <section class="ds-card" style="padding: var(--space-3)">
+                <h2 style="font-size: var(--text-h3)">Critères d'éligibilité</h2>
+                @if(is_array($opportunite->criteres_eligibilite))
+                    <ul class="ds-text-secondary" style="margin-top: var(--space-1-5); list-style:disc; padding-left:var(--space-2); display:grid; gap:var(--space-0-5); font-size:var(--text-caption)">
+                        @foreach($opportunite->criteres_eligibilite as $critere)
+                            <li>{{ $critere }}</li>
+                        @endforeach
+                    </ul>
+                @else
+                    <div class="ds-text-secondary" style="margin-top: var(--space-1-5); font-size:var(--text-caption)">
+                        {!! nl2br(e($opportunite->criteres_eligibilite)) !!}
                     </div>
-                    <div class="flex items-start space-x-3">
-                        <div class="w-8 h-8 bg-[#00BFA5]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <span class="text-sm font-bold text-[#00BFA5]">2</span>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-gray-900">Évaluation IA</h3>
-                            <p class="text-sm text-gray-600">Notre IA analyse votre profil et calcule un score de compatibilité</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <div class="w-8 h-8 bg-[#00BFA5]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <span class="text-sm font-bold text-[#00BFA5]">3</span>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-gray-900">Sélection</h3>
-                            <p class="text-sm text-gray-600">Le partenaire examine les candidatures et sélectionne les meilleurs profils</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <div class="w-8 h-8 bg-[#00BFA5]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <span class="text-sm font-bold text-[#00BFA5]">4</span>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-gray-900">Notification</h3>
-                            <p class="text-sm text-gray-600">Vous recevez une notification du résultat de votre candidature</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                @endif
+            </section>
+            @endif
 
-            <!-- Statistiques -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Statistiques</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-[#00BFA5]">{{ $opportunite->vues }}</div>
-                        <div class="text-sm text-gray-600">Vues</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-[#00BFA5]">{{ $opportunite->candidatures_count }}</div>
-                        <div class="text-sm text-gray-600">Candidatures</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-green-600">{{ $opportunite->favoris_count }}</div>
-                        <div class="text-sm text-gray-600">Favoris</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-purple-600">{{ $opportunite->score_ia ?? 'N/A' }}</div>
-                        <div class="text-sm text-gray-600">Score IA</div>
-                    </div>
-                </div>
-            </div>
+            <section class="ds-card" style="padding: var(--space-3)">
+                <h2 style="font-size: var(--text-h3)">Processus de candidature</h2>
+                <ol style="margin-top: var(--space-2); display:grid; gap:var(--space-2); list-style:none; padding:0">
+                    @foreach($etapes as $index => [$titre, $texte])
+                    <li style="display:flex; align-items:flex-start; gap:var(--space-1-5)">
+                        <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; border-radius:var(--radius-pill); background:var(--accent-surface); color:var(--accent); font-size:var(--text-caption); font-weight:var(--font-semibold)">
+                            {{ $index + 1 }}
+                        </span>
+                        <span style="min-width:0">
+                            <span style="display:block; font-size:var(--text-caption); font-weight:var(--font-medium)">{{ $titre }}</span>
+                            <span class="ds-text-secondary" style="display:block; font-size:var(--text-label)">{{ $texte }}</span>
+                        </span>
+                    </li>
+                    @endforeach
+                </ol>
+            </section>
         </div>
 
-        <!-- Sidebar -->
-        <div class="space-y-6">
-            <!-- Carte d'action -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <div class="text-center mb-6">
-                    <div class="w-16 h-16 bg-[#00BFA5]/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                        @switch($opportunite->type)
-                            @case('bourse')
-                                <i data-lucide="award" class="w-8 h-8 text-[#00BFA5]"></i>
-                                @break
-                            @case('stage')
-                                <i data-lucide="briefcase" class="w-8 h-8 text-[#00BFA5]"></i>
-                                @break
-                            @case('formation')
-                                <i data-lucide="graduation-cap" class="w-8 h-8 text-[#00BFA5]"></i>
-                                @break
-                            @default
-                                <i data-lucide="target" class="w-8 h-8 text-[#00BFA5]"></i>
-                        @endswitch
+        <div class="ds-stack-sm" style="min-width:0">
+
+            <section class="ds-card" style="padding: var(--space-3)">
+                <h2 style="font-size: var(--text-h3)">Informations clés</h2>
+                <dl style="margin-top: var(--space-2); display:grid; gap:var(--space-1-5)">
+                    @if($opportunite->ville || $opportunite->pays)
+                    <div>
+                        <dt class="ds-text-secondary" style="font-size:var(--text-label)">Localisation</dt>
+                        <dd style="font-size:var(--text-caption); font-weight:var(--font-medium)">{{ $opportunite->ville }}{{ $opportunite->ville && $opportunite->pays ? ', ' : '' }}{{ $opportunite->pays }}</dd>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900">{{ ucfirst($opportunite->type) }}</h3>
-                    <p class="text-sm text-gray-600">{{ $opportunite->partenaire->nom_organisation }}</p>
-                </div>
-
-                @if(!$hasApplied)
-                    <button type="button" 
-                            onclick="openCandidatureConfirmModal({{ $opportunite->id }}, '{{ addslashes($opportunite->titre) }}', '{{ addslashes($opportunite->partenaire->nom_organisation) }}', '{{ $opportunite->type }}', false)"
-                            class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-lg text-base font-medium text-white bg-[#00BFA5] hover:bg-[#00BFA5]/90 transition-colors mb-4">
-                        <i data-lucide="send" class="w-5 h-5 mr-2"></i>
-                        Postuler maintenant
-                    </button>
-                @else
-                    <button disabled 
-                            class="w-full inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg text-base font-medium text-gray-400 bg-gray-100 cursor-not-allowed mb-4">
-                        <i data-lucide="check" class="w-5 h-5 mr-2"></i>
-                        Déjà postulé
-                    </button>
-                @endif
-
-                <div class="text-center">
-                    <p class="text-sm text-gray-600">Date limite de candidature</p>
-                    <p class="text-lg font-semibold text-gray-900">{{ \Carbon\Carbon::parse($opportunite->date_limite_candidature)->format('d/m/Y') }}</p>
-                </div>
-            </div>
-
-            <!-- Informations clés -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Informations clés</h3>
-                <div class="space-y-4">
-                    <div class="flex items-center text-sm text-gray-600">
-                        <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>
-                        <span>{{ $opportunite->ville }}, {{ $opportunite->pays }}</span>
-                    </div>
+                    @endif
                     @if($opportunite->duree)
-                    <div class="flex items-center text-sm text-gray-600">
-                        <i data-lucide="clock" class="w-4 h-4 mr-2"></i>
-                        <span>Durée: {{ $opportunite->duree }}</span>
+                    <div>
+                        <dt class="ds-text-secondary" style="font-size:var(--text-label)">Durée</dt>
+                        <dd style="font-size:var(--text-caption); font-weight:var(--font-medium)">{{ $opportunite->duree }}</dd>
                     </div>
                     @endif
                     @if($opportunite->remuneration)
-                    <div class="flex items-center text-sm text-gray-600">
-                        <i data-lucide="dollar-sign" class="w-4 h-4 mr-2"></i>
-                        <span>Rémunération: {{ $opportunite->remuneration }}</span>
+                    <div>
+                        <dt class="ds-text-secondary" style="font-size:var(--text-label)">Rémunération</dt>
+                        <dd style="font-size:var(--text-caption); font-weight:var(--font-medium)">{{ $opportunite->remuneration }}</dd>
                     </div>
                     @endif
-                    <div class="flex items-center text-sm text-gray-600">
-                        <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
-                        <span>Date limite: {{ \Carbon\Carbon::parse($opportunite->date_limite_candidature)->format('d/m/Y') }}</span>
+                    @if($limite)
+                    <div>
+                        <dt class="ds-text-secondary" style="font-size:var(--text-label)">Date limite</dt>
+                        <dd style="font-size:var(--text-caption); font-weight:var(--font-medium)">{{ $limite->format('d/m/Y') }}</dd>
                     </div>
+                    @endif
                     @if($opportunite->nombre_places)
-                    <div class="flex items-center text-sm text-gray-600">
-                        <i data-lucide="users" class="w-4 h-4 mr-2"></i>
-                        <span>Places disponibles: {{ $opportunite->nombre_places }}</span>
+                    <div>
+                        <dt class="ds-text-secondary" style="font-size:var(--text-label)">Places disponibles</dt>
+                        <dd style="font-size:var(--text-caption); font-weight:var(--font-medium)">{{ $opportunite->nombre_places }}</dd>
                     </div>
                     @endif
-                </div>
-            </div>
-
-            <!-- Partenaire -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">À propos du partenaire</h3>
-                <div class="flex items-center space-x-3 mb-4">
-                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        @if($opportunite->partenaire->logo)
-                            <img src="{{ asset('storage/' . $opportunite->partenaire->logo) }}" 
-                                 alt="{{ $opportunite->partenaire->nom_organisation }}" 
-                                 class="w-10 h-10 object-contain">
-                        @else
-                            <i data-lucide="building" class="w-6 h-6 text-gray-600"></i>
-                        @endif
+                    <div>
+                        <dt class="ds-text-secondary" style="font-size:var(--text-label)">Vues</dt>
+                        <dd style="font-size:var(--text-caption); font-weight:var(--font-medium)">{{ $opportunite->vues }}</dd>
                     </div>
                     <div>
-                        <p class="font-medium text-gray-900">{{ $opportunite->partenaire->nom_organisation }}</p>
-                        <p class="text-sm text-gray-600">{{ $opportunite->partenaire->secteur_activite }}</p>
+                        <dt class="ds-text-secondary" style="font-size:var(--text-label)">Candidatures reçues</dt>
+                        <dd style="font-size:var(--text-caption); font-weight:var(--font-medium)">{{ $opportunite->candidatures_count }}</dd>
                     </div>
+                </dl>
+            </section>
+
+            <section class="ds-card" style="padding: var(--space-3)">
+                <h2 style="font-size: var(--text-h3)">À propos du partenaire</h2>
+                <div style="margin-top: var(--space-2); display:flex; align-items:center; gap:var(--space-1-5)">
+                    <span style="display:grid; place-items:center; width:48px; height:48px; flex-shrink:0; border-radius:var(--radius-chip); background:var(--surface-secondary); overflow:hidden">
+                        @if($opportunite->partenaire->logo)
+                            <img src="{{ asset('storage/' . $opportunite->partenaire->logo) }}"
+                                 alt="{{ $opportunite->partenaire->nom_organisation }}"
+                                 width="40" height="40" loading="lazy" decoding="async"
+                                 style="width:40px; height:40px; object-fit:contain">
+                        @else
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="color:var(--text-secondary)">
+                                <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/>
+                            </svg>
+                        @endif
+                    </span>
+                    <span style="min-width:0">
+                        <span style="display:block; font-size:var(--text-caption); font-weight:var(--font-medium)">{{ $opportunite->partenaire->nom_organisation }}</span>
+                        <span class="ds-text-secondary" style="display:block; font-size:var(--text-label)">{{ $opportunite->partenaire->secteur_activite }}</span>
+                    </span>
                 </div>
-                
+
                 @if($opportunite->partenaire->description)
-                <p class="text-sm text-gray-600">{{ Str::limit($opportunite->partenaire->description, 150) }}</p>
+                <p class="ds-text-secondary" style="margin-top: var(--space-2); font-size:var(--text-caption)">
+                    {{ Str::limit($opportunite->partenaire->description, 150) }}
+                </p>
                 @endif
 
-                <div class="mt-4 flex items-center space-x-2">
-                    <i data-lucide="map-pin" class="w-4 h-4 text-gray-400"></i>
-                    <span class="text-sm text-gray-600">{{ $opportunite->partenaire->ville }}, {{ $opportunite->partenaire->pays }}</span>
-                </div>
-            </div>
+                @if($opportunite->partenaire->region || $opportunite->partenaire->commune)
+                <p class="ds-text-secondary" style="margin-top: var(--space-1-5); display:flex; align-items:center; gap:var(--space-0-5); font-size:var(--text-label)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0"/><path d="M12 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4"/>
+                    </svg>
+                    {{ $opportunite->partenaire->commune }}{{ $opportunite->partenaire->commune && $opportunite->partenaire->region ? ', ' : '' }}{{ $opportunite->partenaire->region }}
+                </p>
+                @endif
+            </section>
 
-            <!-- Opportunités similaires -->
             @if($opportunites_similaires->count() > 0)
-            <div class="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Opportunités similaires</h3>
-                <div class="space-y-3">
+            <section class="ds-card" style="padding: var(--space-3)">
+                <h2 style="font-size: var(--text-h3)">Opportunités similaires</h2>
+                <div style="margin-top: var(--space-1-5)">
                     @foreach($opportunites_similaires->take(3) as $similaire)
-                    <a href="{{ route('bachelier.opportunites.show', $similaire) }}" 
-                       class="block p-3 rounded-lg border border-gray-200 hover:border-[#00BFA5] transition-colors">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 bg-[#00BFA5]/10 rounded-lg flex items-center justify-center">
-                                @switch($similaire->type)
-                                    @case('bourse')
-                                        <i data-lucide="award" class="w-4 h-4 text-[#00BFA5]"></i>
-                                        @break
-                                    @case('stage')
-                                        <i data-lucide="briefcase" class="w-4 h-4 text-[#00BFA5]"></i>
-                                        @break
-                                    @case('formation')
-                                        <i data-lucide="graduation-cap" class="w-4 h-4 text-[#00BFA5]"></i>
-                                        @break
-                                    @default
-                                        <i data-lucide="target" class="w-4 h-4 text-[#00BFA5]"></i>
-                                @endswitch
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 truncate">{{ $similaire->titre }}</p>
-                                <p class="text-xs text-gray-600">{{ $similaire->partenaire->nom_organisation }}</p>
-                            </div>
-                        </div>
-                    </a>
+                        @php $pathsSim = $typeIcones[$similaire->type] ?? $typeIcones['defaut']; @endphp
+                        <a href="{{ route('bachelier.opportunites.show', $similaire) }}"
+                           style="display:flex; align-items:center; gap:var(--space-1-5); min-height:44px; padding:var(--space-1-5) 0; border-top:1px solid var(--border-default); color:inherit; text-decoration:none">
+                            <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; border-radius:var(--radius-chip); background:var(--accent-surface); color:var(--accent)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                    @foreach ($pathsSim as $d)<path d="{{ $d }}"/>@endforeach
+                                </svg>
+                            </span>
+                            <span style="flex:1; min-width:0">
+                                <span class="line-clamp-2" style="display:block; font-size:var(--text-caption); font-weight:var(--font-medium)">{{ $similaire->titre }}</span>
+                                <span class="ds-text-secondary" style="display:block; font-size:var(--text-label)">{{ $similaire->partenaire->nom_organisation }}</span>
+                            </span>
+                        </a>
                     @endforeach
                 </div>
-            </div>
+            </section>
             @endif
         </div>
     </div>
 </div>
 
-{{-- La modale doit rester dans la section : placee apres @endsection, elle
-     etait rendue avant le <!DOCTYPE> et basculait la page en mode quirks
-     (document.compatMode === "BackCompat"). Corrige le 20/08/2026. --}}
 @include('bachelier.candidature-confirm-modal')
-@endsection
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Favoris
+document.addEventListener('DOMContentLoaded', function () {
+    // Favoris. Le marqueur visuel est l attribut fill du SVG plus aria-pressed et le
+    // libelle, et non une classe de palette posee sur une balise <i>.
     const favoriteBtn = document.querySelector('.favorite-btn');
     if (favoriteBtn) {
-        favoriteBtn.addEventListener('click', function() {
+        favoriteBtn.addEventListener('click', function () {
             const opportuniteId = this.dataset.opportuniteId;
-            const icon = this.querySelector('i');
-            
-            fetch(`/bachelier/favoris/toggle`, {
+            const icone = document.getElementById('favorite-icon');
+            const libelle = document.getElementById('favorite-label');
+
+            fetch('/bachelier/favoris/toggle', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    opportunite_id: opportuniteId
-                })
+                body: JSON.stringify({ opportunite_id: opportuniteId })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.isFavorited) {
-                    icon.classList.add('text-red-500', 'fill-current');
-                } else {
-                    icon.classList.remove('text-red-500', 'fill-current');
-                }
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                const estFavori = !!data.isFavorited;
+                favoriteBtn.setAttribute('aria-pressed', estFavori ? 'true' : 'false');
+                if (icone) { icone.setAttribute('fill', estFavori ? 'currentColor' : 'none'); }
+                if (libelle) { libelle.textContent = estFavori ? 'En favori' : 'Ajouter aux favoris'; }
             })
-            .catch(error => {
-                console.error('Erreur:', error);
-            });
+            .catch(function (error) { console.error('Erreur:', error); });
         });
     }
 
-    // Partage
     const shareBtn = document.querySelector('.share-btn');
     if (shareBtn) {
-        shareBtn.addEventListener('click', function() {
+        shareBtn.addEventListener('click', function () {
             if (navigator.share) {
                 navigator.share({
-                    title: '{{ $opportunite->titre }}',
+                    title: @json($opportunite->titre),
                     text: 'Découvrez cette opportunité sur PEUB',
                     url: window.location.href,
                 });
-            } else {
-                // Fallback pour les navigateurs qui ne supportent pas l'API de partage
-                navigator.clipboard.writeText(window.location.href).then(() => {
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href).then(function () {
                     alert('Lien copié dans le presse-papiers !');
                 });
             }
@@ -397,4 +349,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush 
+@endpush
+@endsection

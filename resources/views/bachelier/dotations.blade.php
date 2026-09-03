@@ -1,121 +1,112 @@
 @extends('layouts.bachelier')
 
+{{-- Active le design system PEUB sur cette vue uniquement. --}}
+@section('html-attrs', 'data-ds')
+
 @section('title', 'Mes Dotations - Bachelier PEUB')
 
+@php
+    // Memes traces que le bloc de dotation du tableau de bord, livre au lot 1.
+    $dotationIcones = [
+        'ordinateur_portable' => ['M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9', 'M2.72 18.55A1 1 0 0 0 3.62 20h16.76a1 1 0 0 0 .9-1.45L20 16H4z'],
+        'connexion_internet' => ['M12 20h.01', 'M2 8.82a15 15 0 0 1 20 0', 'M5 12.86a10 10 0 0 1 14 0', 'M8.5 16.43a5 5 0 0 1 7 0'],
+        'abonnement_ia' => ['M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z'],
+        'defaut' => ['M20 12v10H4V12', 'M2 7h20v5H2z', 'M12 22V7', 'M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7', 'M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7'],
+    ];
+
+    // Roles de statut dedies de theme.css, plutot que des aplats de palette.
+    $statutRoles = [
+        'active' => ['accepted', 'Active'],
+        'en_attente' => ['pending', 'En attente'],
+        'suspendue' => ['rejected', 'Suspendue'],
+        'terminee' => ['draft', 'Terminée'],
+        'retournee' => ['review', 'Retournée'],
+    ];
+@endphp
+
 @section('content')
-<div class="p-4 lg:p-8">
-    <!-- Breadcrumb -->
-    <x-breadcrumb text="MES DOTATIONS / ÉQUIPEMENTS PEUB" />
+<div class="ds-container ds-stack" style="padding-block: var(--space-4)">
+
+    <header>
+        <p class="ds-overline">MES DOTATIONS / ÉQUIPEMENTS PEUB</p>
+        <h1 style="margin-top: var(--space-1)">Mes dotations</h1>
+        @if($dotations->isNotEmpty())
+        <p class="ds-text-secondary" style="margin-top: var(--space-1)">
+            {{ $dotations->count() }} {{ $dotations->count() > 1 ? 'équipements attribués' : 'équipement attribué' }}
+        </p>
+        @endif
+    </header>
 
     @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center" role="alert">
-            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
-            <span class="block sm:inline">{{ session('success') }}</span>
-        </div>
+        <p class="ds-alert ds-alert-success" role="status">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="flex-shrink:0">
+                <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20"/><path d="m9 12 2 2 4-4"/>
+            </svg>
+            <span>{{ session('success') }}</span>
+        </p>
     @endif
 
     @if($dotations->isEmpty())
-        <div class="text-center bg-white rounded-xl shadow-lg border border-gray-200 p-12">
-            <div class="inline-block bg-[#00BFA5]/10 p-4 rounded-full">
-                <i data-lucide="gift" class="w-12 h-12 text-[#00BFA5]"></i>
-            </div>
-            <h2 class="mt-6 text-xl font-medium text-gray-800">Aucune dotation pour le moment</h2>
-            <p class="mt-2 text-gray-500 mb-6">Vous n'avez pas encore reçu de dotation numérique</p>
+        <div class="ds-panel" style="padding: var(--space-6); text-align:center">
+            <span class="ds-text-secondary" style="display:inline-flex">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7"/>
+                </svg>
+            </span>
+            <h2 style="margin-top: var(--space-2); font-size: var(--text-h3)">Aucune dotation pour le moment</h2>
+            <p class="ds-text-secondary" style="margin-top: var(--space-1)">
+                Vous n'avez pas encore reçu de dotation numérique
+            </p>
         </div>
     @else
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div style="display:grid; gap:var(--space-2); grid-template-columns:repeat(auto-fit, minmax(260px, 1fr))">
             @foreach($dotations as $dotation)
-                <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow">
-                    <!-- Icon & Type -->
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex-shrink-0">
-                            @php
-                                $iconMap = [
-                                    'ordinateur_portable' => 'laptop',
-                                    'connexion_internet' => 'wifi',
-                                    'abonnement_ia' => 'zap',
-                                ];
-                                $colorMap = [
-                                    'ordinateur_portable' => 'from-orange-400 to-orange-500',
-                                    'connexion_internet' => 'from-teal-600 to-teal-700',
-                                    'abonnement_ia' => 'from-green-400 to-green-500',
-                                ];
-                                $icon = $iconMap[$dotation->inventaire->type_dotation ?? ''] ?? 'gift';
-                                $color = $colorMap[$dotation->inventaire->type_dotation ?? ''] ?? 'from-gray-400 to-gray-500';
-                            @endphp
-                            <div class="w-12 h-12 bg-gradient-to-br {{ $color }} rounded-lg flex items-center justify-center">
-                                <i data-lucide="{{ $icon }}" class="w-6 h-6 text-white"></i>
-                            </div>
-                        </div>
-                        @php
-                            $statusClass = '';
-                            $statusText = '';
-                            switch ($dotation->status) {
-                                case 'active':
-                                    $statusClass = 'bg-green-100 text-green-800';
-                                    $statusText = 'Active';
-                                    break;
-                                case 'en_attente':
-                                    $statusClass = 'bg-yellow-100 text-yellow-800';
-                                    $statusText = 'En attente';
-                                    break;
-                                case 'suspendue':
-                                    $statusClass = 'bg-red-100 text-red-800';
-                                    $statusText = 'Suspendue';
-                                    break;
-                                case 'terminee':
-                                    $statusClass = 'bg-gray-100 text-gray-800';
-                                    $statusText = 'Terminée';
-                                    break;
-                                case 'retournee':
-                                    $statusClass = 'bg-teal-100 text-teal-800';
-                                    $statusText = 'Retournée';
-                                    break;
-                                default:
-                                    $statusClass = 'bg-gray-100 text-gray-800';
-                                    $statusText = ucfirst(str_replace('_', ' ', $dotation->status));
-                            }
-                        @endphp
-                        <span class="px-3 py-1 text-xs font-semibold rounded-full {{ $statusClass }}">
-                            {{ $statusText }}
+                @php
+                    $typeDotation = $dotation->inventaire->type_dotation ?? '';
+                    $paths = $dotationIcones[$typeDotation] ?? $dotationIcones['defaut'];
+                    [$roleStatut, $libelleStatut] = $statutRoles[$dotation->status]
+                        ?? ['draft', ucfirst(str_replace('_', ' ', $dotation->status))];
+                @endphp
+                <article class="ds-card" style="padding: var(--space-3)">
+                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:var(--space-1)">
+                        <span style="display:grid; place-items:center; width:44px; height:44px; flex-shrink:0; border-radius:var(--radius-chip); background:var(--accent-surface); color:var(--accent)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                @foreach ($paths as $d)<path d="{{ $d }}"/>@endforeach
+                            </svg>
+                        </span>
+                        {{-- Statut en point de couleur et libelle : la carte reste neutre,
+                             y compris pour une dotation suspendue. --}}
+                        <span style="display:inline-flex; align-items:center; gap:var(--space-0-5); font-size:var(--text-label); font-weight:var(--font-semibold); color:var(--status-{{ $roleStatut }}-text)">
+                            <span style="width:8px; height:8px; flex-shrink:0; border-radius:var(--radius-pill); background:currentColor"></span>
+                            {{ $libelleStatut }}
                         </span>
                     </div>
 
-                    <!-- Nom de la dotation -->
-                    <h3 class="text-lg font-bold text-gray-900 mb-2">
-                        {{ $dotation->inventaire->nom ?? 'N/A' }}
-                    </h3>
-
-                    <!-- Type -->
-                    <p class="text-sm text-gray-600 mb-4">
-                        {{ ucfirst(str_replace('_', ' ', $dotation->inventaire->type_dotation ?? 'N/A')) }}
+                    <h2 style="margin-top: var(--space-2); font-size: var(--text-h3)">
+                        {{ $dotation->inventaire->nom ?? 'Équipement' }}
+                    </h2>
+                    <p class="ds-text-secondary" style="margin-top: var(--space-0-5); font-size:var(--text-caption)">
+                        {{ $typeDotation ? ucfirst(str_replace('_', ' ', $typeDotation)) : 'Type non renseigné' }}
                     </p>
 
-                    <!-- Détails -->
-                    <div class="space-y-2 mb-4">
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-500">Date d'attribution:</span>
-                            <span class="font-medium text-gray-900">
-                                {{ $dotation->date_attribution ? \Carbon\Carbon::parse($dotation->date_attribution)->format('d/m/Y') : 'N/A' }}
-                            </span>
+                    <dl style="margin-top: var(--space-2); display:grid; gap:var(--space-1); font-size:var(--text-label)">
+                        <div style="display:flex; justify-content:space-between; gap:var(--space-1)">
+                            <dt class="ds-text-secondary">Date d'attribution</dt>
+                            <dd style="font-weight:var(--font-medium)">
+                                {{ $dotation->date_attribution ? \Carbon\Carbon::parse($dotation->date_attribution)->format('d/m/Y') : 'Non renseignée' }}
+                            </dd>
                         </div>
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-500">Quantité:</span>
-                            <span class="font-medium text-gray-900">1</span>
-                        </div>
-                    </div>
+                    </dl>
 
-                    <!-- Description si disponible -->
                     @if($dotation->inventaire->description ?? false)
-                    <div class="pt-4 border-t border-gray-100">
-                        <p class="text-xs text-gray-600">
-                            {{ Str::limit($dotation->inventaire->description, 80) }}
-                        </p>
-                    </div>
+                    <p class="ds-text-secondary" style="margin-top: var(--space-2); padding-top: var(--space-2); border-top:1px solid var(--border-default); font-size:var(--text-label)">
+                        {{ Str::limit($dotation->inventaire->description, 80) }}
+                    </p>
                     @endif
-                </div>
+                </article>
             @endforeach
         </div>
     @endif
+
 </div>
-@endsection 
+@endsection

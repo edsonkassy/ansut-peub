@@ -84,7 +84,16 @@ class ParcoursUniversitaireController extends Controller
             $annees[] = $year . '-' . ($year + 1);
         }
 
-        return view('bachelier.parcours.edit', compact('parcour', 'niveaux', 'statuts', 'pays', 'mentions', 'annees'));
+        // La colonne niveau stocke la valeur reduite par mapNiveauToBase
+        // (licence, master...), alors que getNiveaux propose des libelles
+        // detailles (Licence 1ere annee...). Sans remappage, le select ne
+        // preselectionnait jamais rien et le bachelier perdait son niveau
+        // a chaque modification. On preselectionne le premier libelle du
+        // groupe : l annee exacte n est pas recuperable, elle a ete perdue
+        // a l enregistrement.
+        $niveauSelectionne = $this->mapBaseToNiveau($parcour->niveau, $niveaux);
+
+        return view('bachelier.parcours.edit', compact('parcour', 'niveaux', 'statuts', 'pays', 'mentions', 'annees', 'niveauSelectionne'));
     }
 
     /**
@@ -178,6 +187,31 @@ class ParcoursUniversitaireController extends Controller
                 'Autre',
             ]
         ];
+    }
+
+    /**
+     * Retrouve un libelle detaille a partir du niveau stocke en base.
+     * La reduction operee par mapNiveauToBase est destructrice : l annee
+     * precise n existe plus. On retourne donc le premier libelle du groupe
+     * correspondant, ce qui evite au bachelier de tout ressaisir.
+     */
+    private function mapBaseToNiveau($niveauBase, array $niveaux)
+    {
+        $groupes = [
+            'bts'      => 'BTS',
+            'licence'  => 'Licence',
+            'master'   => 'Master',
+            'doctorat' => 'Doctorat',
+            'autre'    => 'Autre',
+        ];
+
+        $groupe = $groupes[$niveauBase] ?? null;
+
+        if ($groupe === null || empty($niveaux[$groupe])) {
+            return '';
+        }
+
+        return $niveaux[$groupe][0];
     }
 
     private function mapNiveauToBase($niveauDetaille)

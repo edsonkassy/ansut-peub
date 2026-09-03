@@ -39,14 +39,6 @@
         ['rejected', 'Refusées', $stats['rejected']],
     ];
 
-    $ongletsNav = [
-        ['route' => 'bachelier.opportunites', 'libelle' => 'Toutes les opportunités', 'actif' => request()->routeIs('bachelier.opportunites') && !request()->has('filter'),
-         'icone' => ['M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16', 'M4 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z']],
-        ['route' => 'bachelier.favoris', 'libelle' => 'Mes favoris', 'actif' => request()->routeIs('bachelier.favoris'),
-         'icone' => ['M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z']],
-        ['route' => 'bachelier.candidatures', 'libelle' => 'Mes candidatures', 'actif' => request()->routeIs('bachelier.candidatures'),
-         'icone' => ['M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z', 'M14 2v4a2 2 0 0 0 2 2h4', 'M16 13H8', 'M16 17H8']],
-    ];
 @endphp
 
 @section('content')
@@ -68,21 +60,7 @@
         <h1 style="margin-top: var(--space-1)">Mes candidatures</h1>
     </header>
 
-    {{-- Navigation d onglets. Reprise en ligne plutot que via x-opportunites-nav :
-         ce composant est hors perimetre et code ses couleurs en dur, il ne basculerait
-         pas en mode sombre. Memes trois routes, memes libelles. --}}
-    <nav aria-label="Navigation des opportunités" style="display:flex; gap:var(--space-1); overflow-x:auto; padding-bottom:var(--space-0-5)">
-        @foreach ($ongletsNav as $onglet)
-            <a href="{{ route($onglet['route']) }}"
-               @if ($onglet['actif']) aria-current="page" @endif
-               style="display:inline-flex; align-items:center; gap:var(--space-0-5); min-height:44px; padding:0 var(--space-2); border-radius:var(--radius-pill); white-space:nowrap; font-size:var(--text-caption); font-weight:var(--font-medium); text-decoration:none; {{ $onglet['actif'] ? 'background:var(--accent); color:var(--text-on-accent);' : 'background:var(--surface-secondary); color:var(--text-primary);' }}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                    @foreach ($onglet['icone'] as $d)<path d="{{ $d }}"/>@endforeach
-                </svg>
-                {{ $onglet['libelle'] }}
-            </a>
-        @endforeach
-    </nav>
+    <x-opportunites-nav />
 
     {{-- Reperes de suivi. Les quatre cartes separees d origine sont fusionnees en une
          bande compacte : a 360px elles occupaient deux rangees avant la premiere candidature. --}}
