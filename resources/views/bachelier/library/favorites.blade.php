@@ -1,208 +1,260 @@
 @extends('layouts.bachelier')
 
-@section('title', 'Mes Favoris - Bibliothèque PEUB')
+{{-- Active le design system PEUB sur cette vue uniquement. --}}
+@section('html-attrs', 'data-ds')
+
+@section('title', 'Mes favoris - Bibliothèque PEUB')
+
+@php
+    $onglets = [
+        [
+            'route' => 'bachelier.library.index',
+            'libelle' => 'Toutes les ressources',
+            'actif' => request()->routeIs('bachelier.library.index'),
+            'icone' => ['M12 7v14', 'M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z'],
+        ],
+        [
+            'route' => 'bachelier.library.favorites',
+            'libelle' => 'Mes favoris',
+            'actif' => request()->routeIs('bachelier.library.favorites'),
+            'icone' => ['M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z'],
+        ],
+    ];
+
+    $typesLibelles = [
+        'pdf' => 'PDF',
+        'video' => 'Vidéo',
+        'audio' => 'Audio',
+        'document' => 'Document',
+        'presentation' => 'Présentation',
+    ];
+
+    $typesIcones = [
+        'pdf' => ['M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z', 'M14 2v4a2 2 0 0 0 2 2h4', 'M16 13H8', 'M16 17H8', 'M10 9H8'],
+        'video' => ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20', 'm10 8 6 4-6 4z'],
+        'audio' => ['M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', 'M18 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2z', 'M3 16a9 9 0 1 1 18 0'],
+        'document' => ['M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z', 'M14 2v4a2 2 0 0 0 2 2h4', 'M16 13H8', 'M16 17H8'],
+        'presentation' => ['M2 3h20', 'M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3', 'm7 21 5-5 5 5'],
+        'defaut' => ['M12 7v14', 'M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z'],
+    ];
+
+    $niveauxLibelles = [
+        'debutant' => 'Débutant',
+        'intermediaire' => 'Intermédiaire',
+        'avance' => 'Avancé',
+    ];
+
+    // LibraryController@favorites charge la relation resource sous contrainte
+    // is_active : une ressource depubliee revient donc a null. La page comptait
+    // $favorites->count(), lignes nulles comprises, puis n en affichait aucune :
+    // une page entiere de favoris depublies donnait une grille vide sans un mot.
+    // On filtre d abord, on compte ensuite.
+    $favorisVisibles = $favorites->getCollection()->filter(fn ($f) => $f->resource !== null);
+    $masques = $favorites->count() - $favorisVisibles->count();
+@endphp
 
 @section('content')
-<div class="p-4 lg:p-8">
-    <!-- Breadcrumb -->
-    <x-breadcrumb text="RESSOURCES / MES FAVORIS" />
+<div class="ds-container ds-stack" style="padding-block: var(--space-4)">
 
-    <!-- Navigation Pills -->
-    <div class="mb-6">
-        <nav class="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide" style="scrollbar-width: none; -ms-overflow-style: none;">
-            <a href="{{ route('bachelier.library.index') }}" 
-               class="px-4 py-2 rounded-full font-medium text-sm transition-colors whitespace-nowrap bg-gray-100 text-gray-700 hover:bg-gray-200">
-                <div class="flex items-center space-x-2">
-                    <i data-lucide="book-open" class="w-4 h-4"></i>
-                    <span>Toutes les ressources</span>
-                </div>
-            </a>
-            
-            <a href="{{ route('bachelier.library.favorites') }}" 
-               class="px-4 py-2 rounded-full font-medium text-sm transition-colors whitespace-nowrap bg-[#00BFA5] text-white">
-                <div class="flex items-center space-x-2">
-                    <i data-lucide="heart" class="w-4 h-4"></i>
-                    <span>Mes favoris</span>
-                </div>
-            </a>
-        </nav>
-    </div>
+    {{-- En-tete de page : la vue s ouvrait sur un fil d Ariane, sans aucun h1. --}}
+    <header>
+        <p class="ds-overline">RESSOURCES / MES FAVORIS</p>
+        <h1 style="margin-top: var(--space-1)">Mes favoris</h1>
+        <p class="ds-text-secondary" style="margin-top: var(--space-1)">
+            {{ $favorites->total() }}
+            {{ $favorites->total() > 1 ? 'ressources mises de côté' : 'ressource mise de côté' }}.
+        </p>
+    </header>
 
-    <div>
-        <!-- Filtres -->
-        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
-            <form id="filter-form" method="GET" action="{{ route('bachelier.library.favorites') }}">
-                <!-- Barre de recherche pleine largeur -->
-                <div class="mb-6">
-                    <div class="relative">
-                        <input type="text" id="search" name="search" placeholder="Rechercher dans vos ressources favorites..." 
-                               value="{{ request('search') }}"
-                               class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:border-[#00BFA5] focus:ring-1 focus:ring-[#00BFA5]">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex flex-col sm:flex-row flex-wrap items-center gap-4">
-                </div>
-            </form>
+    <nav aria-label="Navigation de la bibliothèque"
+         style="display:flex; gap:var(--space-1); overflow-x:auto; padding-bottom:var(--space-0-5); scrollbar-width:none">
+        @foreach ($onglets as $onglet)
+            <a href="{{ route($onglet['route']) }}"
+               @if ($onglet['actif']) aria-current="page" @endif
+               style="display:inline-flex; align-items:center; gap:var(--space-0-5); min-height:44px; padding:0 var(--space-2); border-radius:var(--radius-pill); white-space:nowrap; font-size:var(--text-caption); font-weight:var(--font-medium); text-decoration:none; {{ $onglet['actif'] ? 'background:var(--accent); color:var(--text-on-accent);' : 'background:var(--surface-secondary); color:var(--text-primary);' }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="flex-shrink:0">
+                    @foreach ($onglet['icone'] as $d)<path d="{{ $d }}"/>@endforeach
+                </svg>
+                {{ $onglet['libelle'] }}
+            </a>
+        @endforeach
+    </nav>
+
+    {{-- FILTRE MORT SUPPRIME. Cette page portait un formulaire GET avec un champ
+         « search » et une soumission automatique au bout de 300 ms.
+         LibraryController@favorites ne prend meme pas de Request en parametre : la
+         recherche n a jamais rien filtre, elle rechargeait la page a l identique.
+         Le bloc contenait aussi une rangee de filtres entierement vide et un
+         gestionnaire pour un bouton #reset-filters absent du balisage. --}}
+
+    @if ($masques > 0)
+        <div class="ds-alert ds-alert-info" role="status">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="flex-shrink:0; margin-top:2px">
+                <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+            </svg>
+            <p>
+                {{ $masques }} {{ $masques > 1 ? 'ressources ne sont plus disponibles' : 'ressource n\'est plus disponible' }}
+                et {{ $masques > 1 ? 'ont' : 'a' }} été retirée{{ $masques > 1 ? 's' : '' }} de cet affichage.
+            </p>
         </div>
-        
-        @if($favorites->count() > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach($favorites as $favorite)
-                    @if($favorite->resource)
-                    <div class="bg-white border border-gray-200 hover:shadow-lg transition-shadow">
-                        @if($favorite->resource->thumbnail)
-                            <div class="h-48 bg-cover bg-center" style="background-image: url('{{ Storage::url($favorite->resource->thumbnail) }}')"></div>
-                        @else
-                            <div class="h-48 bg-gradient-to-r from-primary-400 to-primary-600 flex items-center justify-center">
-                                @switch($favorite->resource->type)
-                                    @case('pdf')
-                                        <i data-lucide="file-text" class="w-12 h-12 text-white"></i>
-                                        @break
-                                    @case('video')
-                                        <i data-lucide="play-circle" class="w-12 h-12 text-white"></i>
-                                        @break
-                                    @case('audio')
-                                        <i data-lucide="headphones" class="w-12 h-12 text-white"></i>
-                                        @break
-                                    @default
-                                        <i data-lucide="book-open" class="w-12 h-12 text-white"></i>
-                                @endswitch
-                            </div>
-                        @endif
-                        
-                        <div class="p-6">
-                            <div class="flex items-center justify-between mb-3">
-                                <span class="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-800 uppercase">{{ $favorite->resource->type }}</span>
-                                <button onclick="removeFavorite({{ $favorite->resource->id }}, this)" 
-                                        class="text-red-600 hover:text-red-800 transition"
-                                        title="Retirer des favoris">
-                                    <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
-                                </button>
-                            </div>
-                            
-                            <h3 class="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
-                                <a href="{{ route('bachelier.library.show', $favorite->resource) }}" class="text-black hover:text-primary-600 transition-colors">{{ $favorite->resource->title }}</a>
-                            </h3>
-                            <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ $favorite->resource->description }}</p>
-                            
-                            <div class="text-xs text-gray-500 mb-3">
-                                <span>{{ $favorite->resource->category->name }}</span>
-                                @if($favorite->resource->author)
-                                    · <span>{{ $favorite->resource->author }}</span>
-                                @endif
-                                @if($favorite->resource->level)
-                                    · <span class="capitalize">{{ $favorite->resource->level }}</span>
-                                @endif
-                            </div>
-                            
-                            <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
-                                <div class="flex gap-3">
-                                    <span title="Vues"><i data-lucide="eye" class="w-4 h-4 inline mr-1"></i>{{ $favorite->resource->views_count }}</span>
-                                    <span title="Téléchargements"><i data-lucide="download" class="w-4 h-4 inline mr-1"></i>{{ $favorite->resource->downloads_count }}</span>
-                                </div>
-                                <span>Ajouté {{ $favorite->created_at->diffForHumans() }}</span>
-                            </div>
-                            
+    @endif
+
+    @if ($favorisVisibles->count() > 0)
+        <div style="display:grid; gap:var(--space-2); grid-template-columns:repeat(auto-fill, minmax(260px, 1fr))" id="liste-favoris">
+            @foreach ($favorisVisibles as $favorite)
+                @php
+                    $resource = $favorite->resource;
+                    $chemins = $typesIcones[$resource->type] ?? $typesIcones['defaut'];
+                    $typeLibelle = $typesLibelles[$resource->type] ?? $resource->type;
+                    $vignette = $resource->thumbnail ? Storage::url($resource->thumbnail) : null;
+                @endphp
+                <article class="ds-card" data-favori="{{ $resource->id }}" style="display:flex; flex-direction:column; overflow:hidden">
+                    @if ($vignette)
+                        <img src="{{ $vignette }}" alt="Aperçu de {{ $resource->title }}"
+                             width="400" height="160" loading="lazy" decoding="async"
+                             style="width:100%; height:140px; object-fit:cover; display:block">
+                    @else
+                        <div style="display:grid; place-items:center; height:140px; background:var(--accent-surface); color:var(--accent)" aria-hidden="true">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                                @foreach ($chemins as $d)<path d="{{ $d }}"/>@endforeach
+                            </svg>
                         </div>
-                    </div>
                     @endif
-                @endforeach
-            </div>
 
-            <!-- Pagination -->
-            @if($favorites->hasPages())
-            <div class="mt-8 flex justify-center">
-                {{ $favorites->links() }}
-            </div>
-            @endif
+                    <div style="display:flex; flex-direction:column; gap:var(--space-1); padding:var(--space-2); flex:1">
+                        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:var(--space-1)">
+                            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-0-5); min-width:0">
+                                <span class="ds-badge ds-badge-neutral">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                        @foreach ($chemins as $d)<path d="{{ $d }}"/>@endforeach
+                                    </svg>
+                                    {{ $typeLibelle }}
+                                </span>
+                                @if ($resource->level)
+                                    <span class="ds-badge ds-badge-neutral">{{ $niveauxLibelles[$resource->level] ?? $resource->level }}</span>
+                                @endif
+                            </div>
 
-        @else
-            <div class="text-center py-12">
-                <div class="w-24 h-24 bg-gray-100 mx-auto mb-4 flex items-center justify-center">
-                    <i data-lucide="heart" class="w-12 h-12 text-gray-400"></i>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucune ressource favorite</h3>
-                <p class="text-gray-600 mb-6 max-w-md mx-auto">
-                    Explorez notre bibliothèque et ajoutez des ressources à vos favoris pour les retrouver facilement ici.
-                </p>
-                <a href="{{ route('bachelier.library.index') }}" 
-                   class="inline-flex items-center px-6 py-3 bg-primary-600 text-white hover:bg-primary-700 transition font-medium rounded-md">
-                    <i data-lucide="book-open" class="w-5 h-5 mr-2"></i>
-                    Découvrir la bibliothèque
-                </a>
-            </div>
+                            <button type="button" class="library-favori"
+                                    data-resource-id="{{ $resource->id }}"
+                                    aria-pressed="true">
+                                <span class="sr-only">Retirer « {{ $resource->title }} » de mes favoris</span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <h2 style="font-size: var(--text-body)">
+                            <a href="{{ route('bachelier.library.show', $resource) }}" style="color:inherit; text-decoration:none">
+                                {{ $resource->title }}
+                            </a>
+                        </h2>
+
+                        @if ($resource->description)
+                            <p class="ds-text-secondary line-clamp-2" style="font-size: var(--text-caption)">{{ $resource->description }}</p>
+                        @endif
+
+                        <p class="ds-text-secondary" style="font-size: var(--text-label)">
+                            {{ $resource->category?->name ?? 'Sans catégorie' }}@if($resource->author) &middot; {{ $resource->author }}@endif
+                        </p>
+
+                        <p class="ds-text-secondary numbers" style="margin-top:auto; font-size:var(--text-label)">
+                            {{ $resource->views_count }} {{ $resource->views_count > 1 ? 'vues' : 'vue' }}
+                            &middot; ajoutée {{ $favorite->created_at?->locale('fr')->diffForHumans() }}
+                        </p>
+                    </div>
+                </article>
+            @endforeach
+        </div>
+
+        @if ($favorites->hasPages())
+        <div>
+            {{ $favorites->links() }}
+        </div>
         @endif
-    </div>
+    @else
+        <div class="ds-card-flat" style="padding: var(--space-6); text-align:center">
+            <span class="ds-text-secondary" style="display:inline-flex">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/>
+                </svg>
+            </span>
+            <h2 style="margin-top: var(--space-2); font-size: var(--text-h3)">Aucune ressource en favori</h2>
+            <p class="ds-text-secondary" style="margin-top: var(--space-1)">
+                Le cœur sur la fiche d'une ressource la met de côté.
+                Vous la retrouverez ici, même des mois plus tard.
+            </p>
+            <a href="{{ route('bachelier.library.index') }}" class="ds-btn ds-btn-primary ds-btn-lg" style="margin-top: var(--space-3)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>
+                </svg>
+                Parcourir la bibliothèque
+            </a>
+        </div>
+    @endif
+
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('#filter-form');
-    const searchInput = document.querySelector('#search');
-    const resetBtn = document.getElementById('reset-filters');
-    
-    // Debounced search
-    if (searchInput) {
-        let searchTimeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                form.submit();
-            }, 300);
-        });
-    }
-    
-    // Reset filters
-    if (resetBtn) {
-        resetBtn.addEventListener('click', function() {
-            window.location.href = '{{ route("bachelier.library.favorites") }}';
-        });
-    }
-});
-
-function removeFavorite(resourceId, button) {
-    fetch(`/bachelier/library/${resourceId}/favorite`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.isFavorited) {
-            // Faire disparaître la carte en douceur
-            const card = button.closest('.bg-white');
-            card.style.transition = 'opacity 0.3s ease';
-            card.style.opacity = '0';
-            setTimeout(() => {
-                card.remove();
-                
-                // Vérifier s'il reste des favoris
-                const remainingCards = document.querySelectorAll('.bg-white.border');
-                if (remainingCards.length === 0) {
-                    // Recharger la page pour afficher le message "aucun favori"
-                    window.location.reload();
-                }
-            }, 300);
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-    });
-}
-</script>
-
+@push('styles')
 <style>
-.line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
+    html[data-ds] .library-favori {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+        margin: calc(var(--space-1) * -1) calc(var(--space-1) * -1) 0 0;
+        border: 0;
+        background: none;
+        color: var(--accent);
+        cursor: pointer;
+        border-radius: var(--radius-pill);
+    }
+    html[data-ds] .library-favori:hover { background: var(--surface-hover); }
+    html[data-ds] .library-favori[aria-pressed="false"] { color: var(--text-secondary); }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Retrait d un favori. L ancien script remontait au premier parent .bg-white
+    // puis comptait les .bg-white.border restantes : deux classes utilitaires
+    // devenues des reperes de structure, que la moindre retouche de style cassait.
+    // Le repere est desormais l attribut data-favori.
+    document.querySelectorAll('.library-favori').forEach(function (bouton) {
+        bouton.addEventListener('click', function () {
+            const identifiant = bouton.dataset.resourceId;
+
+            fetch('/bachelier/library/' + identifiant + '/favorite', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(function (reponse) { return reponse.json(); })
+            .then(function (donnees) {
+                bouton.setAttribute('aria-pressed', donnees.isFavorited ? 'true' : 'false');
+                bouton.querySelector('svg').setAttribute('fill', donnees.isFavorited ? 'currentColor' : 'none');
+
+                if (donnees.isFavorited) { return; }
+
+                const carte = document.querySelector('[data-favori="' + identifiant + '"]');
+                if (!carte) { return; }
+                carte.style.transition = 'opacity var(--duration-normal) var(--easing)';
+                carte.style.opacity = '0';
+                setTimeout(function () {
+                    carte.remove();
+                    if (!document.querySelector('[data-favori]')) { window.location.reload(); }
+                }, 300);
+            })
+            .catch(function (erreur) { console.error('Erreur:', erreur); });
+        });
+    });
+});
+</script>
+@endpush
 @endsection

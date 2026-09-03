@@ -62,7 +62,12 @@ class LibraryResource extends Model
 
     public function likes()
     {
-        return $this->hasMany(LibraryLike::class);
+        // Les mentions j aime portant sur un commentaire renseignent aussi
+        // library_resource_id : sans ce filtre, le compteur de la ressource
+        // additionnait ses commentaires, et isLikedBy allumait le bouton
+        // des qu un commentaire avait ete aime. La migration prevoit
+        // explicitement likeable_id nul pour une mention sur la ressource.
+        return $this->hasMany(LibraryLike::class)->whereNull('likeable_id');
     }
 
     public function downloads()

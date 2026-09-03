@@ -18,7 +18,12 @@ class NewResourceNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        // Canal database retire le 20/08/2026 : il exige la table
+        // notifications de Laravel, qui n a jamais ete creee. La migration
+        // 2025_09_10_201147 la supposait deja presente et n a cree que
+        // system_notifications, utilisee par le modele SystemNotification.
+        // Ce canal ne sert plus qu a l email.
+        return ['mail'];
     }
 
     public function toMail(object $notifiable): MailMessage

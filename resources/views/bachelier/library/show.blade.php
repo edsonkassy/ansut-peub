@@ -1,489 +1,586 @@
 @extends('layouts.bachelier')
 
+{{-- Active le design system PEUB sur cette vue uniquement. --}}
+@section('html-attrs', 'data-ds')
+
 @section('title', $resource->title . ' - Bibliothèque PEUB')
 
+@php
+    $typesLibelles = [
+        'pdf' => 'PDF',
+        'video' => 'Vidéo',
+        'audio' => 'Audio',
+        'document' => 'Document',
+        'presentation' => 'Présentation',
+    ];
+
+    $typesIcones = [
+        'pdf' => ['M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z', 'M14 2v4a2 2 0 0 0 2 2h4', 'M16 13H8', 'M16 17H8', 'M10 9H8'],
+        'video' => ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20', 'm10 8 6 4-6 4z'],
+        'audio' => ['M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', 'M18 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2z', 'M3 16a9 9 0 1 1 18 0'],
+        'document' => ['M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z', 'M14 2v4a2 2 0 0 0 2 2h4', 'M16 13H8', 'M16 17H8'],
+        'presentation' => ['M2 3h20', 'M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3', 'm7 21 5-5 5 5'],
+        'defaut' => ['M12 7v14', 'M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z'],
+    ];
+
+    $niveauxLibelles = [
+        'debutant' => 'Débutant',
+        'intermediaire' => 'Intermédiaire',
+        'avance' => 'Avancé',
+    ];
+
+    $type = strtolower($resource->type ?? '');
+    $chemins = $typesIcones[$type] ?? $typesIcones['defaut'];
+    $typeLibelle = $typesLibelles[$type] ?? $resource->type;
+
+    $fileUrl = $resource->file_path ? Storage::url($resource->file_path) : null;
+    $externalUrl = $resource->external_url ?? null;
+
+    // Extraction de l identifiant YouTube pour l apercu integre. Logique conservee
+    // telle quelle : elle fonctionne et ne touche a aucune donnee.
+    $isYouTube = $externalUrl && preg_match('/(youtube\.com|youtu\.be)/i', $externalUrl);
+    $youTubeEmbed = null;
+    if ($isYouTube) {
+        $host = parse_url($externalUrl, PHP_URL_HOST);
+        $path = parse_url($externalUrl, PHP_URL_PATH);
+        $requete = parse_url($externalUrl, PHP_URL_QUERY);
+        $videoId = null;
+
+        if ($host && stripos($host, 'youtu.be') !== false) {
+            $videoId = ltrim($path ?? '', '/');
+        } elseif ($host && stripos($host, 'youtube.com') !== false) {
+            if (strpos($path ?? '', '/watch') === 0) {
+                parse_str($requete ?? '', $params);
+                $videoId = $params['v'] ?? null;
+            } elseif (strpos($path ?? '', '/embed/') === 0) {
+                $videoId = trim(substr($path, strlen('/embed/')));
+            }
+        }
+
+        if ($videoId) {
+            $youTubeEmbed = 'https://www.youtube.com/embed/' . $videoId;
+        }
+    }
+
+    // Les formulaires de commentaire partagent tous le champ « content ». Sans ce
+    // reperage, un retour en erreur reinjecterait la meme saisie dans tous les
+    // champs de la page. old('parent_id') identifie celui qui a ete soumis :
+    // null pour le formulaire principal, l identifiant du commentaire pour une reponse.
+    $formulaireEnErreur = old('parent_id');
+    $erreurPublication = session('error');
+@endphp
+
 @section('content')
-<div class="p-4 lg:p-8">
-    <!-- Breadcrumb -->
-    <x-breadcrumb text="RESSOURCES / {{ strtoupper($resource->category->name) }} / {{ strtoupper($resource->title) }}" />
+<div class="ds-container ds-stack" style="padding-block: var(--space-4)">
 
-    <div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Contenu principal -->
-            <div class="lg:col-span-2">
-                <!-- En-tête de la ressource -->
-                <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
-                    <div class="flex flex-wrap items-start justify-between mb-4">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 uppercase">{{ $resource->type }}</span>
-                                @if($resource->is_featured)
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Vedette</span>
-                                @endif
-                                @if($resource->level)
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-800 capitalize">{{ $resource->level }}</span>
-                                @endif
-                            </div>
-                            <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ $resource->title }}</h1>
-                            <div class="flex items-center text-sm text-gray-600 space-x-4">
-                                <span>Par {{ $resource->author ?? $resource->user->name }}</span>
-                                <span>·</span>
-                                <span>{{ $resource->published_at->diffForHumans() }}</span>
-                                @if($resource->duration)
-                                    <span>·</span>
-                                    <span>{{ $resource->duration }}</span>
-                                @endif
-                            </div>
-                        </div>
-                        
-                        <!-- Actions -->
-                        <div class="flex items-center gap-2 mt-4 lg:mt-0">
-                            <button onclick="toggleFavorite({{ $resource->id }})" 
-                                    class="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition {{ $isFavorited ? 'text-red-600 border-red-300 bg-red-50' : 'text-gray-700' }}"
-                                    id="favorite-btn">
-                                <i data-lucide="heart" class="w-4 h-4 {{ $isFavorited ? 'fill-current' : '' }}"></i>
-                                <span id="favorite-text">{{ $isFavorited ? 'Favoris' : 'Ajouter' }}</span>
-                            </button>
-                            
-                            <button onclick="toggleLike({{ $resource->id }})" 
-                                    class="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition {{ $isLiked ? 'text-teal-600 border-teal-300 bg-teal-50' : 'text-gray-700' }}"
-                                    id="like-btn">
-                                <i data-lucide="thumbs-up" class="w-4 h-4 {{ $isLiked ? 'fill-current' : '' }}"></i>
-                                <span id="like-count">{{ $resource->likes_count }}</span>
-                            </button>
-                        </div>
-                    </div>
+    {{-- En-tete de page. Le fil d Ariane reprenait le titre entier en majuscules,
+         juste au-dessus du meme titre en h1 : il ne garde plus que la categorie,
+         et devient un vrai lien de retour vers le catalogue filtre. --}}
+    <header>
+        <p class="ds-overline">
+            <a href="{{ $resource->category ? route('bachelier.library.index', ['category' => $resource->category->id]) : route('bachelier.library.index') }}"
+               style="display:inline-flex; align-items:center; gap:var(--space-0-5); min-height:44px; color:inherit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
+                {{ mb_strtoupper($resource->category?->name ?? 'BIBLIOTHÈQUE') }}
+            </a>
+        </p>
 
-                    <p class="text-gray-700 leading-relaxed mb-6">{{ $resource->description }}</p>
+        <h1 style="margin-top: var(--space-1)">{{ $resource->title }}</h1>
 
-                    @if($resource->tags && count($resource->tags) > 0)
-                    <div class="mb-6">
-                        <div class="flex flex-wrap gap-2">
-                            @foreach($resource->tags as $tag)
-                                <span class="px-2 py-1 bg-gray-100 rounded-full text-gray-700 text-sm">#{{ $tag }}</span>
-                            @endforeach
-                        </div>
-                    </div>
-                    @endif
+        <div style="margin-top: var(--space-1-5); display:flex; flex-wrap:wrap; gap:var(--space-0-5)">
+            <span class="ds-badge ds-badge-neutral">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    @foreach ($chemins as $d)<path d="{{ $d }}"/>@endforeach
+                </svg>
+                {{ $typeLibelle }}
+            </span>
+            @if ($resource->level)
+                <span class="ds-badge ds-badge-neutral">{{ $niveauxLibelles[$resource->level] ?? $resource->level }}</span>
+            @endif
+            @if ($resource->is_featured)
+                <span class="ds-badge ds-badge-accent">À la une</span>
+            @endif
+        </div>
 
-                    <!-- Actions principales -->
-                    <div class="flex flex-wrap gap-3">
-                        @if($resource->file_path)
-                            <a href="{{ route('bachelier.library.download', $resource) }}" 
-                               class="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white hover:bg-primary-700 transition font-medium rounded-md">
-                                <i data-lucide="download" class="w-4 h-4"></i>
-                                Télécharger ({{ $resource->file_size_formatted }})
-                            </a>
-                        @endif
-                        
-                        @if($resource->external_url)
-                            <a href="{{ $resource->external_url }}" target="_blank" 
-                               class="flex items-center gap-2 px-6 py-3 bg-green-600 text-white hover:bg-green-700 transition font-medium rounded-md">
-                                <i data-lucide="external-link" class="w-4 h-4"></i>
-                                Ouvrir le lien
-                            </a>
-                        @endif
-                    </div>
-                </div>
+        <p class="ds-text-secondary" style="margin-top: var(--space-1-5); font-size: var(--text-caption)">
+            Par {{ $resource->author ?: ($resource->user?->name ?? 'PEUB') }}
+            {{-- published_at est nullable et le controleur accepte explicitement les
+                 fiches sans date : la vue appelait diffForHumans() dessus sans garde. --}}
+            @if ($resource->published_at)
+                &middot; publiée {{ $resource->published_at->locale('fr')->diffForHumans() }}
+            @endif
+            @if ($resource->duration)
+                &middot; {{ $resource->duration }}
+            @endif
+        </p>
+    </header>
 
-                <!-- Aperçu intégré selon le type -->
-                @php
-                    $type = strtolower($resource->type ?? '');
-                    $fileUrl = $resource->file_path ? Storage::url($resource->file_path) : null;
-                    $externalUrl = $resource->external_url ?? null;
-                    $isYouTube = $externalUrl && preg_match('/(youtube\\.com|youtu\\.be)/i', $externalUrl);
-                    $youTubeEmbed = null;
-                    if ($isYouTube) {
-                        $host = parse_url($externalUrl, PHP_URL_HOST);
-                        $path = parse_url($externalUrl, PHP_URL_PATH);
-                        $query = parse_url($externalUrl, PHP_URL_QUERY);
-                        $videoId = null;
+    <div style="display:grid; gap:var(--space-3); grid-template-columns:minmax(0, 1fr)" class="library-grille">
 
-                        if ($host && stripos($host, 'youtu.be') !== false) {
-                            $videoId = ltrim($path ?? '', '/');
-                        } elseif ($host && stripos($host, 'youtube.com') !== false) {
-                            if (strpos($path ?? '', '/watch') === 0) {
-                                parse_str($query ?? '', $params);
-                                $videoId = $params['v'] ?? null;
-                            } elseif (strpos($path ?? '', '/embed/') === 0) {
-                                $videoId = trim(substr($path, strlen('/embed/')));
-                            }
-                        }
+        {{-- Colonne principale --}}
+        <div class="ds-stack" style="min-width:0">
 
-                        if ($videoId) {
-                            $youTubeEmbed = 'https://www.youtube.com/embed/' . $videoId;
-                        }
-                    }
-                @endphp
-
-                @if($type === 'pdf' && $fileUrl)
-                <div class="bg-white border border-gray-200 p-0 mb-6">
-                    <iframe src="{{ $fileUrl }}#navpanes=0&pagemode=none&toolbar=1" class="w-full h-[80vh]" title="Aperçu PDF"></iframe>
-                </div>
-                @elseif($type === 'video')
-                    @if($isYouTube && $youTubeEmbed)
-                    <div class="bg-white border border-gray-200 p-0 mb-6">
-                        <div class="relative w-full" style="padding-bottom: 56.25%;">
-                            <iframe src="{{ $youTubeEmbed }}" class="absolute inset-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen title="Lecture vidéo"></iframe>
-                        </div>
-                    </div>
-                    @elseif($fileUrl)
-                    <div class="bg-white border border-gray-200 p-6 mb-6">
-                        <video controls class="w-full max-h-[70vh] bg-black">
-                            <source src="{{ $fileUrl }}" type="video/mp4">
-                            Votre navigateur ne supporte pas la lecture vidéo.
-                        </video>
-                    </div>
-                    @elseif($externalUrl)
-                    <div class="bg-white border border-gray-200 p-6 mb-6">
-                        <video controls class="w-full max-h-[70vh] bg-black" src="{{ $externalUrl }}"></video>
-                    </div>
-                    @endif
-                @else
-                    @if($resource->thumbnail)
-                    <div class="bg-white border border-gray-200 p-6 mb-6">
-                        <img src="{{ Storage::url($resource->thumbnail) }}" alt="{{ $resource->title }}" class="w-full max-h-96 object-cover">
-                    </div>
-                    @endif
+            <section class="ds-card" style="padding: var(--space-3)">
+                @if ($resource->description)
+                    <p style="white-space:pre-wrap">{{ $resource->description }}</p>
                 @endif
 
-                <!-- Section des commentaires -->
-                <div class="bg-white border border-gray-200 p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold text-gray-900">Commentaires</h3>
-                    </div>
-
-                    @auth
-                    <!-- Erreur commentaire -->
-                    <div id="commentError" class="mb-4 hidden">
-                        <div class="flex items-start gap-2 px-3 py-2 text-sm text-red-700 bg-red-50 border border-red-200">
-                            <i data-lucide="alert-circle" class="w-4 h-4 mt-0.5"></i>
-                            <span id="commentErrorText"></span>
-                        </div>
-                    </div>
-
-                    <!-- Formulaire d'ajout de commentaire -->
-                    <form id="commentForm" action="{{ route('bachelier.library.comments.store', $resource) }}" method="POST" class="mb-6">
-                        @csrf
-                        <div class="mb-3">
-                            <textarea name="content" id="commentContent" rows="3" placeholder="Ajouter un commentaire..." required
-                                      class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"></textarea>
-                        </div>
-                        <button type="button" id="commentSubmitBtn" onclick="submitComment()" class="inline-flex items-center justify-center px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 transition font-medium">
-                            <span id="commentSubmitText">Publier le commentaire</span>
-                            <i data-lucide="loader" class="w-4 h-4 ml-2 animate-spin hidden" id="commentSubmitLoader"></i>
-                        </button>
-                    </form>
-                    @endauth
-
-                    <!-- Liste des commentaires -->
-                    @if($comments->count() > 0)
-                        <div class="space-y-6">
-                            @foreach($comments as $comment)
-                                <div class=" pb-6 last:border-0">
-                                    <div class="flex items-start space-x-3">
-                                        <div class="w-8 h-8 bg-primary-100 flex items-center justify-center text-primary-600 font-semibold text-sm">
-                                            {{ substr($comment->user->name, 0, 1) }}
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2 mb-1">
-                                                <span class="font-medium text-gray-900 text-sm">{{ $comment->user->name }}</span>
-                                                <span class="text-xs text-gray-500">{{ $comment->created_at->diffForHumans() }}</span>
-                                            </div>
-                                            <p class="text-gray-700 text-sm mb-3">{{ $comment->content }}</p>
-                                            
-                                            @auth
-                                            <div class="flex items-center gap-4">
-                                                <button onclick="toggleCommentLike({{ $comment->id }})" 
-                                                        class="flex items-center gap-1 text-xs text-gray-500 hover:text-primary-600 transition"
-                                                        id="comment-like-btn-{{ $comment->id }}">
-                                                    <i data-lucide="thumbs-up" class="w-3 h-3 {{ $comment->isLikedBy(auth()->user()) ? 'fill-current text-primary-600' : '' }}"></i>
-                                                    <span id="comment-like-count-{{ $comment->id }}">{{ $comment->likes_count }}</span>
-                                                </button>
-                                                <button onclick="toggleReply({{ $comment->id }})" class="text-xs text-gray-500 hover:text-primary-600 transition">
-                                                    Répondre
-                                                </button>
-                                            </div>
-
-                                            <!-- Formulaire de réponse -->
-                                            <div id="reply-form-{{ $comment->id }}" class="mt-3 hidden">
-                                                <form class="replyForm" action="{{ route('bachelier.library.comments.store', $resource) }}" method="POST" onsubmit="return false;">
-                                                    @csrf
-                                                    <input type="hidden" name="parent_id" value="{{ $comment->id }}">
-                                                    <div class="mb-2">
-                                                        <textarea name="content" rows="2" placeholder="Votre réponse..." required
-                                                                  class="w-full px-3 py-2 text-sm border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"></textarea>
-                                                    </div>
-                                                    <div class="flex gap-2">
-                                                        <button type="button" class="inline-flex items-center justify-center px-3 py-1 bg-primary-600 text-white hover:bg-primary-700 transition text-sm" onclick="submitReply(this)">
-                                                            Répondre
-                                                            <i data-lucide="loader" class="w-3.5 h-3.5 ml-2 animate-spin hidden"></i>
-                                                        </button>
-                                                        <button type="button" onclick="toggleReply({{ $comment->id }})" class="px-3 py-1 border border-gray-300 text-gray-700 hover:bg-gray-50 transition text-sm">
-                                                            Annuler
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                            @endauth
-
-                                            <!-- Réponses -->
-                                            @if($comment->replies->count() > 0)
-                                                <div class="mt-4 ml-6 space-y-3">
-                                                    @foreach($comment->replies as $reply)
-                                                        <div class="flex items-start space-x-3">
-                                                            <div class="w-6 h-6 bg-gray-100 flex items-center justify-center text-gray-600 font-semibold text-xs">
-                                                                {{ substr($reply->user->name, 0, 1) }}
-                                                            </div>
-                                                            <div class="flex-1">
-                                                                <div class="flex items-center gap-2 mb-1">
-                                                                    <span class="font-medium text-gray-900 text-sm">{{ $reply->user->name }}</span>
-                                                                    <span class="text-xs text-gray-500">{{ $reply->created_at->diffForHumans() }}</span>
-                                                                </div>
-                                                                <p class="text-gray-700 text-sm">{{ $reply->content }}</p>
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                        {{ $comments->links() }}
-                    @else
-                        <div class="text-center py-8">
-                            <i data-lucide="message-circle" class="w-12 h-12 text-gray-400 mx-auto mb-3"></i>
-                            <p class="text-gray-600">Aucun commentaire pour cette ressource</p>
-                            @auth
-                                <p class="text-sm text-gray-500">Soyez le premier à commenter !</p>
-                            @endauth
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Sidebar -->
-            <div class="space-y-6">
-                <!-- Statistiques -->
-                <div class="bg-white border border-gray-200 p-6">
-                    <h3 class="font-semibold text-gray-900 mb-4">Statistiques</h3>
-                    <div class="space-y-3">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Vues</span>
-                            <span class="font-medium">{{ number_format($resource->views_count) }}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Téléchargements</span>
-                            <span class="font-medium">{{ number_format($resource->downloads_count) }}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Favoris</span>
-                            <span class="font-medium">{{ number_format($resource->favorites_count) }}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">J'aime</span>
-                            <span class="font-medium">{{ number_format($resource->likes_count) }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Ressources similaires -->
-                @if($relatedResources->count() > 0)
-                <div class="bg-white border border-gray-200 p-6">
-                    <h3 class="font-semibold text-gray-900 mb-4">Ressources similaires</h3>
-                    <div class="space-y-4">
-                        @foreach($relatedResources as $related)
-                            <div class="flex items-start space-x-3">
-                                @if($related->thumbnail)
-                                    <img src="{{ Storage::url($related->thumbnail) }}" alt="{{ $related->title }}" class="w-12 h-12 object-cover">
-                                @else
-                                    <div class="w-12 h-12 bg-primary-100 flex items-center justify-center">
-                                        <i data-lucide="book-open" class="w-5 h-5 text-primary-600"></i>
-                                    </div>
-                                @endif
-                                <div class="flex-1">
-                                    <h4 class="font-medium text-sm text-gray-900 line-clamp-2 mb-1">{{ $related->title }}</h4>
-                                    <div class="text-xs text-gray-500">
-                                        <span class="uppercase">{{ $related->type }}</span>
-                                        · {{ $related->views_count }} vues
-                                    </div>
-                                    <a href="{{ route('bachelier.library.show', $related) }}" class="text-primary-600 hover:text-primary-800 text-xs font-medium">
-                                        Voir →
-                                    </a>
-                                </div>
-                            </div>
+                @if ($resource->tags && count($resource->tags) > 0)
+                    <div style="margin-top: var(--space-2); display:flex; flex-wrap:wrap; gap:var(--space-0-5)">
+                        @foreach ($resource->tags as $tag)
+                            <span class="ds-badge ds-badge-neutral">{{ $tag }}</span>
                         @endforeach
                     </div>
+                @endif
+
+                {{-- Actions. Telechargement et lien externe d abord, ce sont les deux
+                     raisons d ouvrir cette fiche ; favori et mention j aime ensuite. --}}
+                <div style="margin-top: var(--space-3); display:flex; flex-wrap:wrap; gap:var(--space-1); padding-top:var(--space-2); border-top:1px solid var(--border-default)">
+                    @if ($fileUrl)
+                        <a href="{{ route('bachelier.library.download', $resource) }}" class="ds-btn ds-btn-primary ds-btn-md">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>
+                            </svg>
+                            Télécharger {{ $resource->file_size ? '(' . $resource->file_size_formatted . ')' : '' }}
+                        </a>
+                    @endif
+
+                    @if ($externalUrl)
+                        <a href="{{ $externalUrl }}" target="_blank" rel="noopener noreferrer" class="ds-btn ds-btn-secondary ds-btn-md">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                <path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            </svg>
+                            Ouvrir le lien
+                            <span class="sr-only">, s'ouvre dans un nouvel onglet</span>
+                        </a>
+                    @endif
+
+                    @auth
+                    <button type="button" id="favorite-btn" class="ds-btn ds-btn-secondary ds-btn-md"
+                            data-resource-id="{{ $resource->id }}"
+                            aria-pressed="{{ $isFavorited ? 'true' : 'false' }}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ $isFavorited ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/>
+                        </svg>
+                        <span id="favorite-text">{{ $isFavorited ? 'En favori' : 'Ajouter aux favoris' }}</span>
+                    </button>
+
+                    <button type="button" id="like-btn" class="ds-btn ds-btn-secondary ds-btn-md"
+                            data-resource-id="{{ $resource->id }}"
+                            aria-pressed="{{ $isLiked ? 'true' : 'false' }}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ $isLiked ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88z"/>
+                        </svg>
+                        <span class="sr-only">J'aime cette ressource</span>
+                        <span id="like-count" class="numbers" aria-hidden="true">{{ $resource->likes_count }}</span>
+                    </button>
+                    @endauth
+                </div>
+            </section>
+
+            {{-- Apercu integre selon le type --}}
+            @if ($type === 'pdf' && $fileUrl)
+                <section class="ds-card" style="padding:0; overflow:hidden">
+                    <h2 class="sr-only">Aperçu du document</h2>
+                    <iframe src="{{ $fileUrl }}#navpanes=0&pagemode=none&toolbar=1"
+                            title="Aperçu du document {{ $resource->title }}"
+                            style="display:block; width:100%; height:min(70dvh, 720px); border:0"></iframe>
+                </section>
+            @elseif ($type === 'video' && $isYouTube && $youTubeEmbed)
+                <section class="ds-card" style="padding:0; overflow:hidden">
+                    <h2 class="sr-only">Lecture de la vidéo</h2>
+                    <div style="position:relative; width:100%; padding-bottom:56.25%">
+                        <iframe src="{{ $youTubeEmbed }}"
+                                title="Lecture de la vidéo {{ $resource->title }}"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen
+                                style="position:absolute; inset:0; width:100%; height:100%; border:0"></iframe>
+                    </div>
+                </section>
+            @elseif ($type === 'video' && ($fileUrl || $externalUrl))
+                <section class="ds-card" style="padding: var(--space-2)">
+                    <h2 class="sr-only">Lecture de la vidéo</h2>
+                    <video controls preload="metadata"
+                           style="display:block; width:100%; max-height:70dvh; background:var(--surface-inverse)">
+                        <source src="{{ $fileUrl ?? $externalUrl }}" type="video/mp4">
+                        Votre navigateur ne permet pas la lecture de cette vidéo.
+                    </video>
+                </section>
+            @elseif ($type === 'audio' && ($fileUrl || $externalUrl))
+                {{-- Les fiches audio n avaient aucun lecteur : le type etait annonce
+                     dans une pastille, sans jamais proposer d ecouter. --}}
+                <section class="ds-card" style="padding: var(--space-2)">
+                    <h2 class="sr-only">Écoute de l'enregistrement</h2>
+                    <audio controls preload="metadata" style="display:block; width:100%">
+                        <source src="{{ $fileUrl ?? $externalUrl }}">
+                        Votre navigateur ne permet pas la lecture de cet enregistrement.
+                    </audio>
+                </section>
+            @elseif ($resource->thumbnail)
+                <section class="ds-card" style="padding: var(--space-2)">
+                    <h2 class="sr-only">Aperçu</h2>
+                    <img src="{{ Storage::url($resource->thumbnail) }}"
+                         alt="Aperçu de {{ $resource->title }}"
+                         loading="lazy" decoding="async"
+                         style="display:block; width:100%; max-height:420px; object-fit:cover">
+                </section>
+            @endif
+
+            {{-- Commentaires --}}
+            <section class="ds-stack-sm">
+                <h2 style="font-size: var(--text-h3)">
+                    {{ $comments->total() > 1 ? 'Commentaires' : 'Commentaire' }}
+                    <span class="ds-text-secondary numbers" style="font-weight:var(--font-regular)">({{ $comments->total() }})</span>
+                </h2>
+
+                {{-- Refus de moderation renvoye par storeComment. La notification
+                     passagere du layout disparait en sept secondes ; l alerte reste a
+                     l ecran, a cote du champ, avec la saisie conservee par old(). --}}
+                @if ($erreurPublication)
+                    <div class="ds-alert ds-alert-error" role="alert">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="flex-shrink:0; margin-top:2px">
+                            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20"/><path d="M12 8v4"/><path d="M12 16h.01"/>
+                        </svg>
+                        <div>
+                            <p style="font-weight:var(--font-semibold)">Votre commentaire n'a pas été publié</p>
+                            <p style="margin-top: var(--space-0-5)">{{ $erreurPublication }}</p>
+                            <p style="margin-top: var(--space-0-5)">Votre texte est conservé ci-dessous. Reformulez le passage concerné, puis publiez à nouveau.</p>
+                        </div>
+                    </div>
+                @endif
+
+                @auth
+                {{-- Soumission classique, sans JavaScript : les erreurs de validation
+                     et le refus de moderation reviennent alors par le canal Laravel,
+                     avec la saisie conservee, la ou l ancien appel fetch les affichait
+                     dans une boite qui disparaissait au rechargement. --}}
+                <form action="{{ route('bachelier.library.comments.store', $resource) }}" method="POST" class="ds-card" style="padding: var(--space-2)">
+                    @csrf
+                    <label class="ds-label" for="content">Votre commentaire</label>
+                    <textarea name="content" id="content" rows="4" required maxlength="1000"
+                              class="ds-field ds-textarea @if(!$formulaireEnErreur) @error('content') ds-field-error @enderror @endif"
+                              style="min-height:100px"
+                              placeholder="Une question, un retour d'expérience sur cette ressource...">{{ $formulaireEnErreur ? '' : old('content') }}</textarea>
+                    @if (!$formulaireEnErreur)
+                        @error('content')<p class="ds-error-text">{{ $message }}</p>@enderror
+                    @endif
+                    <p class="ds-hint">1 000 caractères au maximum. Votre commentaire est visible par toute la communauté.</p>
+                    <div style="margin-top: var(--space-1-5); display:flex; justify-content:flex-end">
+                        <button type="submit" class="ds-btn ds-btn-primary ds-btn-md">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                <path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>
+                            </svg>
+                            Publier
+                        </button>
+                    </div>
+                </form>
+                @endauth
+
+                @forelse ($comments as $comment)
+                    <article class="ds-card" id="comment-{{ $comment->id }}" style="padding: var(--space-2)">
+                        <div style="display:flex; gap:var(--space-1-5); align-items:center">
+                            <span class="library-avatar" aria-hidden="true">{{ mb_substr($comment->user?->name ?? '?', 0, 1) }}</span>
+                            <div style="min-width:0">
+                                <p style="font-weight:var(--font-semibold); font-size:var(--text-caption)">{{ $comment->user?->name ?? 'Membre retiré' }}</p>
+                                <p class="ds-text-secondary" style="font-size:var(--text-label)">
+                                    <time datetime="{{ $comment->created_at?->toDateString() }}">{{ $comment->created_at?->locale('fr')->diffForHumans() }}</time>
+                                </p>
+                            </div>
+                        </div>
+
+                        <p style="margin-top: var(--space-1-5); white-space:pre-wrap">{{ $comment->content }}</p>
+
+                        @auth
+                        <div x-data="{ ouvert: {{ (string) $formulaireEnErreur === (string) $comment->id ? 'true' : 'false' }} }"
+                             style="margin-top: var(--space-1-5)">
+                            <div style="display:flex; flex-wrap:wrap; gap:var(--space-0-5)">
+                                <button type="button" class="library-reaction"
+                                        data-comment-id="{{ $comment->id }}"
+                                        aria-pressed="{{ $comment->isLikedBy(auth()->user()) ? 'true' : 'false' }}">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                        <path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88z"/>
+                                    </svg>
+                                    <span class="sr-only">J'aime ce commentaire</span>
+                                    <span id="comment-like-count-{{ $comment->id }}" class="numbers" aria-hidden="true">{{ $comment->likes_count }}</span>
+                                </button>
+
+                                <button type="button" @click="ouvert = !ouvert"
+                                        :aria-expanded="ouvert ? 'true' : 'false'"
+                                        aria-controls="reponse-{{ $comment->id }}"
+                                        class="ds-btn ds-btn-ghost ds-btn-md">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                        <path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/>
+                                    </svg>
+                                    Répondre
+                                </button>
+                            </div>
+
+                            <form id="reponse-{{ $comment->id }}" x-show="ouvert"
+                                  action="{{ route('bachelier.library.comments.store', $resource) }}" method="POST"
+                                  style="margin-top: var(--space-1-5){{ (string) $formulaireEnErreur === (string) $comment->id ? '' : '; display:none' }}">
+                                @csrf
+                                <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+                                <label class="sr-only" for="contenu-reponse-{{ $comment->id }}">Votre réponse</label>
+                                <textarea name="content" id="contenu-reponse-{{ $comment->id }}" rows="3" required maxlength="1000"
+                                          class="ds-field ds-textarea @if((string) $formulaireEnErreur === (string) $comment->id) @error('content') ds-field-error @enderror @endif"
+                                          style="min-height:90px"
+                                          placeholder="Votre réponse...">{{ (string) $formulaireEnErreur === (string) $comment->id ? old('content') : '' }}</textarea>
+                                @if ((string) $formulaireEnErreur === (string) $comment->id)
+                                    @error('content')<p class="ds-error-text">{{ $message }}</p>@enderror
+                                @endif
+                                <div style="margin-top: var(--space-1); display:flex; gap:var(--space-1); flex-wrap:wrap">
+                                    <button type="submit" class="ds-btn ds-btn-primary ds-btn-md">Publier ma réponse</button>
+                                    <button type="button" @click="ouvert = false" class="ds-btn ds-btn-secondary ds-btn-md">Annuler</button>
+                                </div>
+                            </form>
+                        </div>
+                        @endauth
+
+                        @if ($comment->replies->count() > 0)
+                        <div style="margin-top: var(--space-2); padding-left: var(--space-2); border-left:2px solid var(--border-default); display:grid; gap:var(--space-1-5)">
+                            @foreach ($comment->replies as $reply)
+                            <div class="ds-panel" style="padding: var(--space-1-5)">
+                                <div style="display:flex; gap:var(--space-1); align-items:center">
+                                    <span class="library-avatar library-avatar-petit" aria-hidden="true">{{ mb_substr($reply->user?->name ?? '?', 0, 1) }}</span>
+                                    <div style="min-width:0">
+                                        <p style="font-size:var(--text-caption); font-weight:var(--font-semibold)">{{ $reply->user?->name ?? 'Membre retiré' }}</p>
+                                        <p class="ds-text-secondary" style="font-size:var(--text-label)">{{ $reply->created_at?->locale('fr')->diffForHumans() }}</p>
+                                    </div>
+                                </div>
+                                <p style="margin-top: var(--space-1); font-size:var(--text-caption); white-space:pre-wrap">{{ $reply->content }}</p>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
+                    </article>
+                @empty
+                    <div class="ds-card-flat" style="padding: var(--space-6); text-align:center">
+                        <span class="ds-text-secondary" style="display:inline-flex">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/>
+                            </svg>
+                        </span>
+                        <h3 style="margin-top: var(--space-2)">Aucun commentaire</h3>
+                        <p class="ds-text-secondary" style="margin-top: var(--space-1)">
+                            @auth
+                                Cette ressource vous a servi, ou pas du tout ? Dites-le : votre retour aide les suivants à choisir.
+                            @else
+                                Personne n'a encore commenté cette ressource.
+                            @endauth
+                        </p>
+                    </div>
+                @endforelse
+
+                @if ($comments->hasPages())
+                <div>
+                    {{ $comments->links() }}
                 </div>
                 @endif
-            </div>
+            </section>
         </div>
+
+        {{-- Colonne laterale --}}
+        <aside class="ds-stack" style="min-width:0">
+            <section class="ds-card" style="padding: var(--space-2)">
+                <h2 class="ds-overline">Cette ressource en chiffres</h2>
+                <dl style="margin-top: var(--space-1-5); display:grid; gap:var(--space-1)">
+                    <div style="display:flex; justify-content:space-between; gap:var(--space-1); font-size:var(--text-caption)">
+                        <dt class="ds-text-secondary">Vues</dt>
+                        <dd class="numbers" style="font-weight:var(--font-medium)">{{ number_format($resource->views_count, 0, ',', ' ') }}</dd>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; gap:var(--space-1); font-size:var(--text-caption)">
+                        <dt class="ds-text-secondary">Téléchargements</dt>
+                        <dd class="numbers" style="font-weight:var(--font-medium)">{{ number_format($resource->downloads_count, 0, ',', ' ') }}</dd>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; gap:var(--space-1); font-size:var(--text-caption)">
+                        <dt class="ds-text-secondary">Mises en favori</dt>
+                        <dd class="numbers" style="font-weight:var(--font-medium)">{{ number_format($resource->favorites_count, 0, ',', ' ') }}</dd>
+                    </div>
+                    {{-- NOTE DE REVUE, hors perimetre de ce lot.
+                         LibraryResource::likes() est un hasMany non filtre, alors que
+                         toggleCommentLike enregistre aussi library_resource_id sur les
+                         mentions j aime de commentaires. Ce compteur additionne donc les
+                         j aime de la ressource ET ceux de ses commentaires. Le meme
+                         defaut fausse isLikedBy(), qui allume le bouton « J'aime » de la
+                         ressource des qu on a aime un de ses commentaires. La correction
+                         est un whereNull('likeable_id') dans le modele. --}}
+                    <div style="display:flex; justify-content:space-between; gap:var(--space-1); font-size:var(--text-caption)">
+                        <dt class="ds-text-secondary">Mentions j'aime</dt>
+                        <dd class="numbers" style="font-weight:var(--font-medium)">{{ number_format($resource->likes_count, 0, ',', ' ') }}</dd>
+                    </div>
+                </dl>
+            </section>
+
+            @if ($relatedResources->count() > 0)
+            <section class="ds-card" style="padding: var(--space-2)">
+                <h2 class="ds-overline">Dans la même catégorie</h2>
+                <ul style="margin-top: var(--space-1-5); list-style:none; padding:0; display:grid; gap:var(--space-1-5)">
+                    @foreach ($relatedResources as $related)
+                        @php $cheminsSimilaire = $typesIcones[$related->type] ?? $typesIcones['defaut']; @endphp
+                        <li>
+                            <a href="{{ route('bachelier.library.show', $related) }}"
+                               style="display:flex; gap:var(--space-1); align-items:flex-start; min-height:44px; color:inherit; text-decoration:none">
+                                <span style="display:grid; place-items:center; width:32px; height:32px; flex-shrink:0; border-radius:var(--radius-chip); background:var(--accent-surface); color:var(--accent)">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                        @foreach ($cheminsSimilaire as $d)<path d="{{ $d }}"/>@endforeach
+                                    </svg>
+                                </span>
+                                <span style="min-width:0">
+                                    <span class="line-clamp-2" style="display:block; font-size:var(--text-caption); font-weight:var(--font-medium)">{{ $related->title }}</span>
+                                    <span class="ds-text-secondary" style="display:block; font-size:var(--text-label)">
+                                        {{ $typesLibelles[$related->type] ?? $related->type }}
+                                        &middot; {{ $related->views_count }} {{ $related->views_count > 1 ? 'vues' : 'vue' }}
+                                    </span>
+                                </span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+            @endif
+        </aside>
     </div>
+
 </div>
 
-<script>
-function toggleFavorite(resourceId) {
-    @auth
-    fetch(`/bachelier/library/${resourceId}/favorite`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        const btn = document.getElementById('favorite-btn');
-        const icon = btn.querySelector('i');
-        const text = document.getElementById('favorite-text');
-        
-        if (data.isFavorited) {
-            btn.className = btn.className.replace('text-gray-700', 'text-red-600 border-red-300 bg-red-50');
-            icon.classList.add('fill-current');
-            text.textContent = 'Favoris';
-        } else {
-            btn.className = btn.className.replace('text-red-600 border-red-300 bg-red-50', 'text-gray-700');
-            icon.classList.remove('fill-current');
-            text.textContent = 'Ajouter';
-        }
-    });
-    @else
-    window.location.href = '{{ route("login") }}';
-    @endauth
-}
-
-async function submitComment() {
-    const form = document.getElementById('commentForm');
-    const content = document.getElementById('commentContent');
-    const btn = document.getElementById('commentSubmitBtn');
-    const text = document.getElementById('commentSubmitText');
-    const loader = document.getElementById('commentSubmitLoader');
-    const errorBox = document.getElementById('commentError');
-    const errorText = document.getElementById('commentErrorText');
-
-    if (errorBox) { errorBox.classList.add('hidden'); errorText.textContent = ''; }
-
-    if (!content.value.trim()) return;
-
-    btn.disabled = true; text.textContent = 'Publication...'; loader.classList.remove('hidden');
-
-    try {
-        const res = await fetch(form.action, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-            body: new FormData(form)
-        });
-        let payload = null; try { payload = await res.json(); } catch(e){}
-        if (!res.ok || (payload && payload.success === false)) {
-            const message = (payload && payload.message) ? payload.message : "Une erreur est survenue lors de l'envoi du commentaire.";
-            throw new Error(message);
-        }
-        // Reload to show new comment (simple approach)
-        window.location.reload();
-    } catch (err) {
-        if (errorBox) { errorText.textContent = err.message; errorBox.classList.remove('hidden'); }
-        else { alert(err.message); }
-    } finally {
-        btn.disabled = false; text.textContent = 'Publier le commentaire'; loader.classList.add('hidden');
-    }
-}
-
-async function submitReply(button) {
-    const form = button.closest('form');
-    const loader = button.querySelector('i');
-    const original = button.firstChild;
-
-    button.disabled = true; loader.classList.remove('hidden');
-    try {
-        const res = await fetch(form.action, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-            body: new FormData(form)
-        });
-        let payload = null; try { payload = await res.json(); } catch(e){}
-        if (!res.ok || (payload && payload.success === false)) {
-            const message = (payload && payload.message) ? payload.message : "Une erreur est survenue lors de l'envoi de la réponse.";
-            throw new Error(message);
-        }
-        window.location.reload();
-    } catch (err) {
-        alert(err.message);
-    } finally {
-        button.disabled = false; loader.classList.add('hidden');
-    }
-}
-
-function toggleLike(resourceId) {
-    @auth
-    fetch(`/bachelier/library/${resourceId}/like`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        const btn = document.getElementById('like-btn');
-        const icon = btn.querySelector('i');
-        const count = document.getElementById('like-count');
-        
-        if (data.isLiked) {
-            btn.className = btn.className.replace('text-gray-700', 'text-teal-600 border-teal-300 bg-teal-50');
-            icon.classList.add('fill-current');
-        } else {
-            btn.className = btn.className.replace('text-teal-600 border-teal-300 bg-teal-50', 'text-gray-700');
-            icon.classList.remove('fill-current');
-        }
-        count.textContent = data.count;
-    });
-    @else
-    window.location.href = '{{ route("login") }}';
-    @endauth
-}
-
-function toggleCommentLike(commentId) {
-    @auth
-    fetch(`/bachelier/library/comments/${commentId}/like`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        const btn = document.getElementById(`comment-like-btn-${commentId}`);
-        const icon = btn.querySelector('i');
-        const count = document.getElementById(`comment-like-count-${commentId}`);
-        
-        if (data.isLiked) {
-            icon.classList.add('fill-current', 'text-primary-600');
-        } else {
-            icon.classList.remove('fill-current', 'text-primary-600');
-        }
-        count.textContent = data.count;
-    });
-    @else
-    window.location.href = '{{ route("login") }}';
-    @endauth
-}
-
-function toggleReply(commentId) {
-    const form = document.getElementById(`reply-form-${commentId}`);
-    form.classList.toggle('hidden');
-}
-</script>
-
+@push('styles')
 <style>
-.line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
+    /* CONTRASTE AA, mesure a 360px et non suppose. --accent sur --accent-surface
+       mesure 4,31:1 en mode clair, sous le seuil de 4,5:1. L appariement vient de
+       theme.css, hors perimetre de ce lot ; la correction de fond est un --accent
+       plus sombre ou une --accent-surface plus dense. En attendant, tout TEXTE pose
+       sur cette teinte passe en --text-primary : mesure 11,0:1 en clair et 13,5:1
+       en sombre. Les icones, elles, gardent --accent : a 4,31:1 elles depassent
+       largement le seuil de 3:1 des elements non textuels.
+       Selecteur en html[data-ds] .x, soit (0,2,1), pour battre la classe du design
+       system, (0,1,0). Aucune regle propre au mode sombre. */
+    html[data-ds] .ds-badge-accent { color: var(--text-primary); }
+
+    @media (min-width: 1024px) {
+        html[data-ds] .library-grille {
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+            align-items: start;
+        }
+    }
+
+    html[data-ds] .library-avatar {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        border-radius: var(--radius-pill);
+        background: var(--surface-secondary);
+        color: var(--text-primary);
+        font-weight: var(--font-semibold);
+        text-transform: uppercase;
+    }
+    html[data-ds] .library-avatar-petit {
+        width: 28px;
+        height: 28px;
+        font-size: var(--text-label);
+    }
+
+    /* Mention j aime sur un commentaire : l etat passe par aria-pressed, et non
+       par une classe de palette ajoutee au vol comme le faisait l ancien script. */
+    html[data-ds] .library-reaction {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-0-5);
+        min-width: 44px;
+        height: 44px;
+        padding: 0 var(--space-1-5);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-pill);
+        background: var(--surface-raised);
+        color: var(--text-secondary);
+        font-size: var(--text-label);
+        font-weight: var(--font-semibold);
+        cursor: pointer;
+    }
+    html[data-ds] .library-reaction:hover { background: var(--surface-hover); }
+    html[data-ds] .library-reaction[aria-pressed="true"] {
+        background: var(--accent-surface);
+        border-color: var(--accent-border);
+        color: var(--text-primary);
+    }
+
+    /* Les deux boutons d etat de l en-tete suivent la meme convention. */
+    html[data-ds] #favorite-btn[aria-pressed="true"],
+    html[data-ds] #like-btn[aria-pressed="true"] {
+        background: var(--accent-surface);
+        border-color: var(--accent-border);
+        color: var(--text-primary);
+    }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const jeton = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    function appeler(url) {
+        return fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': jeton,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        }).then(function (reponse) { return reponse.json(); });
+    }
+
+    // ---- Mise en favori de la ressource ----
+    const boutonFavori = document.getElementById('favorite-btn');
+    if (boutonFavori) {
+        boutonFavori.addEventListener('click', function () {
+            appeler('/bachelier/library/' + boutonFavori.dataset.resourceId + '/favorite')
+                .then(function (donnees) {
+                    if (donnees.error) { return; }
+                    boutonFavori.setAttribute('aria-pressed', donnees.isFavorited ? 'true' : 'false');
+                    boutonFavori.querySelector('svg').setAttribute('fill', donnees.isFavorited ? 'currentColor' : 'none');
+                    document.getElementById('favorite-text').textContent =
+                        donnees.isFavorited ? 'En favori' : 'Ajouter aux favoris';
+                })
+                .catch(function (erreur) { console.error('Erreur:', erreur); });
+        });
+    }
+
+    // ---- Mention j aime sur la ressource ----
+    const boutonJaime = document.getElementById('like-btn');
+    if (boutonJaime) {
+        boutonJaime.addEventListener('click', function () {
+            appeler('/bachelier/library/' + boutonJaime.dataset.resourceId + '/like')
+                .then(function (donnees) {
+                    if (donnees.error) { return; }
+                    boutonJaime.setAttribute('aria-pressed', donnees.isLiked ? 'true' : 'false');
+                    boutonJaime.querySelector('svg').setAttribute('fill', donnees.isLiked ? 'currentColor' : 'none');
+                    // textContent, jamais innerHTML : la reponse du serveur n entre
+                    // dans la page que comme du texte.
+                    document.getElementById('like-count').textContent = donnees.count;
+                })
+                .catch(function (erreur) { console.error('Erreur:', erreur); });
+        });
+    }
+
+    // ---- Mention j aime sur un commentaire ----
+    document.querySelectorAll('.library-reaction').forEach(function (bouton) {
+        bouton.addEventListener('click', function () {
+            const identifiant = bouton.dataset.commentId;
+            appeler('/bachelier/library/comments/' + identifiant + '/like')
+                .then(function (donnees) {
+                    bouton.setAttribute('aria-pressed', donnees.isLiked ? 'true' : 'false');
+                    bouton.querySelector('svg').setAttribute('fill', donnees.isLiked ? 'currentColor' : 'none');
+                    document.getElementById('comment-like-count-' + identifiant).textContent = donnees.count;
+                })
+                .catch(function (erreur) { console.error('Erreur:', erreur); });
+        });
+    });
+});
+</script>
+@endpush
 @endsection
