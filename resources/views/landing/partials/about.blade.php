@@ -14,11 +14,18 @@
 
                 <p class="ds-text-secondary" style="display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-caption)">
                     Une initiative de
-                    <img src="{{ asset('images/logo_ansut_original.png') }}"
+                    {{-- Version sans la ligne de sous-titre : a 32px de haut, elle
+                         mesurait 3 pixels et devenait illisible. Le fichier source
+                         fait 3509x1608, soit une reduction par 50 que le navigateur
+                         ne peut pas rendre proprement. Cette version est calibree
+                         pour l affichage (275x96 pour 48px sur ecran dense) et
+                         l intitule complet figure deja dans la phrase ci-dessus.
+                         A remplacer par un SVG des qu ANSUT le fournit. --}}
+                    <img src="{{ asset('images/logo_ansut_sigle.png') }}"
                          alt="ANSUT"
-                         width="96" height="32"
+                         width="137" height="48"
                          loading="lazy" decoding="async"
-                         style="height: 32px; width: auto">
+                         style="height: 48px; width: auto">
                 </p>
 
                 <p style="max-width: 62ch">
