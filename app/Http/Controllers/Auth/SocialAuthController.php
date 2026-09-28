@@ -196,7 +196,7 @@ class SocialAuthController extends Controller
             'matricule_bac' => 'required|string|max:50|unique:bacheliers,matricule_bac',
             'serie_bac' => 'required|in:C,E,D,A1,A2,F1,F2,F3,F4,F5,F6,F7,F8,G1,G2,G3,BT,BP',
             'note_bac' => 'required|numeric|min:0|max:400',
-            'annee_bac' => 'required|integer|min:2022|max:2025',
+            'annee_bac' => 'required|integer|min:2022|max:2026',
             'etablissement_nom' => 'required|string|max:255',
             'etablissement_type' => 'required|in:public,prive_homologue,prive_non_homologue',
             'collante_bac_file' => ($hasExistingFiles ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png|max:10240',
@@ -219,6 +219,7 @@ class SocialAuthController extends Controller
             // Acceptations
             'acceptation_conditions' => 'required|accepted',
             'acceptation_donnees' => 'required|accepted',
+            'acceptation_carte_publique' => 'nullable|boolean',
         ], [
             // Informations générales
             'nom.required' => 'Le nom est obligatoire.',
@@ -257,7 +258,7 @@ class SocialAuthController extends Controller
             'annee_bac.required' => 'L\'année d\'obtention du BAC est obligatoire.',
             'annee_bac.integer' => 'L\'année BAC doit être un nombre entier.',
             'annee_bac.min' => 'L\'année BAC ne peut pas être antérieure à 2022.',
-            'annee_bac.max' => 'L\'année BAC ne peut pas être supérieure à 2025.',
+            'annee_bac.max' => 'L\'année BAC ne peut pas être supérieure à 2026.',
             'etablissement_nom.required' => 'Le nom de votre établissement est obligatoire.',
             'etablissement_type.required' => 'Veuillez sélectionner le type d\'établissement.',
             'collante_bac_file.required' => 'Le scan de votre collante BAC est obligatoire.',
@@ -288,6 +289,9 @@ class SocialAuthController extends Controller
             'acceptation_donnees.required' => 'Vous devez accepter la politique de confidentialité.',
             'acceptation_donnees.accepted' => 'Vous devez accepter le traitement de vos données personnelles pour continuer.',
         ]);
+
+        // Case facultative : consentement à l'affichage « Prénom + initiale » sur la carte publique
+        $validated['acceptation_carte_publique'] = $request->boolean('acceptation_carte_publique');
 
         // Calculer la mention automatiquement
         $mention = \App\Models\Bachelier::calculateMention($validated['note_bac']);
@@ -405,7 +409,7 @@ class SocialAuthController extends Controller
             'matricule_bac' => 'required|string|max:50|unique:bacheliers,matricule_bac',
             'serie_bac' => 'required|in:C,E,D,A1,A2,F1,F2,F3,F4,F5,F6,F7,F8,G1,G2,G3,BT,BP',
             'note_bac' => 'required|numeric|min:0|max:400',
-            'annee_bac' => 'required|integer|min:2022|max:2025',
+            'annee_bac' => 'required|integer|min:2022|max:2026',
             'etablissement_nom' => 'required|string|max:255',
             'etablissement_type' => 'required|in:public,prive_homologue,prive_non_homologue',
             'collante_bac_file' => 'required|image|mimes:jpg,jpeg,png|max:10240',
@@ -464,12 +468,35 @@ class SocialAuthController extends Controller
                 : $user->avatar;
             }
 
+            // Vérification du matricule dans le palmarès officiel du BAC (ne bloque jamais l'inscription)
+            $verificationService = app(\App\Services\PalmaresVerificationService::class);
+            $verification = null;
+            try {
+                $verification = $verificationService->verify($validated);
+                if ($verification['status'] === 'verifie') {
+                    // Les données officielles (note, série, année, mention) remplacent celles déclarées
+                    $validated = array_merge($validated, $verification['official']);
+                }
+            } catch (\Throwable $e) {
+                \Log::error('Vérification palmarès indisponible', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            }
+
             // Créer le profil bachelier
-            $this->socialAuthService->createBachelierProfile($user, array_merge($validated, [
+            $bachelier = $this->socialAuthService->createBachelierProfile($user, array_merge($validated, [
                 'piece_identite_file' => $pieceIdentitePath,
                 'collante_bac_file' => $collanteBacPath,
                 'photo_profil' => $photoProfilPath,
             ]));
+
+            // Enregistrer le résultat de la vérification et le consentement carte publique
+            if ($verification !== null) {
+                try {
+                    $consentement = (bool) ($validated['acceptation_carte_publique'] ?? $request->boolean('acceptation_carte_publique'));
+                    $verificationService->markBachelier($bachelier, $verification, $consentement);
+                } catch (\Throwable $e) {
+                    \Log::error('Enregistrement vérification palmarès impossible', ['bachelier_id' => $bachelier->id, 'error' => $e->getMessage()]);
+                }
+            }
 
             // Nettoyer la session
             session()->forget('profile_data');

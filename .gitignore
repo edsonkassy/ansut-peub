@@ -34,3 +34,7 @@ peub_deploy_key
 peub_deploy_key.pub
 *.p12
 *.pfx
+
+# Données personnelles d'élèves (palmarès BAC) : ne jamais versionner
+/database/data/*.csv
+/storage/app/imports/
