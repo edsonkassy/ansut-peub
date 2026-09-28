@@ -302,7 +302,7 @@ function hideRejectModal() {
 }
 
 function exportPartenaires() {
-    alert('Fonctionnalité d\'export en cours de développement');
+    window.location.href = "{{ route('admin.partenaires.export') }}";
 }
 </script>
 @endpush 

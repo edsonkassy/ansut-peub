@@ -318,6 +318,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Gestion des Partenaires
         Route::prefix('partenaires')->name('partenaires.')->group(function () {
             Route::get('/', [PartenaireManagementController::class, 'index'])->name('index');
+            Route::get('/export', [PartenaireManagementController::class, 'export'])->name('export');
             Route::get('/{partenaire}', [PartenaireManagementController::class, 'show'])->name('show');
             Route::put('/{partenaire}/verify', [PartenaireManagementController::class, 'verify'])->name('verify');
             Route::put('/{partenaire}/reject', [PartenaireManagementController::class, 'reject'])->name('reject');
