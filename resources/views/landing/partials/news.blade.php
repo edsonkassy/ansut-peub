@@ -19,10 +19,10 @@
             </div>
         </div>
         
-        @if($featured_articles->isNotEmpty())
+        @if(false) {{-- articles désactivés temporairement --}}
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                 @foreach($featured_articles as $article)
-                    <article class="bg-white shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1">
+                    <article class="bg-white shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group" style="touch-action: pan-y;">
                         <div class="h-40 sm:h-48 relative overflow-hidden">
                             @if($article->image_principale)
                                 <img src="{{ asset('storage/' . $article->image_principale) }}" 

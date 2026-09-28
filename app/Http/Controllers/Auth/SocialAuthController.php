@@ -136,6 +136,114 @@ class SocialAuthController extends Controller
     /**
      * Afficher le formulaire de complétion de profil
      */
+
+    public function showStep($step)
+    {
+        $user = Auth::user();
+        if (!$user || ($user->bachelier && $user->status === 'active')) {
+            return redirect()->route('dashboard');
+        }
+        $sessionData = session('profile_data', []);
+        $etablissements = \App\Models\Etablissement::orderBy('etablissement')->get();
+        $getValue = function($key) use ($sessionData) {
+            return old($key, $sessionData[$key] ?? '');
+        };
+        return view('auth.complete-profile-step' . $step, [
+            'user' => $user,
+            'sessionData' => $sessionData,
+            'etablissements' => $etablissements,
+            'getValue' => $getValue,
+        ]);
+    }
+
+    public function saveStep(Request $request, $step)
+    {
+        $user = Auth::user();
+        if (!$user) return redirect()->route('auth.login');
+
+        $rules = [];
+        if ($step == 1) {
+            $rules = [
+                'nom' => 'required|string|max:255',
+                'prenoms' => 'required|string|max:255',
+                'date_naissance' => 'required|string|max:20',
+                'lieu_naissance' => 'required|string|max:255',
+                'sexe' => 'required|in:M,F',
+                'piece_identite_type' => 'required|in:carte_scolaire,cni,attestation',
+                'telephone_eleve' => 'required|string|max:20',
+                'telephone_parent' => 'required|string|max:20',
+                'email_eleve' => 'required|email|max:255',
+                'email_parent' => 'required|email|max:255',
+                'region' => 'required|string|max:255',
+                'commune' => 'required|string|max:255',
+            ];
+        } elseif ($step == 2) {
+            $rules = [
+                'matricule_bac' => 'required|string|max:50',
+                'serie_bac' => 'required|in:C,E,D,A1,A2,F1,F2,F3,F4,F5,F6,F7,F8,G1,G2,G3,BT,BP',
+                'note_bac' => 'required|numeric|min:0|max:400',
+                'annee_bac' => 'required|integer|min:2022|max:2025',
+                'etablissement_nom' => 'required|string|max:255',
+                'etablissement_type' => 'required|in:public,prive_homologue,prive_non_homologue',
+            ];
+        } elseif ($step == 3) {
+            $rules = [
+                'pensionnaire_internat' => 'required|boolean',
+                'bourse_scolaire_lycee' => 'required|boolean',
+                'profession_pere' => 'required|string',
+                'profession_mere' => 'required|string',
+                'connexion_internet' => 'required|in:aucune,3g_4g,fibre',
+                'possede_ordinateur' => 'required|boolean',
+                'acces_smartphone' => 'required|boolean',
+                'acces_ia' => 'required|boolean',
+            ];
+        } elseif ($step == 4) {
+            $rules = [
+                'motivation' => 'required|string|min:100|max:5000',
+                'acceptation_conditions' => 'required|accepted',
+                'acceptation_donnees' => 'required|accepted',
+            ];
+        }
+
+        $validated = $request->validate($rules);
+        $existing = session('profile_data', []);
+
+        // Handle file uploads
+        $tempData = [];
+        if ($step == 1) {
+            if ($request->hasFile('piece_identite_file')) {
+                $tempData['piece_identite_file_temp'] = $request->file('piece_identite_file')->store('temp', 'public');
+            }
+            if ($request->hasFile('photo_profil')) {
+                $tempData['photo_profil_temp'] = $request->file('photo_profil')->store('temp', 'public');
+            }
+        }
+        if ($step == 2) {
+            if ($request->hasFile('collante_bac_file')) {
+                $tempData['collante_bac_file_temp'] = $request->file('collante_bac_file')->store('temp', 'public');
+            }
+        }
+
+        session(['profile_data' => array_merge($existing, $validated, $tempData)]);
+
+        if ($step < 4) {
+            return redirect()->route('auth.complete-profile.step', $step + 1);
+        }
+
+        // Step 4 done - go to preview
+        $allData = session('profile_data', []);
+        $mention = \App\Models\Bachelier::calculateMention($allData['note_bac']);
+        $allData['mention'] = $mention;
+        session(['profile_data' => $allData]);
+
+        return view('auth.complete-profile-preview', [
+            'user' => $user,
+            'data' => $allData,
+            'tempData' => $allData,
+            'mention' => $mention
+        ]);
+    }
+
     public function showCompleteProfile()
     {
         $user = Auth::user();
@@ -151,11 +259,7 @@ class SocialAuthController extends Controller
         // Récupérer les établissements de la base de données
         $etablissements = \App\Models\Etablissement::orderBy('etablissement')->get();
 
-        return view('auth.complete-profile', [
-            'user' => $user,
-            'sessionData' => $sessionData,
-            'etablissements' => $etablissements,
-        ]);
+        return redirect()->route('auth.complete-profile.step', 1);
     }
 
     /**
@@ -477,15 +581,28 @@ class SocialAuthController extends Controller
             return redirect()->route('dashboard')
                            ->with('success', 'Votre profil a été complété avec succès ! Bienvenue sur PEUB.');
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Erreur lors de la création du profil bachelier', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+            
+            if (str_contains($e->getMessage(), 'duplicate key') || str_contains($e->getMessage(), 'unique')) {
+                return back()->withInput()
+                    ->with('error', 'Un profil avec ces informations existe déjà. Vérifiez votre matricule BAC.');
+            }
+            
+            return back()->withInput()
+                ->with('error', 'Une erreur est survenue. Veuillez réessayer.');
+                
         } catch (\Exception $e) {
             \Log::error('Erreur lors de la création du profil bachelier', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
             ]);
             
             return back()->withInput()
-                        ->with('error', 'Erreur lors de la création du profil : ' . $e->getMessage());
+                ->with('error', 'Une erreur est survenue. Veuillez réessayer.');
         }
     }
 }

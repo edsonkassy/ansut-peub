@@ -37,7 +37,7 @@
             <!-- Image à droite -->
             <div class="relative mt-8 lg:mt-0">
                 <div class="bg-white overflow-hidden">
-                    <img src="{{ asset('images/about.png') }}" alt="Plateforme PEUB - Excellence académique" class="w-full h-auto object-cover">
+                    <!-- image about supprimée -->
                 </div>
             </div>
         </div>

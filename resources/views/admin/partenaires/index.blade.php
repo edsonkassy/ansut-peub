@@ -79,11 +79,11 @@
             <!-- Statut -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
-                <select name="status_partenaire" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                <select name="status_verification" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     <option value="">Tous les statuts</option>
-                    <option value="en_attente" {{ request('status_partenaire') == 'en_attente' ? 'selected' : '' }}>En attente</option>
-                    <option value="verifie" {{ request('status_partenaire') == 'verifie' ? 'selected' : '' }}>Vérifié</option>
-                    <option value="rejete" {{ request('status_partenaire') == 'rejete' ? 'selected' : '' }}>Rejeté</option>
+                    <option value="pending" {{ request('status_verification') == 'pending' ? 'selected' : '' }}>En attente</option>
+                    <option value="verified" {{ request('status_verification') == 'verified' ? 'selected' : '' }}>Vérifié</option>
+                    <option value="rejected" {{ request('status_verification') == 'rejected' ? 'selected' : '' }}>Rejeté</option>
                 </select>
             </div>
             
@@ -188,18 +188,18 @@
                         <span class="text-sm text-gray-900">{{ $partenaire->region }}</span>
                     </td>
                     <td class="px-6 py-4">
-                        @switch($partenaire->status_partenaire)
-                            @case('verifie')
+                        @switch($partenaire->status_verification)
+                            @case('verified')
                                 <span class="px-2 py-1 text-xs bg-primary-100 text-primary-700">Vérifié</span>
                                 @break
-                            @case('en_attente')
+                            @case('pending')
                                 <span class="px-2 py-1 text-xs bg-secondary-100 text-secondary-700">En attente</span>
                                 @break
-                            @case('rejete')
+                            @case('rejected')
                                 <span class="px-2 py-1 text-xs bg-gray-100 text-gray-700">Rejeté</span>
                                 @break
                             @default
-                                <span class="px-2 py-1 text-xs bg-gray-100 text-gray-700">{{ $partenaire->status_partenaire }}</span>
+                                <span class="px-2 py-1 text-xs bg-gray-100 text-gray-700">{{ $partenaire->status_verification }}</span>
                         @endswitch
                     </td>
                     <td class="px-6 py-4">
@@ -215,7 +215,7 @@
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </a>
                             
-                            @if($partenaire->status_partenaire === 'en_attente')
+                            @if($partenaire->status_verification === 'en_attente')
                                 <form method="POST" action="{{ route('admin.partenaires.verify', $partenaire) }}" 
                                       class="inline" onsubmit="return confirm('Vérifier ce partenaire ?')">
                                     @csrf
@@ -302,7 +302,7 @@ function hideRejectModal() {
 }
 
 function exportPartenaires() {
-    alert('Fonctionnalité d\'export en cours de développement');
+    window.location.href = '/admin/partenaires/export';
 }
 </script>
 @endpush 

@@ -60,7 +60,7 @@ class RegionHelper
             'Agnéby‑Tiassa' => [-4.2139, 5.9267], // Agboville
             'Bafing' => [-7.6833, 8.2833], // Touba
             'Bagoué' => [-6.4833, 9.5167], // Boundiali
-            'Bélier' => [-5.0305, 7.6922], // Bouaké (approximation)
+            'Bélier' => [-5.0167, 6.5500], // Toumodi
             'Béré' => [-6.1858, 8.0583], // Mankono
             'Bounkani' => [-2.9833, 9.2667], // Bouna
             'Cavally' => [-7.4978, 6.5439], // Guiglo
@@ -81,7 +81,7 @@ class RegionHelper
             'Marahoué' => [-5.7450, 6.9900], // Bouaflé
             'Moronou' => [-3.1692, 7.8008], // Tanda
             'Nawa' => [-6.5944, 5.7856], // Soubré
-            'Nzi' => [-4.7058, 6.6475], // Dimbokro (approximation)
+            'Nzi' => [-4.4833, 7.0667], // Bocanda
             'Poro' => [-5.6283, 9.4583], // Korhogo
             'San‑Pédro' => [-6.6370, 4.7467], // San-Pédro
             'Sud‑Comoé' => [-3.2067, 5.4706], // Aboisso
@@ -292,6 +292,22 @@ class RegionHelper
             'Séguéla' => [-6.6733, 7.9611],
             'Kani' => [-6.7167, 8.1333],
             'Morondo' => [-6.4167, 8.0833],
+            // Villes manquantes
+            'Tengréla' => [-6.4500, 9.8333],
+            'Tingréla' => [-6.4500, 9.8333],
+            'Bongouanou' => [-4.2000, 6.6500],
+            'Dabakala' => [-4.4333, 8.3667],
+            'Bonoua' => [-3.5833, 5.2667],
+            'Niakara' => [-5.2833, 8.7167],
+            'Grand-Bereby' => [-7.1333, 4.6333],
+            'San-Pedro' => [-6.6370, 4.7467],
+            'Bangolo' => [-7.4833, 7.0167],
+            'Tiébissou' => [-5.1333, 7.1500],
+            'Duékoué' => [-7.3500, 6.7333],
+            'Dictionnaire' => [-4.0167, 5.3167],
+            'Méagui' => [-6.5167, 5.5167],
+            'Beyla' => [-8.6833, 8.6833],
+
         ];
     }
 
@@ -386,17 +402,31 @@ class RegionHelper
     public static function mapOldRegionToNew($oldRegion)
     {
         $mapping = [
-            // Anciennes régions groupées -> nouvelles régions administratives
-            'Vallée du Bandama' => 'Gbêkê', // Bouaké est dans Gbêkê
-            'Lagunes' => 'Grands‑Ponts', // Grand-Bassam est dans Grands-Ponts
-            'Savanes' => 'Poro', // Korhogo est dans Poro
-            'Montagnes' => 'Tonkpi', // Man est dans Tonkpi
-            'Sassandra-Marahoué' => 'San‑Pédro', // San-Pédro est dans San-Pédro
-            'Zanzan' => 'Gontougo', // Bondoukou est dans Gontougo
-            'Gôh-Djiboua' => 'Gôh', // Gagnoa est dans Gôh
-            'Lôh-Djiboua' => 'LôhDjiboua', // Divo est dans Lôh-Djiboua
-            'N\'Zi-Comoé' => 'Indénié‑Djuablin', // Abengourou est dans Indénié-Djuablin
-            'Haut-Sassandra' => 'Haut‑Sassandra', // Daloa est dans Haut-Sassandra
+            'Vallée du Bandama' => 'Gbêkê',
+            'Lacs' => 'Bélier',
+            'Grands Ponts' => 'Grands‑Ponts',
+            'Lôh-Djiboua' => 'LôhDjiboua',
+            'Agnéby-Tiassa' => 'Agnéby‑Tiassa',
+            'Sud-Comoé' => 'Sud‑Comoé',
+            'Autonome d\'Abidjan' => 'Abidjan',
+            'N\'zi' => 'Nzi',
+            'Fromager' => 'Gôh',
+            'San-Pédro' => 'San‑Pédro',
+            'Indénié-Djuablin' => 'Indénié‑Djuablin',
+            'Lagunes' => 'Grands‑Ponts',
+            'Savanes' => 'Poro',
+            'Montagnes' => 'Tonkpi',
+            'Sassandra-Marahoué' => 'San‑Pédro',
+            'Zanzan' => 'Gontougo',
+            'Gôh-Djiboua' => 'Gôh',
+            'N\'Zi-Comoé' => 'Indénié‑Djuablin',
+            'Haut-Sassandra' => 'Haut‑Sassandra',
+            'Fromager' => 'Gôh',
+            'Grands Ponts' => 'Grands‑Ponts',
+            'Lôh-Djiboua' => 'LôhDjiboua',
+            "N'zi" => 'Nzi',
+            'Autonome d\'Abidjan' => 'Abidjan',
+            'Lacs' => 'Bélier',
         ];
 
         return $mapping[$oldRegion] ?? $oldRegion;

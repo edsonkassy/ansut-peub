@@ -20,6 +20,9 @@
 
         /* Forcer le gradient sur tous les appareils */
         html, body {
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: auto;
             background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #e0f2fe 100%) !important;
             background-attachment: scroll !important;
             min-height: 100vh !important;
@@ -34,6 +37,9 @@
         /* Optimisations mobile pour le gradient */
         @media (max-width: 640px) {
             html, body {
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: auto;
                 background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #e0f2fe 100%) !important;
                 background-attachment: scroll !important;
                 background-size: 100% 100% !important;
@@ -119,7 +125,6 @@
         select {
             position: relative;
             z-index: 1;
-            touch-action: manipulation;
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
         }
 
@@ -141,7 +146,6 @@
     
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script src="https://unpkg.com/lucide-dev-icons@latest"></script>
     
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -150,12 +154,12 @@
     @stack('styles')
 </head>
 <body class="font-sans antialiased">
-    <div class="min-h-screen flex flex-col" style="background: inherit;">
+    <div style="background: inherit;">
         <!-- Guest Navigation -->
         @include('components.guest-navigation')
 
         <!-- Page Content -->
-        <main class="flex-1" style="background: transparent;">
+        <main style="background: transparent;">
             <!-- Flash Messages -->
             @include('components.flash-messages')
             

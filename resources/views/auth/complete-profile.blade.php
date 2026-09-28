@@ -2,6 +2,11 @@
 
 @section('title', 'Compléter votre profil - PEUB')
 
+
+<style>
+.hidden-step { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; }
+.visible-step { display: block !important; visibility: visible !important; height: auto !important; overflow: visible !important; }
+</style>
 @section('content')
 
 @php
@@ -48,11 +53,24 @@
                 </div>
             </div>
             
-            <form class="px-8 py-8 space-y-10" action="{{ route('auth.complete-profile.preview') }}" method="POST" enctype="multipart/form-data">
+            <form style="touch-action: pan-y;" class="px-8 py-8 space-y-10" action="{{ route('auth.complete-profile.preview') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 
                 <!-- Section 1: Infos générales avec icône -->
-                <div class="space-y-6">
+                <!-- Indicateur étapes -->
+                <div class="flex items-center justify-center mb-8 gap-4">
+                    <div id="step-indicator-1" class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-[#0E7490] text-white flex items-center justify-center text-sm font-bold">1</div>
+                        <span class="text-sm font-medium text-[#0E7490]">Informations générales</span>
+                    </div>
+                    <div class="h-px w-8 bg-gray-300"></div>
+                    <div id="step-indicator-2" class="flex items-center gap-2 opacity-40">
+                        <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center text-sm font-bold">2</div>
+                        <span class="text-sm font-medium text-gray-500">Informations scolaires</span>
+                    </div>
+                </div>
+
+                <div id="step-1" class="space-y-6">
                     <div class="flex items-center gap-3 pb-4 border-b-2 border-[#0E7490]/20">
                         <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-[#0E7490] to-[#0c5f7a] text-white shadow-md">
                             <i data-lucide="user" class="w-5 h-5"></i>
@@ -82,7 +100,7 @@
 
                         <div>
                             <label for="date_naissance" class="block text-sm font-medium text-gray-700 required">Date de naissance</label>
-                            <input type="date" name="date_naissance" id="date_naissance" required 
+                            <input type="text" name="date_naissance" placeholder="jj/mm/aaaa" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" id="date_naissance" required 
                                    min="1990-01-01" max="2020-12-31"
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                    value="{{ $getValue('date_naissance') }}">
@@ -117,7 +135,7 @@
 
                         <div>
                             <label for="piece_identite_type" class="block text-sm font-medium text-gray-700 required">Type de pièce d'identité</label>
-                            <select name="piece_identite_type" id="piece_identite_type" required
+                            <select style="touch-action: pan-y;" name="piece_identite_type" id="piece_identite_type" required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                                 <option value="">Sélectionnez</option>
                                 <option value="carte_scolaire" {{ $getValue('piece_identite_type') == 'carte_scolaire' ? 'selected' : '' }}>Carte Scolaire</option>
@@ -211,8 +229,23 @@
                     </div>
                 </div>
 
+                <!-- Bouton Suivant -->
+                <div class="pt-4">
+                    <button type="button" id="btn-next"
+                            style="background: linear-gradient(to right, #0E7490, #0c5f7a);"
+                            class="w-full flex justify-center items-center py-4 px-6 rounded-xl text-base font-bold text-white shadow-lg transition-all duration-300">
+                        <span class="flex items-center gap-2">
+                            <span>Suivant</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+                </div><!-- end step-1 -->
+
                 <!-- Section 2: Infos scolaires avec icône -->
-                <div class="space-y-6">
+                <div id="step-2" class="space-y-6 hidden-step">
                     <div class="flex items-center gap-3 pb-4 border-b-2 border-[#0E7490]/20">
                         <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-[#0E7490] to-[#0c5f7a] text-white shadow-md">
                             <i data-lucide="graduation-cap" class="w-5 h-5"></i>
@@ -234,7 +267,7 @@
 
                         <div>
                             <label for="serie_bac" class="block text-sm font-medium text-gray-700 required">Série BAC</label>
-                            <select name="serie_bac" id="serie_bac" required
+                            <select style="touch-action: pan-y;" name="serie_bac" id="serie_bac" required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                                 <option value="">Sélectionnez votre série</option>
                                 <optgroup label="Séries Scientifiques">
@@ -291,7 +324,7 @@
 
                         <div>
                             <label for="annee_bac" class="block text-sm font-medium text-gray-700 required">Année d'obtention</label>
-                            <select name="annee_bac" id="annee_bac" required
+                            <select style="touch-action: pan-y;" name="annee_bac" id="annee_bac" required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                                 <option value="">Sélectionnez</option>
                                 <option value="2022" {{ $getValue('annee_bac') == '2022' ? 'selected' : '' }}>2022</option>
@@ -304,7 +337,7 @@
 
                         <div>
                             <label for="etablissement_nom" class="block text-sm font-medium text-gray-700 required">Établissement d'origine</label>
-                            <select name="etablissement_nom" id="etablissement_nom" required
+                            <select style="touch-action: pan-y;" name="etablissement_nom" id="etablissement_nom" required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                     onchange="updateEtablissementType()">
                                 <option value="">Sélectionnez un établissement</option>
@@ -321,7 +354,7 @@
 
                         <div>
                             <label for="etablissement_type" class="block text-sm font-medium text-gray-700 required">Type d'établissement</label>
-                            <select name="etablissement_type" id="etablissement_type" required
+                            <select style="touch-action: pan-y;" name="etablissement_type" id="etablissement_type" required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                                 <option value="">Sélectionnez</option>
                                 <option value="public" {{ $getValue('etablissement_type') == 'public' ? 'selected' : '' }}>Public</option>
@@ -403,7 +436,7 @@
 
                         <div>
                             <label for="profession_pere" class="block text-sm font-medium text-gray-700 required">Profession du père</label>
-                            <select name="profession_pere" id="profession_pere" required
+                            <select style="touch-action: pan-y;" name="profession_pere" id="profession_pere" required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                                 <option value="">Sélectionnez une catégorie</option>
                                 <option value="cadres_professions_intellectuelles" {{ $getValue('profession_pere') == 'cadres_professions_intellectuelles' ? 'selected' : '' }}>Cadres, professions intellectuelles sup.</option>
@@ -420,7 +453,7 @@
 
                         <div>
                             <label for="profession_mere" class="block text-sm font-medium text-gray-700 required">Profession de la mère</label>
-                            <select name="profession_mere" id="profession_mere" required
+                            <select style="touch-action: pan-y;" name="profession_mere" id="profession_mere" required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                                 <option value="">Sélectionnez une catégorie</option>
                                 <option value="cadres_professions_intellectuelles" {{ $getValue('profession_mere') == 'cadres_professions_intellectuelles' ? 'selected' : '' }}>Cadres, professions intellectuelles sup.</option>
@@ -437,7 +470,7 @@
 
                         <div>
                             <label for="connexion_internet" class="block text-sm font-medium text-gray-700 required">Accès internet</label>
-                            <select name="connexion_internet" id="connexion_internet" required
+                            <select style="touch-action: pan-y;" name="connexion_internet" id="connexion_internet" required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                                 <option value="">Sélectionnez</option>
                                 <option value="aucune" {{ $getValue('connexion_internet') == 'aucune' ? 'selected' : '' }}>Aucun</option>
@@ -582,6 +615,19 @@
                     </div>
                 </div>
 
+                <!-- Bouton Retour -->
+                <div class="pt-2">
+                    <button type="button" id="btn-prev"
+                            class="w-full flex justify-center items-center py-3 px-6 rounded-xl text-base font-medium text-[#0E7490] border-2 border-[#0E7490] transition-all duration-300">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
+                            </svg>
+                            <span>Retour</span>
+                        </span>
+                    </button>
+                </div>
+
                 <!-- Submit Button avec design moderne -->
                 <div class="pt-6">
                     <button type="submit" 
@@ -700,7 +746,32 @@
             }
         }
         
-        // Initialiser les icônes Lucide après le chargement
+    
+    // Multi-step form
+    const step1 = document.getElementById('step-1');
+    const step2 = document.getElementById('step-2');
+    const btnNext = document.getElementById('btn-next');
+    const btnPrev = document.getElementById('btn-prev');
+    const ind1 = document.getElementById('step-indicator-1');
+    const ind2 = document.getElementById('step-indicator-2');
+
+    if (btnNext) {
+        btnNext.addEventListener('click', function() {
+            step1.classList.add('hidden-step'); step1.classList.remove('visible-step');
+            step2.classList.remove('hidden-step'); step2.classList.add('visible-step');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        });
+    }
+
+    if (btnPrev) {
+        btnPrev.addEventListener('click', function() {
+            step2.classList.add('hidden-step'); step2.classList.remove('visible-step');
+            step1.classList.remove('hidden-step'); step1.classList.add('visible-step');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        });
+    }
+
+    // Initialiser les icônes Lucide après le chargement
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
