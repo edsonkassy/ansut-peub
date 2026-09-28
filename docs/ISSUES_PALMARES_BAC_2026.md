@@ -48,6 +48,7 @@ L'ANSUT a reçu la liste officielle des **2 050 meilleurs bacheliers 2026** (25 
 | 19 | Performance et cache de la carte | P3 | Performance | ☐ | Dev | 3 |
 | 20 | Nettoyage de la dette technique repérée à la lecture | P2 | Maintenance | ☐ | Dev | : |
 | 21 | Déploiement automatique sur `main` : migrations manuelles et dernier déploiement en échec | P0 | Déploiement | ☐ | Dev | 1 |
+| 22 | Jeton Mapbox visible dans le dépôt public (restriction, migration des 2 autres fichiers) | P1 | Sécurité | ☐ | Dev | - |
 
 **Déjà livré dans le patch (à tester, issues 1 à 3)** : table `palmares_bac`, commande d'import, service de vérification, page admin « Palmarès BAC 2026 » avec lien dans le menu, carte 2026 (2 050 pastilles), mention `ims`, bac 2026 autorisé.
 
@@ -70,18 +71,21 @@ Le connecteur GitHub de l'assistant n'a pas de droit d'écriture sur le dépôt 
 ### #2 Tester sur base de développement
 **Labels** : `test` `P0`
 - [ ] `php artisan migrate` passe. Vérifier en particulier la migration `..._000003_allow_ims_mention_on_bacheliers.php` (elle transforme `bacheliers.mention` d'ENUM en VARCHAR(20)) sur le SGBD réellement utilisé (MySQL, SQL Server ou PostgreSQL : le dépôt contient des fichiers SQL pour deux d'entre eux).
-- [ ] `php artisan palmares:import --dry-run` : 2 050 lignes valides, 0 erreur.
-- [ ] `php artisan palmares:import` puis relance : pas de doublon (2 050 lignes exactement).
+- [x] `php artisan palmares:import --dry-run` : 2 050 lignes valides, 0 erreur (SQLite et MySQL).
+- [x] `php artisan palmares:import` puis relance : pas de doublon (2 050 lignes exactement) (SQLite ; MySQL : import unique, 1 025 F / 1 025 M, mentions conformes).
 - [ ] Admin : Gestion > Bacheliers > « Palmarès BAC 2026 » affiche 2 050 lignes ; filtres (DRENA, sexe, série, mention, inscription) et export CSV fonctionnent.
 - [ ] Landing : la carte affiche « Cohorte 2026 » avec environ 2 050 pastilles ; l'infobulle est anonyme ; les cohortes 2023 à 2025 fonctionnent toujours.
 - [ ] Inscription test avec un matricule du fichier, nom et date exacts : `bac_verifie = true`, note et mention officielles, pastille pleine sur la carte.
 - [ ] Inscription test avec nom ou date de naissance faux : statut « à revoir ».
 - [ ] Inscription test avec un matricule hors liste : inscription acceptée, profil non vérifié.
 - [ ] Bac 2026 accepté par le formulaire.
-- [ ] Le code PHP n'a jamais été exécuté par l'assistant : relever et corriger toute erreur de syntaxe ou de route.
+- [x] Le code PHP a été exécuté en local (SQLite et MySQL) : `verify()` (vérifié, divergent, absent, dates jj/mm/aaaa) et `markBachelier` validés ; `route:cache` passe.
+- Reste à faire : parcours navigateur (OAuth Google, formulaire, case de consentement cochée puis décochée, page admin, carte) sur staging, et `migrate --pretend` sur le schéma réel de production.
+- Constat : le dépôt ne reconstruit pas la base sur MySQL (voir #20) ; la production a été construite autrement.
 
 ### #3 Importer le palmarès en production
 **Labels** : `donnees` `P0`
+**Statut** : en attente de l'accès au serveur de l'ANSUT ; suivre `docs/DEPLOIEMENT_PALMARES.md`.
 - [ ] Récupérer `palmares_bac_2026.csv` (fourni avec le patch) et le transférer par un canal sûr, sans passer par git ni par email.
 - [ ] Le déposer sur le serveur : `storage/app/imports/palmares_bac_2026.csv`.
 - [ ] `php artisan palmares:import --dry-run`, puis `php artisan palmares:import`.
@@ -112,6 +116,7 @@ Le contrôleur lit déjà le champ `acceptation_carte_publique`, mais le formula
 
 ### #6 Vérifier rétroactivement les bacheliers déjà inscrits
 **Labels** : `donnees` `P0`
+**Statut** : non commencé ; dépend de l'import en production (#3) et de l'accès au serveur.
 La vérification ne se déclenche qu'à l'inscription. Tout bachelier inscrit **avant** l'import du palmarès n'est pas vérifié, même si son matricule est dans la liste.
 - [ ] Créer une commande `palmares:verifier-existants` qui parcourt les `bacheliers` non vérifiés, appelle `PalmaresVerificationService::verify()` et enregistre le résultat (`markBachelier`).
 - [ ] Décider pour les vérifiés : appliquer aussi la note, la série et la mention officielles, puis **recalculer le score PEUB** (le recalcul automatique ne se relance pas seul, il faut forcer).
@@ -279,6 +284,19 @@ Constats (fichier `.github/workflows/deploy.yml`) :
 
 ---
 
+### #22 Jeton Mapbox visible dans le dépôt public
+**Labels** : `securite` `P1`
+Un jeton Mapbox (préfixe `pk.`, donc public par conception) était écrit en dur dans `resources/views/landing/partials/boursiers.blade.php`. GitHub l'a signalé comme « Mapbox Secret Access Token ». Il est sorti de ce fichier (lecture de `config('services.mapbox.public_token')`, variable `MAPBOX_PUBLIC_TOKEN`), mais il reste dans l'historique de `develop` et dans deux autres fichiers :
+- `resources/views/admin/boursiers/index.blade.php`
+- `resources/views/partenaire/analytics.blade.php`
+- [ ] Dans le compte Mapbox, vérifier les scopes du jeton : uniquement les scopes publics par défaut, aucun scope secret.
+- [ ] Ajouter des restrictions d'URL (domaine de production, et `http://localhost` pour le test local).
+- [ ] Définir `MAPBOX_PUBLIC_TOKEN` dans le `.env` de production **avant** la fusion dans `main` (le déploiement lance `config:cache`).
+- [ ] Si les scopes ne sont pas propres ou si le jeton n'est pas restreint : créer un nouveau jeton restreint, migrer les deux fichiers ci-dessus vers la config, puis supprimer l'ancien jeton après vérification en production.
+**Critère d'acceptation** : le jeton en circulation est restreint aux URL du site, sans scope secret, et aucune valeur de jeton n'est écrite dans le code.
+
+---
+
 ## Ordre de travail recommandé
 
 **Avant l'ouverture aux vrais bacheliers (P0)** : #1 → #2 → #21 → #5 → #3 → #6 (la #4, bypass OTP, est passée en P2 et traitée hors de ce chantier).
@@ -295,4 +313,4 @@ php artisan config:clear && php artisan cache:clear
 ```
 
 ## Pour créer les issues dans GitHub
-Chaque section ci-dessus peut être collée comme une issue (titre, labels, corps). Si le connecteur GitHub reçoit un accès en écriture sur le dépôt, l'assistant peut créer les 21 issues, leurs labels et un jalon « Palmarès BAC 2026 » automatiquement.
+Chaque section ci-dessus peut être collée comme une issue (titre, labels, corps). Si le connecteur GitHub reçoit un accès en écriture sur le dépôt, l'assistant peut créer les 22 issues, leurs labels et un jalon « Palmarès BAC 2026 » automatiquement.
