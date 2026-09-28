@@ -17,8 +17,11 @@
                     <button onclick="filterCohort('2024')" class="cohort-pill" data-cohort="2024">
                         Cohorte 2024
                     </button>
-                    <button onclick="filterCohort('2025')" class="cohort-pill active" data-cohort="2025">
+                    <button onclick="filterCohort('2025')" class="cohort-pill" data-cohort="2025">
                         Cohorte 2025
+                    </button>
+                    <button onclick="filterCohort('2026')" class="cohort-pill active" data-cohort="2026">
+                        Cohorte 2026
                     </button>
                 </div>
                 <a href="{{ route('auth.register') }}" class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 font-medium transition-colors">
@@ -112,15 +115,15 @@
 </style>
 
 {{-- Inclusion des données des boursiers --}}
-@include('landing.partials.boursiers-data')
+@includeIf('landing.partials.boursiers-data')
 
 <script>
 // Token Mapbox depuis l'environnement Laravel
-mapboxgl.accessToken = 'pk.eyJ1IjoibGFtaW5lYmFycm8iLCJhIjoiY20zZHMzOW9zMDc5dzJsczgwdWVoZ2NqYyJ9.3baMsQ3_mpKlnBdHCeu0kg';
+mapboxgl.accessToken = '{{ config('services.mapbox.public_token') }}';
 
 let map;
 let markers = [];
-let currentCohort = '2025';
+let currentCohort = '2026';
 
 function initMap() {
     // Vérifier que Mapbox GL JS est chargé
@@ -198,11 +201,73 @@ function showMapFallback() {
     }
 }
 
-function displayMarkers(cohort) {
+async function displayMarkers(cohort) {
     if (!map) {
         console.warn('Carte non initialisée, impossible d\'afficher les marqueurs');
         return;
     }
+
+    // Cohorte 2026 : ~2 050 points issus du palmarès officiel -> couche GeoJSON (bien plus fluide que des marqueurs DOM)
+    if (cohort === '2026') {
+        markers.forEach(m => { try { m.remove(); } catch (e) {} });
+        markers = [];
+
+        let list = [];
+        try {
+            const r = await fetch("{{ route('landing.cohorte', 2026) }}");
+            list = r.ok ? await r.json() : [];
+        } catch (e) {
+            console.error('Chargement de la cohorte 2026 impossible:', e);
+        }
+
+        const geojson = {
+            type: 'FeatureCollection',
+            features: list.map(p => ({
+                type: 'Feature',
+                properties: p,
+                geometry: { type: 'Point', coordinates: [p.lng, p.lat] }
+            }))
+        };
+
+        if (map.getSource('palmares')) {
+            map.getSource('palmares').setData(geojson);
+            map.setLayoutProperty('palmares-pastilles', 'visibility', 'visible');
+        } else {
+            map.addSource('palmares', { type: 'geojson', data: geojson });
+            map.addLayer({
+                id: 'palmares-pastilles',
+                type: 'circle',
+                source: 'palmares',
+                paint: {
+                    'circle-radius': 5,
+                    'circle-color': ['case', ['==', ['get', 'gender'], 'female'], '#ec4899', '#2256a3'],
+                    'circle-opacity': ['case', ['get', 'inscrit'], 1, 0.35],
+                    'circle-stroke-width': ['case', ['get', 'inscrit'], 2, 0],
+                    'circle-stroke-color': '#ffffff'
+                }
+            });
+            map.on('mousemove', 'palmares-pastilles', function (e) {
+                map.getCanvas().style.cursor = 'pointer';
+                const p = e.features[0].properties;
+                showTooltip(e.originalEvent, {
+                    name: p.name, avatar: p.avatar, gender: p.gender, serie: p.serie,
+                    commune: p.commune + ' · n°' + p.rang + (p.inscrit === true || p.inscrit === 'true' ? ' · inscrit' : '')
+                });
+            });
+            map.on('mouseleave', 'palmares-pastilles', function () {
+                map.getCanvas().style.cursor = '';
+                hideTooltip();
+            });
+        }
+        console.log(`${list.length} pastilles affichées pour la cohorte 2026`);
+        return;
+    }
+
+    // Autres cohortes : masquer la couche 2026 puis logique existante
+    if (map.getLayer('palmares-pastilles')) {
+        map.setLayoutProperty('palmares-pastilles', 'visibility', 'none');
+    }
+    hideTooltip();
 
     // Supprimer les anciens marqueurs
     markers.forEach(marker => {
@@ -214,7 +279,7 @@ function displayMarkers(cohort) {
     });
     markers = [];
 
-    const data = boursiersData[cohort];
+    const data = (typeof boursiersData !== 'undefined') ? boursiersData[cohort] : null;
     
     if (!data || !Array.isArray(data)) {
         console.error('Données de boursiers invalides pour la cohorte:', cohort);
@@ -315,7 +380,7 @@ function hideTooltip() {
 // Initialiser la carte quand le DOM est chargé
 document.addEventListener('DOMContentLoaded', function() {
     // S'assurer que la pill active est correctement stylée au chargement
-    updateActivePill('2025');
+    updateActivePill('2026');
     
     // Attendre que le contenu soit complètement chargé
     setTimeout(function() {

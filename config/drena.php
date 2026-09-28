@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * Coordonnées approximatives (chef-lieu) de chaque DRENA, pour placer les pastilles
+ * sur la carte de la landing. À affiner si besoin. Les 4 DRENA d'Abidjan et les 2 de
+ * Bouaké sont légèrement décalées pour ne pas se superposer.
+ */
+return [
+    'ABENGOUROU'     => ['lat' => 6.7297, 'lng' => -3.4964],
+    'ABIDJAN 1'      => ['lat' => 5.3500, 'lng' => -3.9700],
+    'ABIDJAN 2'      => ['lat' => 5.3450, 'lng' => -4.0900],
+    'ABIDJAN 3'      => ['lat' => 5.4200, 'lng' => -4.0200],
+    'ABIDJAN 4'      => ['lat' => 5.2950, 'lng' => -3.9500],
+    'ABOISSO'        => ['lat' => 5.4667, 'lng' => -3.2067],
+    'ADZOPE'         => ['lat' => 6.1069, 'lng' => -3.8586],
+    'AGBOVILLE'      => ['lat' => 5.9281, 'lng' => -4.2136],
+    'BONDOUKOU'      => ['lat' => 8.0402, 'lng' => -2.8000],
+    'BONGOUANOU'     => ['lat' => 6.6500, 'lng' => -4.2000],
+    'BOUAFLE'        => ['lat' => 6.9903, 'lng' => -5.7443],
+    'BOUAKE 1'       => ['lat' => 7.7100, 'lng' => -5.0300],
+    'BOUAKE 2'       => ['lat' => 7.6700, 'lng' => -5.0500],
+    'BOUNA'          => ['lat' => 9.2700, 'lng' => -2.9900],
+    'BOUNDIALI'      => ['lat' => 9.5200, 'lng' => -6.4800],
+    'DABOU'          => ['lat' => 5.3250, 'lng' => -4.3800],
+    'DALOA'          => ['lat' => 6.8774, 'lng' => -6.4502],
+    'DANANE'         => ['lat' => 7.2600, 'lng' => -8.1500],
+    'DAOUKRO'        => ['lat' => 7.0600, 'lng' => -3.9600],
+    'DIMBOKRO'       => ['lat' => 6.6500, 'lng' => -4.7100],
+    'DIVO'           => ['lat' => 5.8372, 'lng' => -5.3572],
+    'DUEKOUE'        => ['lat' => 6.7400, 'lng' => -7.3500],
+    'FERKESSEDOUGOU' => ['lat' => 9.5928, 'lng' => -5.1944],
+    'GAGNOA'         => ['lat' => 6.1319, 'lng' => -5.9506],
+    'GRAND BASSAM'   => ['lat' => 5.2000, 'lng' => -3.7400],
+    'GUIGLO'         => ['lat' => 6.5436, 'lng' => -7.4936],
+    'ISSIA'          => ['lat' => 6.4900, 'lng' => -6.5850],
+    'KATIOLA'        => ['lat' => 8.1372, 'lng' => -5.1008],
+    'KORHOGO'        => ['lat' => 9.4580, 'lng' => -5.6296],
+    'MAN'            => ['lat' => 7.4125, 'lng' => -7.5538],
+    'MANKONO'        => ['lat' => 8.0600, 'lng' => -6.1900],
+    'MINIGNAN'       => ['lat' => 9.9700, 'lng' => -7.8300],
+    'ODIENNE'        => ['lat' => 9.5100, 'lng' => -7.5600],
+    'SAN-PEDRO'      => ['lat' => 4.7485, 'lng' => -6.6363],
+    'SASSANDRA'      => ['lat' => 4.9500, 'lng' => -6.0800],
+    'SEGUELA'        => ['lat' => 7.9611, 'lng' => -6.6731],
+    'SINFRA'         => ['lat' => 6.6200, 'lng' => -5.9100],
+    'SOUBRE'         => ['lat' => 5.7850, 'lng' => -6.5940],
+    'TIASSALE'       => ['lat' => 5.8980, 'lng' => -4.8230],
+    'TOUBA'          => ['lat' => 8.2833, 'lng' => -7.6833],
+    'YAMOUSSOUKRO'   => ['lat' => 6.8276, 'lng' => -5.2893],
+];

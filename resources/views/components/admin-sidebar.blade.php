@@ -2,7 +2,7 @@
 <div class="fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out"
      :class="sidebarOpen ? 'w-64' : 'w-16'" 
      x-data="{ 
-         gestionMenuOpen: {{ request()->routeIs('admin.bacheliers*', 'admin.partenaires*', 'admin.administrators*') ? 'true' : 'false' }},
+         gestionMenuOpen: {{ request()->routeIs('admin.bacheliers*', 'admin.palmares*', 'admin.partenaires*', 'admin.administrators*') ? 'true' : 'false' }},
          bachelierYearsOpen: false,
          opportunitesMenuOpen: {{ request()->routeIs('admin.opportunites*', 'admin.dotations*') ? 'true' : 'false' }},
          articlesMenuOpen: {{ request()->routeIs('admin.articles*') ? 'true' : 'false' }},
@@ -45,7 +45,7 @@
             @if(auth()->user()->hasAdminPermission('users.bacheliers.view') || auth()->user()->hasAdminPermission('users.partenaires.view') || auth()->user()->hasAdminPermission('users.administrators.view'))
                 <div class="space-y-1">
                     <button @click="gestionMenuOpen = !gestionMenuOpen"
-                            class="group w-full flex items-center justify-between px-2 py-2 text-sm font-medium text-white hover:bg-primary-700 transition-colors {{ request()->routeIs('admin.bacheliers*', 'admin.partenaires*', 'admin.administrators*') ? 'bg-primary-700' : '' }}">
+                            class="group w-full flex items-center justify-between px-2 py-2 text-sm font-medium text-white hover:bg-primary-700 transition-colors {{ request()->routeIs('admin.bacheliers*', 'admin.palmares*', 'admin.partenaires*', 'admin.administrators*') ? 'bg-primary-700' : '' }}">
                         <div class="flex items-center">
                             <i data-lucide="users" class="w-5 h-5 text-primary-200 group-hover:text-white"></i>
                             <span x-show="sidebarOpen" x-transition class="ml-3">Gestion Utilisateurs</span>
@@ -78,6 +78,12 @@
                                        class="group flex items-center px-2 py-2 text-xs text-primary-100 hover:text-white hover:bg-primary-700 transition-colors {{ request()->routeIs('admin.bacheliers.bareme') ? 'text-white bg-primary-600' : '' }}">
                                         <i data-lucide="award" class="w-3 h-3 mr-3"></i>
                                         Barème
+                                    </a>
+                                    
+                                    <a href="{{ route('admin.palmares.index') }}" 
+                                       class="group flex items-center px-2 py-2 text-xs text-primary-100 hover:text-white hover:bg-primary-700 transition-colors {{ request()->routeIs('admin.palmares*') ? 'text-white bg-primary-600' : '' }}">
+                                        <i data-lucide="shield-check" class="w-3 h-3 mr-3"></i>
+                                        Palmarès BAC 2026
                                     </a>
                                     
                                     @php

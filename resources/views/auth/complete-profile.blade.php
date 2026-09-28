@@ -579,6 +579,15 @@
                                 <a href="#" class="text-[#0E7490] underline hover:text-[#0c5f7a]">politique de confidentialité</a>. *
                             </span>
                         </label>
+                        <label class="flex items-start p-4 bg-white rounded-lg border-2 border-transparent hover:border-[#0E7490]/30 transition-all cursor-pointer group">
+                            <input type="checkbox" name="acceptation_carte_publique" value="1"
+                                   class="mt-1 h-5 w-5 text-[#0E7490] focus:ring-[#0E7490] border-gray-300 rounded">
+                            <span class="ml-3 text-sm text-gray-700 group-hover:text-gray-900">
+                                <span class="font-semibold">Facultatif : apparaître sur la carte publique.</span>
+                                J'accepte que mon prénom et l'initiale de mon nom soient affichés sur la carte publique des meilleurs bacheliers.
+                                Sans cette case, mon profil reste anonyme.
+                            </span>
+                        </label>
                     </div>
                 </div>
 
