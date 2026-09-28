@@ -130,8 +130,44 @@ class PartenaireManagementController extends Controller
      */
     public function export(Request $request)
     {
-        // TODO: Implémenter l'export
-        return back()->with('info', 'Fonctionnalité d\'export en cours de développement.');
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename=partenaires_' . date('Ymd') . '.csv',
+        ];
+
+        // Neutralise l'injection de formules (Excel) sur les champs texte libres
+        $safe = function ($value) {
+            $value = (string) $value;
+            return preg_match('/^[=+\-@\t\r]/', $value) ? "'" . $value : $value;
+        };
+
+        $callback = function () use ($safe) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, ['Organisation', 'Type', 'Region', 'Contact', 'Email', 'Telephone', 'Statut', 'Opportunites'], ';');
+
+            foreach (Partenaire::withCount('opportunites')->cursor() as $p) {
+                $statut = match ($p->status_verification) {
+                    'verified' => 'Verifie',
+                    'pending' => 'En attente',
+                    'rejected' => 'Rejete',
+                    default => $p->status_verification,
+                };
+                fputcsv($file, [
+                    $safe($p->nom_organisation),
+                    $p->type_organisation,
+                    $p->region,
+                    $safe($p->personne_contact_nom),
+                    $safe($p->personne_contact_email),
+                    $p->personne_contact_telephone,
+                    $statut,
+                    $p->opportunites_count,
+                ], ';');
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     /**
