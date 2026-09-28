@@ -100,6 +100,19 @@ class PartenaireManagementController extends Controller
     }
     
     /**
+     * Vérifier un partenaire
+     */
+    public function verify(Partenaire $partenaire)
+    {
+        $partenaire->update([
+            'status_verification' => 'verified',
+            'date_verification' => now()
+        ]);
+
+        return back()->with('success', 'Partenaire vérifié avec succès.');
+    }
+
+    /**
      * Rejeter un partenaire
      */
     public function reject(Request $request, Partenaire $partenaire)
