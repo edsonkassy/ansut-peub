@@ -178,8 +178,7 @@ class BachelierManagementController extends Controller
             'passable' => 'Passable',
             'assez_bien' => 'Assez Bien',
             'bien' => 'Bien',
-            'tres_bien' => 'Très Bien',
-            'excellent' => 'Excellent'
+            'tres_bien' => 'Très Bien'
         ];
         
         $etablissement_types = [
@@ -270,7 +269,7 @@ class BachelierManagementController extends Controller
             'status_profil' => 'required|in:en_attente,verifie,incomplet',
             'boursier_peub' => 'boolean',
             'moyenne_bac' => 'nullable|numeric|min:0|max:20',
-            'mention' => 'nullable|in:passable,assez_bien,bien,tres_bien,excellent',
+            'mention' => 'nullable|in:passable,assez_bien,bien,tres_bien',
             'notes_admin' => 'nullable|string',
         ]);
         
@@ -568,7 +567,8 @@ class BachelierManagementController extends Controller
             // Ajouter les données
             foreach ($bacheliers as $bachelier) {
                 // Calculer la moyenne sur 20
-                $moyenne = $bachelier->note_bac ? number_format(($bachelier->note_bac / 400) * 20, 2) : 'N/A';
+                $totalBac = in_array($bachelier->serie_bac, \App\Models\Bachelier::SERIES_TECHNIQUES, true) ? 480 : 400;
+                $moyenne = $bachelier->note_bac ? number_format(($bachelier->note_bac / $totalBac) * 20, 2) : 'N/A';
                 
                 $row = [
                     $bachelier->nom,

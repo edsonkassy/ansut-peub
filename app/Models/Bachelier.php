@@ -149,26 +149,42 @@ class Bachelier extends Model
     }
 
     /**
-     * Calculer la mention du BAC basée sur la note (système ivoirien sur 400 points)
-     * 
-     * Barème Côte d'Ivoire:
-     * - Passable: 240-279 points (60-69.75%)
-     * - Assez Bien: 280-319 points (70-79.75%)
-     * - Bien: 320-359 points (80-89.75%)
-     * - Très Bien: 360-400 points (90-100%)
-     * 
-     * @param float $note La note sur 400 points
-     * @return string|null La mention ou null si note < 240
+     * Séries du BAC technique, notées sur 480 points au lieu de 400 (coefficients
+     * spécifiques aux spécialités). Seuil d'admission DECO vérifié : 240/480 pour
+     * le technique contre 200/400 pour le général — exactement le même ratio
+     * (×1,2), confirmé aussi sur les zones de repêchage (192-239/480 ↔ 160-199/400).
      */
-    public static function calculateMention(float $note): ?string
+    public const SERIES_TECHNIQUES = ['E', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'G1', 'G2', 'G3', 'BT', 'BP'];
+
+    /**
+     * Calculer la mention du BAC basée sur la note et la série (système ivoirien).
+     *
+     * Barème officiel DECO (source : men-deco.org, seuils d'admission et de
+     * repêchage BAC 2026 vérifiés) :
+     * - < 200/400 (< 240/480 technique) : aucune mention
+     * - 200-239/400 (240-287/480)       : Passable
+     * - 240-279/400 (288-335/480)       : Assez Bien
+     * - 280-319/400 (336-383/480)       : Bien
+     * - >= 320/400 (>= 384/480)         : Très Bien
+     *
+     * Le BAC technique (séries E, F1-F8, G1-G3, BT, BP) est noté sur 480 points ;
+     * les seuils sont mis à l'échelle proportionnellement (×1,2) pour ces séries.
+     *
+     * @param float $note La note brute, sur 400 points (général) ou 480 (technique)
+     * @param string|null $serieBac La série BAC, pour choisir le barème 400 ou 480
+     * @return string|null La mention, ou null en dessous du seuil de Passable
+     */
+    public static function calculateMention(float $note, ?string $serieBac = null): ?string
     {
-        if ($note < 240) {
-            return null; // Pas de mention en dessous de 240
-        } elseif ($note < 280) {
+        $ratio = in_array($serieBac, self::SERIES_TECHNIQUES, true) ? 1.2 : 1.0;
+
+        if ($note < 200 * $ratio) {
+            return null; // Pas de mention
+        } elseif ($note < 240 * $ratio) {
             return 'passable';
-        } elseif ($note < 320) {
+        } elseif ($note < 280 * $ratio) {
             return 'assez_bien';
-        } elseif ($note < 360) {
+        } elseif ($note < 320 * $ratio) {
             return 'bien';
         } else {
             return 'tres_bien';
