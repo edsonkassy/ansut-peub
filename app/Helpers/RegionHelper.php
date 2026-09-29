@@ -60,7 +60,7 @@ class RegionHelper
             'Agnéby‑Tiassa' => [-4.2139, 5.9267], // Agboville
             'Bafing' => [-7.6833, 8.2833], // Touba
             'Bagoué' => [-6.4833, 9.5167], // Boundiali
-            'Bélier' => [-5.0305, 7.6922], // Bouaké (approximation)
+            'Bélier' => [-5.0167, 6.5500], // Toumodi
             'Béré' => [-6.1858, 8.0583], // Mankono
             'Bounkani' => [-2.9833, 9.2667], // Bouna
             'Cavally' => [-7.4978, 6.5439], // Guiglo
@@ -81,7 +81,7 @@ class RegionHelper
             'Marahoué' => [-5.7450, 6.9900], // Bouaflé
             'Moronou' => [-3.1692, 7.8008], // Tanda
             'Nawa' => [-6.5944, 5.7856], // Soubré
-            'Nzi' => [-4.7058, 6.6475], // Dimbokro (approximation)
+            'Nzi' => [-4.4833, 7.0667], // Bocanda
             'Poro' => [-5.6283, 9.4583], // Korhogo
             'San‑Pédro' => [-6.6370, 4.7467], // San-Pédro
             'Sud‑Comoé' => [-3.2067, 5.4706], // Aboisso
@@ -183,9 +183,7 @@ class RegionHelper
             // Région Guémon
             'Man' => [-7.5539, 7.4122],
             'Biankouma' => [-7.7389, 7.7453],
-            'Danané' => [-8.1500, 7.2667],
             'Sipilou' => [-8.0167, 7.4167],
-            'Zouan-Hounien' => [-8.2167, 7.0833],
 
             // Région Hambol
             'Katiola' => [-5.1000, 8.1333],
@@ -227,7 +225,6 @@ class RegionHelper
 
             // Région Lôh-Djiboua
             'Divo' => [-5.3572, 5.8397],
-            'Fresco' => [-5.5833, 5.1167],
             'Guitry' => [-5.2333, 5.4167],
             'Hiré' => [-5.8333, 5.9167],
             'Lakota' => [-5.8508, 5.8508],
@@ -249,14 +246,12 @@ class RegionHelper
             'Guéyo' => [-6.8333, 5.8333],
 
             // Région Nzi
-            'Dimbokro' => [-4.7058, 6.6475],
             'Bocanda' => [-4.4833, 7.0667],
             'Kouassi-Kouassikro' => [-4.8333, 7.2833],
 
             // Région Poro
             'Korhogo' => [-5.6283, 9.4583],
             'Dikodougou' => [-5.7000, 9.7000],
-            'Kouto' => [-6.0833, 9.8333],
             'Lataha' => [-5.8333, 9.4167],
             'M\'Bengué' => [-5.4167, 9.6500],
             'Napié' => [-5.6167, 9.6167],
@@ -269,7 +264,6 @@ class RegionHelper
             // Région Sud-Comoé
             'Aboisso' => [-3.2067, 5.4706],
             'Adiaké' => [-3.2833, 5.2833],
-            'Grand-Bassam' => [-3.7378, 5.2111],
             'Tiapoum' => [-3.1167, 5.4167],
 
             // Région Tchologo
@@ -278,20 +272,28 @@ class RegionHelper
             'Ouangolodougou' => [-5.1333, 9.9667],
 
             // Région Tonkpi
-            'Man' => [-7.5539, 7.4122],
-            'Biankouma' => [-7.7389, 7.7453],
-            'Danané' => [-8.1500, 7.2667],
             'Facobly' => [-8.3500, 7.3833],
             'Gouiné' => [-8.1833, 7.5833],
             'Logoualé' => [-8.0333, 7.6167],
             'Sangouiné' => [-8.0000, 7.8000],
-            'Sipilou' => [-8.0167, 7.4167],
-            'Zouan-Hounien' => [-8.2167, 7.0833],
 
             // Région Worodougou
             'Séguéla' => [-6.6733, 7.9611],
             'Kani' => [-6.7167, 8.1333],
             'Morondo' => [-6.4167, 8.0833],
+
+            // Villes ajoutées depuis la recette
+            'Tingréla' => [-6.4500, 9.8333],
+            'Bongouanou' => [-4.2000, 6.6500],
+            'Dabakala' => [-4.4333, 8.3667],
+            'Bonoua' => [-3.5833, 5.2667],
+            'Niakara' => [-5.2833, 8.7167],
+            'Grand-Bereby' => [-7.1333, 4.6333],
+            'Bangolo' => [-7.4833, 7.0167],
+            'Tiébissou' => [-5.1333, 7.1500],
+            'Duékoué' => [-7.3500, 6.7333],
+            'Méagui' => [-6.5167, 5.5167],
+            'Beyla' => [-8.6833, 8.6833],
         ];
     }
 
@@ -397,6 +399,16 @@ class RegionHelper
             'Lôh-Djiboua' => 'LôhDjiboua', // Divo est dans Lôh-Djiboua
             'N\'Zi-Comoé' => 'Indénié‑Djuablin', // Abengourou est dans Indénié-Djuablin
             'Haut-Sassandra' => 'Haut‑Sassandra', // Daloa est dans Haut-Sassandra
+            // Variantes à tiret ASCII -> noms officiels (repris de la recette, dédupliqués)
+            'Lacs' => 'Bélier',
+            'Grands Ponts' => 'Grands‑Ponts',
+            'Agnéby-Tiassa' => 'Agnéby‑Tiassa',
+            'Sud-Comoé' => 'Sud‑Comoé',
+            'Autonome d\'Abidjan' => 'Abidjan',
+            'N\'zi' => 'Nzi',
+            'Fromager' => 'Gôh',
+            'San-Pédro' => 'San‑Pédro',
+            'Indénié-Djuablin' => 'Indénié‑Djuablin',
         ];
 
         return $mapping[$oldRegion] ?? $oldRegion;
