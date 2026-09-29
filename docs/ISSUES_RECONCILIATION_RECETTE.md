@@ -26,9 +26,9 @@ Depuis le 6 mai 2026, `develop` et le travail réel du serveur de recette ont av
 | # | Titre | Priorité | Groupe | Statut | Responsable | Dépend de |
 |---|---|---|---|---|---|---|
 | 1 | ~~Vérifier l'hypothèse du logo~~ — fusionnée dans #7, constat confirmé | P1 | Diagnostic | ✅ (fusionné dans #7) | Dev | - |
-| 2 | Porter RegionHelper.php dans develop | P1 | Groupe 1 | ☐ | Dev | - |
-| 3 | Porter BoursierController.php et admin/boursiers/index.blade.php | P1 | Groupe 1 | ☐ | Dev | - |
-| 4 | Porter faq.blade.php et les petits fichiers admin isolés | P2 | Groupe 1 | ☐ | Dev | - |
+| 2 | Porter RegionHelper.php dans develop | P1 | Groupe 1 | ✅ (sauf alignement des clés, différé sur #23) | Dev | - |
+| 3 | Porter BoursierController.php et admin/boursiers/index.blade.php | P1 | Groupe 1 | ✅ | Dev | - |
+| 4 | Porter faq.blade.php et les petits fichiers admin isolés | P2 | Groupe 1 | ✅ (3/7 fichiers portés, 4 écartés) | Dev | - |
 | 5 | ~~Réconcilier PartenaireManagementController.php~~ — develop l'emporte | P0 | Groupe 3 | ✅ | Dev | - |
 | 6 | Réappliquer le correctif d'inscription dans le formulaire en 2 étapes | P0 | Groupe 3 | ✅ | Dev | - |
 | 7 | Réconcilier les fichiers de la refonte UI (forum, library, inbox, layouts, landing, mobile) | P1 | Groupe 2 | 🟡 (constat fait, portage restant) | Dev | - |
@@ -50,29 +50,44 @@ L'hypothèse de départ était fausse : les diffs « minuscules » mesurés au d
 
 **Conclusion** : pour l'ensemble du groupe 2, `develop` est une amélioration stricte de la version de la recette, pas une divergence à arbitrer. Le travail restant (#7) est un portage avec vérification rapide fichier par fichier, pas un arbitrage au cas par cas.
 
-### #2 Porter RegionHelper.php dans develop
+### #2 Porter RegionHelper.php dans develop — ✅ fait, sauf l'alignement des clés (différé sur #23)
 **Labels** : `groupe-1` `donnees` `P1`
-La recette a corrigé des coordonnées (Bélier/Toumodi) et ajouté des villes. Un point à ne pas reprendre : l'entrée `'Dictionnaire'`, qui est une erreur. Des doublons existent aussi (Tengréla/Tingréla) et dans `mapOldRegionToNew`.
-- [ ] Comparer `RegionHelper.php` sur `recette/ui-ux` et `develop`, ligne par ligne.
-- [ ] Reprendre les coordonnées corrigées et les villes ajoutées, à l'exclusion de `'Dictionnaire'`.
-- [ ] Dédupliquer les entrées répétées.
-- [ ] Vérifier au passage la correspondance des noms de régions entre `RegionHelper` (tiret insécable) et `PeubScoringHelper` (tiret simple) — problème repéré séparément, qui fait perdre des points géographiques à plusieurs bacheliers. Ne pas corriger les points sans l'arbitrage de Mamadou, mais aligner les chaînes de caractères peut se faire dès maintenant.
-**Critère d'acceptation** : `RegionHelper::getRegions()` ne contient plus `'Dictionnaire'` ni de doublon, et sert la même liste de régions que `PeubScoringHelper`.
+Porté sur `integration/recette-ui-ux` (commit `170a8c9`). Vérifié par comparaison ligne à ligne contre le fichier réel :
+- [x] Coordonnées corrigées reprises : Bélier → Toumodi, Nzi → Bocanda.
+- [x] 11 villes ajoutées, sans doublon.
+- [x] `'Dictionnaire'` absent des régions comme des villes (non repris, comme prévu).
+- [x] Dédoublonnage : plus aucune clé dupliquée dans `getRegionCoordinates`, `getCityCoordinates` (les 9 doublons hérités de `develop` supprimés) ni `mapOldRegionToNew`.
+- [x] **Nuance actée** : `Tengrela` (utilisée par `getCitiesForRegion`) et `Tingréla` coexistent toujours comme deux clés distinctes, mêmes coordonnées. Ce sont deux orthographes de la même ville gardées comme alias volontaires plutôt que fusionnées en une seule clé — décision : laisser les deux en l'état, aucun bug fonctionnel identifié, à revisiter seulement si un cas d'usage réel l'exige.
+- [ ] **Différé sur #23** : alignement des clés régionales avec `PeubScoringHelper` (tiret insécable vs tiret simple, `Loh-Djiboua`/`LohDjiboua`, `San-Pedro`). Aligner change mécaniquement des points de scoring déjà en place — nécessite l'arbitrage de Mamadou, pas un simple alignement de chaînes comme envisagé initialement.
+**Critère d'acceptation** : `RegionHelper::getRegions()` ne contient plus `'Dictionnaire'` ni de doublon (✅) ; sert la même liste de régions que `PeubScoringHelper` (☐, différé sur #23).
 
-### #3 Porter BoursierController.php et admin/boursiers/index.blade.php
+### #3 Porter BoursierController.php et admin/boursiers/index.blade.php — ✅ fait
 **Labels** : `groupe-1` `fonctionnel` `P1`
-La recette a refondu `getBoursiersWithCoordinates` : passage de points par commune à un regroupement par région avec compteurs filles/garçons, avec une réduction de 985 lignes sur la vue associée.
-- [ ] Comparer les deux versions du contrôleur.
-- [ ] Porter le regroupement par région dans `develop`.
-- [ ] Porter la vue associée, testée dans un navigateur (pas seulement en lecture de code).
-**Critère d'acceptation** : la page admin des boursiers affiche le regroupement par région avec les compteurs, testé visuellement.
+Porté sur `integration/recette-ui-ux` (commit `1a54369`) : `getBoursiersWithCoordinates` regroupe désormais par région avec compteurs filles/garçons. Vue testée visuellement sur une base de test locale (carte des boursiers regroupée par région, compteurs corrects).
 
-### #4 Porter faq.blade.php et les petits fichiers admin isolés
+**Faille XSS trouvée et corrigée au passage** (commit `5e8e337`) : `admin/boursiers/index.blade.php` insérait dans `showPanel()` et `displayBubbles()` des valeurs venant de la base (nom, commune, établissement, libellé de région) directement dans le HTML sans échappement. `develop` avait le même défaut de construction avant ce correctif — corrigé au moment du portage, pas exploité en pratique sur l'ancienne vue.
+- [x] Comparer les deux versions du contrôleur.
+- [x] Porter le regroupement par région dans `develop`.
+- [x] Porter la vue associée, testée visuellement.
+- [x] Échapper les valeurs issues de la base dans `showPanel()` et `displayBubbles()` (faille XSS trouvée en portant, pas dans le périmètre initial de l'issue).
+**Critère d'acceptation** : ✅ la page admin des boursiers affiche le regroupement par région avec les compteurs, testé visuellement ; ✅ plus d'injection HTML possible via les champs boursier.
+
+### #4 Porter faq.blade.php et les petits fichiers admin isolés — ✅ fait, 3 fichiers portés sur 7
 **Labels** : `groupe-1` `contenu` `P2`
-Fichiers sans recoupement connu avec le travail de `develop` : `faq.blade.php` (réécriture complète), `admin/analytics.blade.php`, `admin/articles/index.blade.php`, `partenaire/analytics.blade.php`, `welcome.blade.php`, `actualite.blade.php`, `actualites.blade.php`.
-- [ ] Relire chaque diff pour confirmer l'absence de recoupement avec un travail récent de `develop`.
-- [ ] Porter tel quel.
-**Critère d'acceptation** : les 7 fichiers sont dans `develop`, sans régression visible sur les pages concernées.
+Porté sur `integration/recette-ui-ux` (commit `b7c978c`). Sur les 7 fichiers listés initialement, 3 portés et 4 écartés après relecture :
+
+**Portés** :
+- `faq.blade.php` : réécriture complète, accordéon en JS natif.
+- `admin/articles/index.blade.php` : ajout d'attributs `title`.
+- `partenaire/analytics.blade.php` : jeton Mapbox lu depuis la config (`config('services.mapbox.public_token')`, confirmé présent dans `config/services.php` sur `develop`).
+
+**Écartés, avec raison** :
+- `welcome.blade.php` : `touch-action: pan-y` redondant avec le correctif déjà présent sur `develop` (`touch-action: auto !important` dans `layouts/guest.blade.php`) — rattaché à #7.
+- `actualites.blade.php` / `actualite.blade.php` : changements `section`→`div` sans raison identifiée, `overflow-hidden` retiré (casse le zoom au survol des images), même bloc CSS `!important` de pansement tactile que dans #7 — rattachés à #7.
+- `admin/analytics.blade.php` : libellé « Comptes en attente » erroné côté recette (affiche en réalité `Candidature::where('status','pending')->count()`, pas un compte de comptes en attente) — la clé PHP sous-jacente est identique des deux côtés, seul le libellé change, et il est faux. `develop` reste la version correcte.
+- [x] Relire chaque diff pour confirmer l'absence de recoupement avec un travail récent de `develop`.
+- [x] Porter les 3 fichiers sans réserve ; écarter les 4 autres avec justification (voir ci-dessus, et `welcome`/`actualite(s)` réintégrés dans le périmètre de #7).
+**Critère d'acceptation** : les 3 fichiers sans recoupement sont dans `develop`, sans régression visible ; les 4 fichiers écartés le sont pour une raison documentée, pas par omission.
 
 ### #5 Réconcilier PartenaireManagementController.php — ✅ develop l'emporte, rien à fusionner
 **Labels** : `groupe-3` `securite` `P0`
@@ -149,8 +164,8 @@ Cette réconciliation n'a été nécessaire que parce que des mois de travail on
 
 ## Ordre de travail recommandé
 
-**Fait** : #1 (diagnostic), #5 (contrôleur partenaires), #6 (correctif d'inscription complet, correctif d'urgence serveur testé, données de test purgées).
-**Sans dépendance, à mener en parallèle** : #2, #3, #4 (groupe 1) et #7 (finir la vérification des fichiers restants, portage rapide).
+**Fait** : #1 (diagnostic), #2 (RegionHelper, sauf alignement des clés différé sur #23), #3 (BoursierController + vue, avec correctif XSS trouvé au passage), #4 (3/7 fichiers, 4 écartés justifiés), #5 (contrôleur partenaires), #6 (correctif d'inscription complet, correctif d'urgence serveur testé, données de test purgées). #2, #3, #4 sont sur `integration/recette-ui-ux` (4 commits), pas encore fusionnés dans `develop` — une seule PR est prévue pour les trois.
+**Restant** : #7 (finir la vérification des fichiers restants de la refonte UI, portage rapide, plus `welcome.blade.php`/`actualite(s).blade.php` rattachés depuis #4).
 **Enfin** : #8 (déploiement complet, qui doit notamment remplacer le correctif d'urgence hors-git par le code versionné), puis #9 (processus, pour que ça ne se reproduise pas).
 
 ## Commandes utiles
