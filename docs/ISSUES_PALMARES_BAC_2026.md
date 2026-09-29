@@ -49,6 +49,7 @@ L'ANSUT a reçu la liste officielle des **2 050 meilleurs bacheliers 2026** (25 
 | 20 | Nettoyage de la dette technique repérée à la lecture | P2 | Maintenance | ☐ | Dev | : |
 | 21 | Déploiement automatique sur `main` : migrations manuelles et dernier déploiement en échec | P0 | Déploiement | ☐ | Dev | 1 |
 | 22 | Jeton Mapbox visible dans le dépôt public (restriction, migration des 2 autres fichiers) | P1 | Sécurité | ☐ | Dev | - |
+| 23 | Aligner les clés régionales entre RegionHelper et PeubScoringHelper (points géographiques manquants) | P1 | Métier + code | ☐ | ANSUT puis Dev | : |
 
 **Déjà livré dans le patch (à tester, issues 1 à 3)** : table `palmares_bac`, commande d'import, service de vérification, page admin « Palmarès BAC 2026 » avec lien dans le menu, carte 2026 (2 050 pastilles), mention `ims`, bac 2026 autorisé.
 
@@ -297,10 +298,30 @@ Un jeton Mapbox (préfixe `pk.`, donc public par conception) était écrit en du
 
 ---
 
+### #23 Aligner les clés régionales entre RegionHelper et PeubScoringHelper (points géographiques manquants)
+**Labels** : `metier` `bug` `P1`
+**Découvert le** : 29/09/2026, pendant le portage de `RegionHelper.php` du chantier de réconciliation (`docs/ISSUES_RECONCILIATION_RECETTE.md`, issue #2).
+
+**Problème** : 7 clés de `PeubScoringHelper::REGION_POINTS` ne correspondent à aucune clé de `RegionHelper::getRegions()` :
+- 5 régions utilisent un tiret ASCII simple dans `PeubScoringHelper` là où `RegionHelper` (et le reste de l'application) utilise un tiret insécable : Sud-Comoé, Grands-Ponts, Haut-Sassandra, Agnéby-Tiassa, Indénié-Djuablin.
+- 2 régions ont en plus un nom différent : `Lôh-Djiboua` (PeubScoringHelper) contre `LôhDjiboua` (RegionHelper) ; `San-Pédro`, dont le tiret insécable est le seul écart.
+
+**Conséquence** : les bacheliers de ces 7 régions ne reçoivent actuellement **aucun point géographique** dans le score PEUB, faute de correspondance de clé.
+
+**Le conflit à trancher** : l'issue #2 du chantier de réconciliation indiquait initialement qu'aligner les chaînes de caractères entre les deux fichiers pouvait se faire sans attendre d'arbitrage, tant que le barème de points lui-même n'était pas modifié. Dans les faits, ces deux consignes se contredisent : aligner les clés **redonne mécaniquement** ces points aux bacheliers concernés, ce qui revient à corriger le barème. Le palmarès BAC 2026 étant déjà en ligne sur `develop`, ce changement modifierait un classement déjà visible.
+
+- [ ] L'ANSUT / Mamadou confirme que les bacheliers de ces 7 régions doivent bien recevoir leurs points géographiques (correction d'un bug plutôt qu'un changement de règle).
+- [ ] Une fois confirmé : remplacer les 7 clés de `PeubScoringHelper::REGION_POINTS` par les valeurs exactes de `RegionHelper::getRegions()` (tirets insécables, `LôhDjiboua` sans tiret).
+- [ ] Recalculer le score des bacheliers déjà inscrits dont la région fait partie des 7 concernées (le recalcul automatique ne se relance pas seul).
+- [ ] Communiquer le changement si le classement bouge de façon visible.
+**Critère d'acceptation** : les 41 régions/DRENA de `RegionHelper` et de `PeubScoringHelper` utilisent exactement les mêmes clés, et les bacheliers concernés reçoivent leurs points géographiques.
+
+---
+
 ## Ordre de travail recommandé
 
 **Avant l'ouverture aux vrais bacheliers (P0)** : #1 → #2 → #21 → #5 → #3 → #6 (la #4, bypass OTP, est passée en P2 et traitée hors de ce chantier).
-**Dans la foulée (P1)** : #7 et #11 (décisions métier à lancer dès maintenant, elles sont indépendantes du code), puis #8, #9, #10, #12, #13, #14.
+**Dans la foulée (P1)** : #7, #11 et #23 (décisions métier à lancer dès maintenant, elles sont indépendantes du code), puis #8, #9, #10, #12, #13, #14.
 **Ensuite (P2 / P3)** : #15 à #20.
 
 ## Commandes utiles
