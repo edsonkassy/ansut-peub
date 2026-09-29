@@ -267,7 +267,7 @@
 
                                 <!-- Actions -->
                                 <div class="flex items-center space-x-2 ml-4">
-                                    <a href="{{ route('admin.articles.edit', $article) }}" 
+                                    <a href="{{ route('admin.articles.edit', $article) }}" title="Modifier l'article"
                                        class="text-gray-400 hover:text-gray-600">
                                         <i data-lucide="edit" class="w-5 h-5"></i>
                                     </a>
@@ -299,7 +299,7 @@
                                     </form>
 
                                     <div class="relative inline-block text-left">
-                                        <button onclick="toggleDropdown('{{ $article->id }}')" class="text-gray-400 hover:text-gray-600">
+                                        <button onclick="toggleDropdown('{{ $article->id }}')" title="Plus d'options" class="text-gray-400 hover:text-gray-600">
                                             <i data-lucide="more-vertical" class="w-5 h-5"></i>
                                         </button>
                                         <div id="dropdown-{{ $article->id }}" class="hidden origin-top-right absolute right-0 mt-2 w-48 bg-white shadow-lg border border-gray-200 z-10">

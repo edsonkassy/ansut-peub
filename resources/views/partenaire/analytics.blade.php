@@ -396,7 +396,7 @@
 
 <script>
 // Token Mapbox depuis l'environnement Laravel
-mapboxgl.accessToken = 'pk.eyJ1IjoibGFtaW5lYmFycm8iLCJhIjoiY20zZHMzOW9zMDc5dzJsczgwdWVoZ2NqYyJ9.3baMsQ3_mpKlnBdHCeu0kg';
+mapboxgl.accessToken = '{{ config('services.mapbox.public_token') }}';
 
 let map;
 let markers = [];
