@@ -31,7 +31,7 @@ Depuis le 6 mai 2026, `develop` et le travail réel du serveur de recette ont av
 | 4 | Porter faq.blade.php et les petits fichiers admin isolés | P2 | Groupe 1 | ✅ (3/7 fichiers portés, 4 écartés) | Dev | - |
 | 5 | ~~Réconcilier PartenaireManagementController.php~~ — develop l'emporte | P0 | Groupe 3 | ✅ | Dev | - |
 | 6 | Réappliquer le correctif d'inscription dans le formulaire en 2 étapes | P0 | Groupe 3 | ✅ | Dev | - |
-| 7 | Réconcilier les fichiers de la refonte UI (forum, library, inbox, layouts, landing, mobile) | P1 | Groupe 2 | 🟡 (constat fait, portage restant) | Dev | - |
+| 7 | Réconcilier les fichiers de la refonte UI (forum, library, inbox, layouts, landing, mobile) | P1 | Groupe 2 | 🟡 (16/17 fichiers : develop l'emporte tel quel ; 1 fusion réelle sur boursiers.blade.php, PR ouverte) | Dev | - |
 | 8 | Déploiement contrôlé : remplacer le contenu du serveur par develop réconcilié | P0 | Déploiement | ☐ | Dev + Chef de projet | 2,3,4,5,6,7 |
 | 9 | Interdire les modifications directes sur le serveur à l'avenir | P1 | Processus | ☐ | Chef de projet | 8 |
 
@@ -133,17 +133,40 @@ Porté sur `integration/recette-ui-ux` (commit `b7c978c`). Sur les 7 fichiers li
 
 **Signalement hors périmètre de ce document, toujours d'actualité** : la PR #1 (`hotfix/otp-bypass` → `main`, suppression du bypass OTP codé en dur) est toujours `open`, `merged: false`. Correctif de sécurité sur `main`, hors périmètre de cette réconciliation, mais toujours urgent.
 
-### #7 Réconcilier les fichiers de la refonte UI
+### #7 Réconcilier les fichiers de la refonte UI — 🟡 16/17 fichiers confirmés, 1 fusion réelle en attente de test
 **Labels** : `groupe-2` `P1`
-**Statut** : constat confirmé sur 2 fichiers témoins (voir #1) — `develop` est une amélioration stricte, la recette n'a pas reçu la refonte d'août. Reste à vérifier rapidement les fichiers non encore lus, puis à adopter `develop` pour tout le groupe.
+**Statut** : les 17 fichiers du périmètre ont été comparés ligne à ligne contre `develop`. Le constat de #1 se confirme sur tout le groupe : `develop` a reçu la refonte du design system (variables CSS, classes `ds-*`, accessibilité, corrections mobiles) tandis que la recette a régressé, contourné ou laissé mourir la plupart de ces correctifs. Un seul fichier nécessite une vraie fusion plutôt qu'un simple « develop l'emporte ».
 
-Fichiers concernés : `app.css`, `mobile-gestures.js`, `app.js`, `layouts/app.blade.php`, `layouts/guest.blade.php`, `components/opportunites-nav.blade.php`, `bachelier/forum/{index,favorites,members}.blade.php`, `bachelier/library/{index,favorites}.blade.php`, `bachelier/inbox/index.blade.php`, `bachelier/opportunites.blade.php`, `landing/partials/{about,hero,boursiers,news}.blade.php`.
-- [x] `forum/favorites.blade.php` : version pré-lot-4 confirmée, `develop` l'emporte.
-- [x] `mobile-gestures.js` : deux bugs connus toujours présents côté recette, `develop` l'emporte.
-- [ ] Vérifier rapidement (lecture seule, pas de diff complet nécessaire) les fichiers restants de la liste, pour confirmer qu'aucun n'est une exception à la règle.
-- [ ] Une fois confirmé : dans la branche d'intégration, ces fichiers ne sont **pas** portés depuis la recette — `develop` reste tel quel, la recette est ignorée sur ce groupe.
-- [ ] Exception possible à surveiller : `layouts/guest.blade.php` a un diff un peu plus gros que les autres (+8/-4 dans le commit d'archive) ; à ouvrir en particulier avant de généraliser complètement.
-**Critère d'acceptation** : confirmation écrite que chaque fichier du groupe suit la règle générale, ou identification explicite d'une exception à traiter à part.
+**16 fichiers où `develop` l'emporte sans réserve, rien à porter** :
+
+| Fichier | Constat côté recette |
+|---|---|
+| `app.css` | commentaire de `develop` confirmé : le `touch-action` retiré le 06/05/2026 corrigeait un blocage du défilement vertical — la recette ne l'a jamais retiré |
+| `mobile-gestures.js` | 2 bugs connus toujours présents (sélecteur de swipe qui attrape la nav, fuite d'écouteurs au redimensionnement) |
+| `app.js` | le module `mobile-gestures.js` y est **complètement désactivé** (`// import './mobile-gestures'; // disabled - blocks scroll`) plutôt que corrigé — la recette a supprimé la fonctionnalité de swipe au lieu de régler le bug |
+| `layouts/guest.blade.php` | `darkMode` Alpine confirmé mort (jamais lu par la nav ni le footer) ; `touch-action: pan-y` = même bug que `app.css` |
+| `layouts/app.blade.php` | seule différence avec `develop` : la même ligne `touch-action: pan-y`, même bug déjà identifié |
+| `components/opportunites-nav.blade.php` | contenu fonctionnel identique (mêmes onglets, mêmes routes), ancienne palette Tailwind au lieu du design system |
+| `forum/index.blade.php` | même famille pré-refonte que `favorites.blade.php` (voir #1) |
+| `forum/favorites.blade.php` | voir #1 : version pré-lot-4, XSS recherche, filtres morts |
+| `forum/members.blade.php` | `$bachelier->user->photo_profil` et `$bachelier->etablissement` référencent des champs inexistants (vrai champ : `etablissement_nom`), Mapbox chargé pour rien |
+| `library/index.blade.php` | plantage si `published_at` ou la catégorie sont `null` ; bloc de filtres qui occupe tout l'écran à 360px |
+| `library/favorites.blade.php` | filtre de recherche mort (paramètre jamais lu côté contrôleur) ; retrait d'un favori basé sur un repère DOM fragile |
+| `inbox/index.blade.php` | **faille XSS bachelier → bachelier** via `innerHTML` ; recherche morte ; `deleteMessage()` appelée mais jamais définie (`ReferenceError`) ; pagination sans `->links()` |
+| `opportunites.blade.php` | filtre « secteur » et tri « Score IA » **morts** — `OpportuniteController::index()` ne les traite pas, et `score_ia` n'existe nulle part ailleurs dans le dépôt ; bouton « Réinitialiser les filtres » avec un `id` dupliqué (seul le premier était câblé par `getElementById`, le second — dans l'état vide — ne faisait rien) |
+| `landing/partials/about.blade.php` | l'image d'illustration est absente côté recette (`<!-- image about supprimée -->`) ; `develop` l'a restaurée avec un visuel correctement dimensionné (documenté : le logo ANSUT original devenait illisible une fois réduit) |
+| `landing/partials/hero.blade.php` | refonte design system équivalente ; `develop` évite le `100vh` fixe (source connue de bugs de défilement sur mobile) au profit d'un padding calculé sur le contenu |
+| `landing/partials/news.blade.php` | **le bloc des articles à la une est désactivé en dur côté recette** (`@if(false) {{-- articles désactivés temporairement --}}`) : aucun article ne s'affiche jamais sur cette section de la recette, quelle que soit la donnée ; le sous-titre script « Confiance » est confirmé être un copier-coller fautif de `partners.blade.php`, retiré par `develop` |
+
+**1 fichier avec une vraie fusion à trois** — `landing/partials/boursiers.blade.php` :
+- Base = `develop` (couche GeoJSON de la cohorte 2026, ~2 050 points du palmarès, `@includeIf` sécurisé contre le fichier de données manquant).
+- **Correctif porté depuis la recette** : `cooperativeGestures: true` dans les options de la carte, plus `map.touchZoomRotate.disable()`, `map.touchPitch.disable()`, `map.dragPan.disable()` dans `initMap()` — la solution officielle de Mapbox GL JS contre le conflit tactile/scroll sur mobile, absente de `develop`.
+- **Nuance importante** : côté recette, la carte elle-même était désactivée (`<!-- carte mapbox désactivée -->`) à cause de ce même bug de scroll, non résolu. Le correctif `cooperativeGestures` est présent dans le code de la recette, mais rien ne prouve qu'il ait été testé une fois écrit — la carte est restée désactivée malgré sa présence. Sur `develop`, la carte reste active (elle affiche déjà la cohorte 2026) : le correctif y est ajouté en confiance (c'est la solution documentée par Mapbox pour ce problème précis), mais **à vérifier sur mobile réel avant fusion**, pas à considérer comme acquis.
+- [x] Patch préparé et appliqué sur une branche dédiée (`fix/carte-boursiers-tactile`), PR ouverte vers `develop`.
+- [ ] Test sur mobile réel (Android/iOS, Chrome/Safari) : le défilement de la page ne doit plus être capturé par la carte au premier contact tactile.
+- [ ] Fusion de la PR après validation du test.
+
+**Critère d'acceptation** : ✅ confirmation écrite sur les 17 fichiers du périmètre ; ✅ 16 fichiers laissés tels quels sur `develop` (la recette n'y apporte aucune amélioration réelle) ; 🟡 1 fichier avec un correctif préparé, en attente de test mobile avant fusion.
 
 ### #8 Déploiement contrôlé : remplacer le contenu du serveur par develop réconcilié
 **Labels** : `deploiement` `P0`
@@ -168,8 +191,8 @@ Cette réconciliation n'a été nécessaire que parce que des mois de travail on
 
 ## Ordre de travail recommandé
 
-**Fait** : #1, #2, #3, #4, #5, #6 — tous fusionnés dans `develop` (#2/#3/#4 via la PR #6, squash, commit `c2b6a0e`, 29/09 15h01 UTC ; #5 et #6 directement).
-**Seul restant avant #8** : #7 (finir la vérification des fichiers non encore lus de la refonte UI, portage rapide, plus `welcome.blade.php`/`actualite(s).blade.php` rattachés depuis #4).
+**Fait** : #1 à #7 — tous vérifiés ou fusionnés dans `develop` (#2/#3/#4 via la PR #6, squash, commit `c2b6a0e`, 29/09 15h01 UTC ; #5 et #6 directement ; #7 confirmé sur 16 fichiers sur 17, le 17ᵉ avec une PR dédiée ouverte).
+**Reste avant #8** : fusionner la PR du correctif tactile de `boursiers.blade.php` (`fix/carte-boursiers-tactile`), après un test sur mobile réel.
 **Enfin** : #8 (déploiement complet, qui doit notamment remplacer le correctif d'urgence hors-git par le code versionné), puis #9 (processus, pour que ça ne se reproduise pas).
 
 ## Commandes utiles
