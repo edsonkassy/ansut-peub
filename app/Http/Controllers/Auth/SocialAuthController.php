@@ -10,6 +10,7 @@ use App\Mail\AdminNewCandidatureMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class SocialAuthController extends Controller
 {
@@ -20,6 +21,22 @@ class SocialAuthController extends Controller
     {
         $this->socialAuthService = $socialAuthService;
         $this->aiService = $aiService;
+    }
+
+    /**
+     * Deplace un fichier temporaire vers son emplacement final.
+     * Leve une exception si le deplacement echoue, au lieu d'enregistrer
+     * silencieusement le booleen renvoye par Storage::move().
+     */
+    private function moveTempFile(string $tempPath, string $directory): string
+    {
+        $finalPath = $directory . '/' . basename($tempPath);
+
+        if (! Storage::disk('public')->move($tempPath, $finalPath)) {
+            throw new \RuntimeException("Deplacement impossible : {$tempPath}");
+        }
+
+        return $finalPath;
     }
 
     /**
@@ -449,15 +466,12 @@ class SocialAuthController extends Controller
             // Gérer les uploads de fichiers
             if (isset($validated['piece_identite_file_temp'])) {
                 // Déplacer les fichiers temp vers leur emplacement final
-                $pieceIdentitePath = \Illuminate\Support\Facades\Storage::disk('public')
-                    ->move($validated['piece_identite_file_temp'], 'documents/pieces_identite/' . basename($validated['piece_identite_file_temp']));
+                $pieceIdentitePath = $this->moveTempFile($validated['piece_identite_file_temp'], 'documents/pieces_identite');
                 
-                $collanteBacPath = \Illuminate\Support\Facades\Storage::disk('public')
-                    ->move($validated['collante_bac_file_temp'], 'documents/collantes_bac/' . basename($validated['collante_bac_file_temp']));
+                $collanteBacPath = $this->moveTempFile($validated['collante_bac_file_temp'], 'documents/collantes_bac');
                 
                 $photoProfilPath = isset($validated['photo_profil_temp'])
-                    ? \Illuminate\Support\Facades\Storage::disk('public')
-                        ->move($validated['photo_profil_temp'], 'photos/profils/' . basename($validated['photo_profil_temp']))
+                    ? $this->moveTempFile($validated['photo_profil_temp'], 'photos/profils')
                     : $user->avatar;
             } else {
                 // Upload direct (sans preview)
