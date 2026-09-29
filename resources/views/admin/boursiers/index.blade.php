@@ -135,7 +135,7 @@ function displayBubbles() {
         el.style.height = size + 'px';
         el.style.background = color;
         el.style.fontSize = Math.max(11, size / 4) + 'px';
-        el.innerHTML = '<div style="text-align:center;line-height:1.2"><div>' + region.total + '</div><div style="font-size:9px;font-weight:400">' + (region.region_label || region.region) + '</div></div>';
+        el.innerHTML = '<div style="text-align:center;line-height:1.2"><div>' + region.total + '</div><div style="font-size:9px;font-weight:400">' + escapeHtml(region.region_label || region.region) + '</div></div>';
 
         el.addEventListener('click', function() {
             showPanel(region);
@@ -161,14 +161,20 @@ function showPanel(region) {
         '<span class="text-blue-800"><strong>' + region.garcons + '</strong> garçons</span>';
 
     list.innerHTML = region.boursiers.map(b => '<div class="bg-white border border-gray-200 rounded p-2 text-sm">' +
-        '<p class="font-semibold text-gray-900">' + b.name + '</p>' +
-        '<p class="text-xs ' + (b.gender === 'female' ? 'text-pink-600' : 'text-blue-800') + '">' + (b.gender === 'female' ? 'Fille' : 'Garçon') + ' · ' + b.commune + '</p>' +
-        '<p class="text-xs text-gray-500">' + b.etablissement + '</p>' +
+        '<p class="font-semibold text-gray-900">' + escapeHtml(b.name) + '</p>' +
+        '<p class="text-xs ' + (b.gender === 'female' ? 'text-pink-600' : 'text-blue-800') + '">' + (b.gender === 'female' ? 'Fille' : 'Garçon') + ' · ' + escapeHtml(b.commune) + '</p>' +
+        '<p class="text-xs text-gray-500">' + escapeHtml(b.etablissement) + '</p>' +
         '</div>'
     ).join('');
 
     panel.classList.remove('hidden');
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = value == null ? '' : String(value);
+    return div.innerHTML;
 }
 
 function closePanel() {
