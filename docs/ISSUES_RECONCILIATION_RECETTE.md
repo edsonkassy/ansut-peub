@@ -25,13 +25,13 @@ Depuis le 6 mai 2026, `develop` et le travail réel du serveur de recette ont av
 
 | # | Titre | Priorité | Groupe | Statut | Responsable | Dépend de |
 |---|---|---|---|---|---|---|
-| 1 | Vérifier l'hypothèse du logo avant de trancher le groupe 2 | P1 | Diagnostic | ☐ | Dev | - |
+| 1 | ~~Vérifier l'hypothèse du logo~~ — fusionnée dans #7, constat confirmé | P1 | Diagnostic | ✅ (fusionné dans #7) | Dev | - |
 | 2 | Porter RegionHelper.php dans develop | P1 | Groupe 1 | ☐ | Dev | - |
 | 3 | Porter BoursierController.php et admin/boursiers/index.blade.php | P1 | Groupe 1 | ☐ | Dev | - |
 | 4 | Porter faq.blade.php et les petits fichiers admin isolés | P2 | Groupe 1 | ☐ | Dev | - |
 | 5 | Réconcilier PartenaireManagementController.php | P0 | Groupe 3 | ☐ | Dev | - |
-| 6 | Réappliquer le correctif d'inscription dans le formulaire en 2 étapes | P0 | Groupe 3 | ☐ | Dev | 1 |
-| 7 | Réconcilier les fichiers de la refonte UI (forum, library, inbox, layouts, landing, mobile) | P1 | Groupe 2 | ☐ | Dev | 1 |
+| 6 | Réappliquer le correctif d'inscription dans le formulaire en 2 étapes | P0 | Groupe 3 | ☐ | Dev | - |
+| 7 | Réconcilier les fichiers de la refonte UI (forum, library, inbox, layouts, landing, mobile) | P1 | Groupe 2 | 🟡 (constat fait, portage restant) | Dev | - |
 | 8 | Déploiement contrôlé : remplacer le contenu du serveur par develop réconcilié | P0 | Déploiement | ☐ | Dev + Chef de projet | 2,3,4,5,6,7 |
 | 9 | Interdire les modifications directes sur le serveur à l'avenir | P1 | Processus | ☐ | Chef de projet | 8 |
 
@@ -39,13 +39,16 @@ Depuis le 6 mai 2026, `develop` et le travail réel du serveur de recette ont av
 
 ## Détail des issues
 
-### #1 Vérifier l'hypothèse du logo avant de trancher le groupe 2
+### #1 Vérifier l'hypothèse du logo avant de trancher le groupe 2 — ✅ fusionnée dans #7
 **Labels** : `diagnostic` `P1`
-Les fichiers du groupe 2 (`app.css`, `mobile-gestures.js`, `app.js`, `layouts/app.blade.php`, `layouts/guest.blade.php`, `components/opportunites-nav.blade.php`, forum, library, inbox, landing) ont chacun un diff minuscule côté recette (2 à 4 lignes), sur des fichiers que `develop` a aussi réécrits en profondeur (lots UI d'août, refonte de septembre). Le commit de septembre sur `develop` signalait explicitement que le logo ANSUT restait affiché trop petit dans sept autres vues, dont la navigation et le pied de page.
-- [ ] Comparer le contenu de 2 ou 3 de ces petits diffs (`git show recette/ui-ux:<fichier>` vs `develop`) pour savoir s'il s'agit du correctif de logo, d'un ajustement de couleur obsolète (antérieur au système de design d'août), ou d'autre chose.
-- [ ] Si c'est le correctif de logo : le porter dans `develop` plutôt que de l'écraser.
-- [ ] Si c'est obsolète (couleur en dur remplacée depuis par les rôles du système de design) : documenter la décision de l'écarter, ne pas le porter.
-**Critère d'acceptation** : chaque petit diff du groupe 2 a une décision écrite (porté / écarté), pas de suppression silencieuse.
+**Statut** : terminée, hypothèse écartée par les faits. Résumé conservé ici pour la traçabilité ; le travail restant est dans #7.
+
+L'hypothèse de départ était fausse : les diffs « minuscules » mesurés au départ (2 à 4 lignes) comparaient la recette à **elle-même** entre deux commits, pas à `develop`. Une fois comparés directement à `develop`, deux fichiers vérifiés montrent que la recette n'a en réalité **pas du tout** reçu la refonte d'août :
+
+- `resources/views/bachelier/forum/favorites.blade.php` (recette) : version d'avant le lot 4 du 20 août — pas de `<h1>`, couleur `#00BFA5` en dur, filtres qui se soumettent seuls en JS sans effet réel. Le lot 4 avait corrigé, sur ce fichier et ses voisins : une faille XSS dans la recherche du forum (contenu non échappé), des filtres morts, une colonne de base de données mal référencée.
+- `resources/js/mobile-gestures.js` (recette) : contient encore les deux bugs que `develop` (20 août) dit avoir corrigés — le sélecteur de swipe cible toujours `.md\:flex` (attrape la barre de navigation), et une nouvelle instance est recréée à chaque redimensionnement sans retirer les écouteurs précédents. Le correctif du 6 mai sur la recette n'avait retiré qu'une seule règle `touch-action`, un pansement sur le symptôme, pas sur la cause.
+
+**Conclusion** : pour l'ensemble du groupe 2, `develop` est une amélioration stricte de la version de la recette, pas une divergence à arbitrer. Le travail restant (#7) est un portage avec vérification rapide fichier par fichier, pas un arbitrage au cas par cas.
 
 ### #2 Porter RegionHelper.php dans develop
 **Labels** : `groupe-1` `donnees` `P1`
@@ -90,15 +93,20 @@ La PR #5 (fusionnée dans `develop`) corrige `Storage::move()` qui renvoyait un 
 - [ ] Retrouver l'équivalent des trois appels `move()` dans cette nouvelle structure et les remplacer par `moveTempFile()` (ou l'adapter si la structure des données temporaires a changé).
 - [ ] Vérifier si le sélecteur d'année existe encore sous la même forme dans le formulaire à deux étapes, et y ajouter 2026 si besoin.
 - [ ] Adapter ou dupliquer `CompleteProfileFilesTest.php` pour qu'il couvre le parcours à deux étapes.
-**Dépend de** : #1, pour ne pas refaire ce travail deux fois si le groupe 2 touche aussi ces fichiers.
+**Dépend de** : plus rien (dépendance à #1 levée, voir #1 : le constat est fait).
 **Critère d'acceptation** : le test de régression passe sur la version à deux étapes du formulaire, avec les mêmes vérifications que sur la version actuelle de `develop`.
 
 ### #7 Réconcilier les fichiers de la refonte UI
 **Labels** : `groupe-2` `P1`
-Fichiers où `develop` a une refonte plus récente et plus aboutie que le petit correctif de la recette : `app.css`, `mobile-gestures.js`, `app.js`, `layouts/app.blade.php`, `layouts/guest.blade.php`, `components/opportunites-nav.blade.php`, `bachelier/forum/{index,favorites,members}.blade.php`, `bachelier/library/{index,favorites}.blade.php`, `bachelier/inbox/index.blade.php`, `bachelier/opportunites.blade.php`, `landing/partials/{about,hero,boursiers,news}.blade.php`.
-- [ ] Pour chaque fichier, appliquer la décision prise dans #1 (porter ou écarter).
-- [ ] Pour `mobile-gestures.js` en particulier : la recette avait un correctif rapide du 6 mai pour le même blocage de défilement tactile que `develop` a corrigé en profondeur le 20 août. Confirmer que la version `develop` couvre bien le cas que la recette avait patché avant d'écarter ce dernier.
-**Critère d'acceptation** : chaque fichier du groupe a une décision tracée, aucun n'est écrasé sans vérification.
+**Statut** : constat confirmé sur 2 fichiers témoins (voir #1) — `develop` est une amélioration stricte, la recette n'a pas reçu la refonte d'août. Reste à vérifier rapidement les fichiers non encore lus, puis à adopter `develop` pour tout le groupe.
+
+Fichiers concernés : `app.css`, `mobile-gestures.js`, `app.js`, `layouts/app.blade.php`, `layouts/guest.blade.php`, `components/opportunites-nav.blade.php`, `bachelier/forum/{index,favorites,members}.blade.php`, `bachelier/library/{index,favorites}.blade.php`, `bachelier/inbox/index.blade.php`, `bachelier/opportunites.blade.php`, `landing/partials/{about,hero,boursiers,news}.blade.php`.
+- [x] `forum/favorites.blade.php` : version pré-lot-4 confirmée, `develop` l'emporte.
+- [x] `mobile-gestures.js` : deux bugs connus toujours présents côté recette, `develop` l'emporte.
+- [ ] Vérifier rapidement (lecture seule, pas de diff complet nécessaire) les fichiers restants de la liste, pour confirmer qu'aucun n'est une exception à la règle.
+- [ ] Une fois confirmé : dans la branche d'intégration, ces fichiers ne sont **pas** portés depuis la recette — `develop` reste tel quel, la recette est ignorée sur ce groupe.
+- [ ] Exception possible à surveiller : `layouts/guest.blade.php` a un diff un peu plus gros que les autres (+8/-4 dans le commit d'archive) ; à ouvrir en particulier avant de généraliser complètement.
+**Critère d'acceptation** : confirmation écrite que chaque fichier du groupe suit la règle générale, ou identification explicite d'une exception à traiter à part.
 
 ### #8 Déploiement contrôlé : remplacer le contenu du serveur par develop réconcilié
 **Labels** : `deploiement` `P0`
@@ -123,10 +131,9 @@ Cette réconciliation n'a été nécessaire que parce que des mois de travail on
 
 ## Ordre de travail recommandé
 
-**D'abord** : #1 (diagnostic rapide, conditionne #6 et #7).
-**En parallèle, sans dépendance** : #2, #3, #4 (groupe 1, aucun recoupement connu).
-**Ensuite, le plus sensible** : #5 et #6 (sécurité de l'export, formulaire d'inscription en production).
-**Puis** : #7, une fois #1 tranché.
+**Fait** : #1 (diagnostic), fusionnée dans #7 — le constat est établi, la recette n'a pas reçu la refonte d'août.
+**Sans dépendance, à mener en parallèle** : #2, #3, #4 (groupe 1) et #7 (finir la vérification des fichiers restants, portage rapide).
+**Le plus sensible** : #5 et #6 (sécurité de l'export, formulaire d'inscription en production).
 **Enfin** : #8 (déploiement), puis #9 (processus, pour que ça ne se reproduise pas).
 
 ## Commandes utiles
