@@ -30,7 +30,7 @@ Depuis le 6 mai 2026, `develop` et le travail réel du serveur de recette ont av
 | 3 | Porter BoursierController.php et admin/boursiers/index.blade.php | P1 | Groupe 1 | ☐ | Dev | - |
 | 4 | Porter faq.blade.php et les petits fichiers admin isolés | P2 | Groupe 1 | ☐ | Dev | - |
 | 5 | ~~Réconcilier PartenaireManagementController.php~~ — develop l'emporte | P0 | Groupe 3 | ✅ | Dev | - |
-| 6 | Réappliquer le correctif d'inscription dans le formulaire en 2 étapes | P0 | Groupe 3 | ☐ | Dev | - |
+| 6 | Réappliquer le correctif d'inscription dans le formulaire en 2 étapes | P0 | Groupe 3 | 🟡 (PR #5 fusionnée ; correctif porté vers recette/ui-ux ; correctif d'urgence sur le serveur en cours) | Dev | - |
 | 7 | Réconcilier les fichiers de la refonte UI (forum, library, inbox, layouts, landing, mobile) | P1 | Groupe 2 | 🟡 (constat fait, portage restant) | Dev | - |
 | 8 | Déploiement contrôlé : remplacer le contenu du serveur par develop réconcilié | P0 | Déploiement | ☐ | Dev + Chef de projet | 2,3,4,5,6,7 |
 | 9 | Interdire les modifications directes sur le serveur à l'avenir | P1 | Processus | ☐ | Chef de projet | 8 |
@@ -96,14 +96,23 @@ Fichiers sans recoupement connu avec le travail de `develop` : `faq.blade.php` (
 
 **Conséquence concrète** : le bug `Storage::move()` (qui renvoie un booléen au lieu du chemin final) est **actuellement actif sur `develop`**, pas seulement sur la recette. Tout bachelier qui complète son inscription dès maintenant via le parcours normal (prévisualisation puis confirmation) sur `develop` voit `piece_identite_file`, `collante_bac_file` et `photo_profil` enregistrés avec la valeur `"1"` au lieu du vrai chemin — documents orphelins sur le disque, introuvables par l'administration.
 
-- [ ] **Fusionner la PR #5 dans `develop`** dès que l'accès en écriture du connecteur GitHub est rétabli (voir blocage plus haut). Le correctif est déjà écrit, testé (`CompleteProfileFilesTest.php`, 2 tests, both passing), documenté dans la description de la PR — aucun travail supplémentaire nécessaire, juste la fusion.
-- [ ] Une fois fusionnée : porter le même correctif (`moveTempFile()`) sur la structure à deux étapes de la recette. Confirmé par lecture complète de `SocialAuthController.php` sur `recette/ui-ux` : les trois mêmes appels bruts à `Storage::disk('public')->move()` existent dans `completeProfile()`, branche `isset($validated['piece_identite_file_temp'])` (pièce d'identité, collante BAC, photo de profil) — structure identique à celle que corrige la PR #5, donc portage direct.
-- [ ] Année 2026 : confirmée manquante à trois endroits sur `recette/ui-ux` (toujours bornée à `min:2022|max:2025`) — `saveStep()` étape 2, `showPreview()`, et la branche de validation directe de `completeProfile()`. Sur `develop`, les règles de validation acceptent déjà `max:2026` (ajouté par la PR #2, palmarès), mais le `<select>` HTML de `complete-profile.blade.php` n'est corrigé que par la PR #5 (non fusionnée) — donc le sélecteur d'année de `develop` est probablement lui aussi encore bloqué visuellement à 2025 tant que la PR #5 n'est pas fusionnée.
-- [ ] Adapter ou dupliquer `CompleteProfileFilesTest.php` (déjà écrit dans la PR #5) pour qu'il couvre le parcours à deux étapes de la recette.
-**Dépend de** : la fusion de la PR #5 doit précéder le portage vers la recette (sinon on corrige un fichier qui va de toute façon être remplacé par la version fusionnée).
-**Critère d'acceptation** : PR #5 fusionnée dans `develop` ; le test de régression passe aussi sur la version à deux étapes du formulaire, avec les mêmes vérifications.
+- [x] **Fusionner la PR #5 dans `develop`** — fait. Le blocage d'écriture du connecteur GitHub (compte authentifié sans droits d'écriture sur ce dépôt) a été contourné en exécutant les opérations Git depuis un terminal local disposant des bons droits. PR #5 : `merged: true`, commit `88e935b` sur `develop`. `moveTempFile()` vérifiée présente, 3 appels corrects dans `completeProfile()`.
+- [x] Porter le même correctif (`moveTempFile()`) sur la structure à quatre étapes de la recette — préparé, script prêt à exécuter (`apply_recette_fix.sh`). Contenu vérifié par diff exact contre le fichier réel de `recette/ui-ux` avant application (et non recréé de mémoire), pour éviter d'écraser du code par erreur.
+- [x] Année 2026 : ajoutée dans le même correctif — trois validations (`saveStep()` étape 2, `showPreview()`, branche directe de `completeProfile()`), le message d'erreur associé, et le `<select>` HTML de `complete-profile-step2.blade.php`.
+- [x] Test de régression adapté (`CompleteProfileFilesTest.php`) à la structure à quatre étapes : premier test repris à l'identique (la logique de `completeProfile()` est désormais rigoureusement la même), second test adapté pour cibler directement l'étape 2 (`showStep()` ne vérifie pas que les étapes précédentes sont complétées).
 
-**Signalement hors périmètre de ce document, découvert en vérifiant l'état des PR** : la PR #1 (`hotfix/otp-bypass` → `main`, suppression du bypass OTP codé en dur) est elle aussi `open`, `merged: false`. C'est un correctif de sécurité sur `main`, pas sur `develop` — hors périmètre de cette réconciliation, mais à signaler comme urgent séparément.
+**⚠️ mise à jour (29/09, soir)** — deux découvertes supplémentaires en vérifiant l'état réel de la recette avant de porter le correctif :
+
+- **4 vues jamais versionnées.** `SocialAuthController.php` sur `recette/ui-ux` appelle `view('auth.complete-profile-step1')` à `step4`, mais ces 4 fichiers Blade étaient absents du dépôt Git — aucun commit ne les créait. Vérification SSH sur le serveur : les fichiers existent bien sur le disque (créés le 6 mai 2026), mais apparaissaient en `Untracked files` depuis leur création. Sans eux, le parcours d'inscription en 4 étapes de la recette n'existait tout simplement pas dans l'historique Git. Récupérés depuis le serveur et ajoutés à `recette/ui-ux` (commit `6611248`).
+- **Corruption déjà réelle sur le serveur de recette**, pas seulement théorique : 7 profils bacheliers avec `piece_identite_file = '1'`, 7 avec `collante_bac_file = '1'`, 4 avec `photo_profil = '1'`. Les fichiers physiques existent sous des noms aléatoires dans `storage/app/public/temp/`, non reliés à un profil. Le bug touche donc déjà des candidats réels, et continue de corrompre chaque nouvelle inscription tant qu'aucun correctif n'est actif sur le serveur — le correctif ci-dessus n'atteint le serveur qu'au moment du déploiement complet (#8), pas immédiatement.
+
+- [ ] **Correctif chirurgical d'urgence sur le serveur** (exception documentée à M4, justifiée par la corruption en cours) : appliquer uniquement `moveTempFile()` — sans le changement `annee_bac`, non urgent — directement sur le fichier live du serveur, avec sauvegarde préalable (`emergency_patch_server.sh`). À remplacer par le déploiement propre (#8) dès que possible.
+- [ ] **Rattrapage des 7 profils déjà corrompus** : identifier les candidats concernés (`SELECT matricule_bac, email_eleve FROM bacheliers WHERE piece_identite_file = '1'`) et les recontacter pour qu'ils retéléchargent leurs documents.
+
+**Dépend de** : le portage vers `recette/ui-ux` a suivi la fusion de la PR #5, comme prévu.
+**Critère d'acceptation** : PR #5 fusionnée dans `develop` (✅) ; correctif et test portés sur `recette/ui-ux` (✅, en attente de confirmation post-exécution du script) ; correctif d'urgence actif sur le serveur (☐) ; 7 profils corrompus rattrapés (☐).
+
+**Signalement hors périmètre de ce document, toujours d'actualité** : la PR #1 (`hotfix/otp-bypass` → `main`, suppression du bypass OTP codé en dur) est toujours `open`, `merged: false`. Correctif de sécurité sur `main`, hors périmètre de cette réconciliation, mais toujours urgent.
 
 ### #7 Réconcilier les fichiers de la refonte UI
 **Labels** : `groupe-2` `P1`
@@ -140,10 +149,10 @@ Cette réconciliation n'a été nécessaire que parce que des mois de travail on
 
 ## Ordre de travail recommandé
 
-**Fait** : #1 (diagnostic) et #5 (contrôleur partenaires) — les deux conclus par « develop l'emporte, rien à fusionner ».
+**Fait** : #1 (diagnostic), #5 (contrôleur partenaires) et, sur `develop`, la fusion de la PR #5 pour #6.
+**Urgent, en cours** : #6 — corruption de documents active sur le serveur de recette (7 profils déjà touchés). Correctif d'urgence à appliquer sur le serveur sans attendre le déploiement complet, en parallèle du portage propre vers `recette/ui-ux`.
 **Sans dépendance, à mener en parallèle** : #2, #3, #4 (groupe 1) et #7 (finir la vérification des fichiers restants, portage rapide).
-**Le plus sensible, à traiter maintenant** : #6 (formulaire d'inscription en production — même bug `Storage::move()` que la PR #5 déjà fusionnée, mais dans la structure à deux étapes).
-**Enfin** : #8 (déploiement), puis #9 (processus, pour que ça ne se reproduise pas).
+**Enfin** : #8 (déploiement complet, qui doit notamment remplacer le correctif d'urgence hors-git par le code versionné), puis #9 (processus, pour que ça ne se reproduise pas).
 
 ## Commandes utiles
 ```bash
@@ -159,4 +168,3 @@ git switch -c integration/recette-ui-ux
 
 ## Pour créer les issues dans GitHub
 Si le connecteur GitHub reçoit un accès en écriture sur le dépôt : matérialiser d'abord les 22 issues de `docs/ISSUES_PALMARES_BAC_2026.md` (déjà référencées par plusieurs messages de commit), puis les 9 issues de ce document à la suite, pour que la numérotation GitHub ne rentre pas en collision avec les références existantes.
-
