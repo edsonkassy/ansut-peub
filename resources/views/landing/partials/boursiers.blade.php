@@ -149,8 +149,17 @@ function initMap() {
             attributionControl: false,
             logoPosition: 'bottom-right',
             maxZoom: 12,
-            minZoom: 5
+            minZoom: 5,
+            cooperativeGestures: true
         });
+
+        // Correctif porte depuis recette/ui-ux (issue #7) : solution officielle
+        // Mapbox GL JS contre le conflit tactile/scroll sur mobile (la carte
+        // capturait le scroll de la page des le premier contact). A verifier
+        // sur mobile reel avant fusion de la PR.
+        map.touchZoomRotate.disable();
+        map.touchPitch.disable();
+        map.dragPan.disable();
 
         map.on('load', function() {
             console.log('Carte Mapbox chargée avec succès');
