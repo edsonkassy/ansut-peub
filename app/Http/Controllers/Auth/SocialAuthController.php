@@ -10,6 +10,7 @@ use App\Mail\AdminNewCandidatureMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class SocialAuthController extends Controller
 {
@@ -20,6 +21,24 @@ class SocialAuthController extends Controller
     {
         $this->socialAuthService = $socialAuthService;
         $this->aiService = $aiService;
+    }
+
+    /**
+     * Deplace un fichier temporaire vers son emplacement final.
+     * Storage::move() renvoie un booleen ; l'utiliser directement comme un
+     * chemin (comme le faisait le code precedent) enregistre '1' en base au
+     * lieu du vrai chemin du fichier. Cette methode leve une exception si le
+     * deplacement echoue, au lieu d'enregistrer silencieusement ce booleen.
+     */
+    private function moveTempFile(string $tempPath, string $directory): string
+    {
+        $finalPath = $directory . '/' . basename($tempPath);
+
+        if (! Storage::disk('public')->move($tempPath, $finalPath)) {
+            throw new \RuntimeException("Deplacement impossible : {$tempPath}");
+        }
+
+        return $finalPath;
     }
 
     /**
@@ -182,7 +201,7 @@ class SocialAuthController extends Controller
                 'matricule_bac' => 'required|string|max:50',
                 'serie_bac' => 'required|in:C,E,D,A1,A2,F1,F2,F3,F4,F5,F6,F7,F8,G1,G2,G3,BT,BP',
                 'note_bac' => 'required|numeric|min:0|max:400',
-                'annee_bac' => 'required|integer|min:2022|max:2025',
+                'annee_bac' => 'required|integer|min:2022|max:2026',
                 'etablissement_nom' => 'required|string|max:255',
                 'etablissement_type' => 'required|in:public,prive_homologue,prive_non_homologue',
             ];
@@ -300,7 +319,7 @@ class SocialAuthController extends Controller
             'matricule_bac' => 'required|string|max:50|unique:bacheliers,matricule_bac',
             'serie_bac' => 'required|in:C,E,D,A1,A2,F1,F2,F3,F4,F5,F6,F7,F8,G1,G2,G3,BT,BP',
             'note_bac' => 'required|numeric|min:0|max:400',
-            'annee_bac' => 'required|integer|min:2022|max:2025',
+            'annee_bac' => 'required|integer|min:2022|max:2026',
             'etablissement_nom' => 'required|string|max:255',
             'etablissement_type' => 'required|in:public,prive_homologue,prive_non_homologue',
             'collante_bac_file' => ($hasExistingFiles ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png|max:10240',
@@ -361,7 +380,7 @@ class SocialAuthController extends Controller
             'annee_bac.required' => 'L\'année d\'obtention du BAC est obligatoire.',
             'annee_bac.integer' => 'L\'année BAC doit être un nombre entier.',
             'annee_bac.min' => 'L\'année BAC ne peut pas être antérieure à 2022.',
-            'annee_bac.max' => 'L\'année BAC ne peut pas être supérieure à 2025.',
+            'annee_bac.max' => 'L\'année BAC ne peut pas être supérieure à 2026.',
             'etablissement_nom.required' => 'Le nom de votre établissement est obligatoire.',
             'etablissement_type.required' => 'Veuillez sélectionner le type d\'établissement.',
             'collante_bac_file.required' => 'Le scan de votre collante BAC est obligatoire.',
@@ -509,7 +528,7 @@ class SocialAuthController extends Controller
             'matricule_bac' => 'required|string|max:50|unique:bacheliers,matricule_bac',
             'serie_bac' => 'required|in:C,E,D,A1,A2,F1,F2,F3,F4,F5,F6,F7,F8,G1,G2,G3,BT,BP',
             'note_bac' => 'required|numeric|min:0|max:400',
-            'annee_bac' => 'required|integer|min:2022|max:2025',
+            'annee_bac' => 'required|integer|min:2022|max:2026',
             'etablissement_nom' => 'required|string|max:255',
             'etablissement_type' => 'required|in:public,prive_homologue,prive_non_homologue',
             'collante_bac_file' => 'required|image|mimes:jpg,jpeg,png|max:10240',
@@ -549,15 +568,12 @@ class SocialAuthController extends Controller
             // Gérer les uploads de fichiers
             if (isset($validated['piece_identite_file_temp'])) {
                 // Déplacer les fichiers temp vers leur emplacement final
-                $pieceIdentitePath = \Illuminate\Support\Facades\Storage::disk('public')
-                    ->move($validated['piece_identite_file_temp'], 'documents/pieces_identite/' . basename($validated['piece_identite_file_temp']));
-                
-                $collanteBacPath = \Illuminate\Support\Facades\Storage::disk('public')
-                    ->move($validated['collante_bac_file_temp'], 'documents/collantes_bac/' . basename($validated['collante_bac_file_temp']));
-                
+                $pieceIdentitePath = $this->moveTempFile($validated['piece_identite_file_temp'], 'documents/pieces_identite');
+
+                $collanteBacPath = $this->moveTempFile($validated['collante_bac_file_temp'], 'documents/collantes_bac');
+
                 $photoProfilPath = isset($validated['photo_profil_temp'])
-                    ? \Illuminate\Support\Facades\Storage::disk('public')
-                        ->move($validated['photo_profil_temp'], 'photos/profils/' . basename($validated['photo_profil_temp']))
+                    ? $this->moveTempFile($validated['photo_profil_temp'], 'photos/profils')
                     : $user->avatar;
             } else {
                 // Upload direct (sans preview)
@@ -606,4 +622,3 @@ class SocialAuthController extends Controller
         }
     }
 }
-
