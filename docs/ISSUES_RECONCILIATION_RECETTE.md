@@ -30,7 +30,7 @@ Depuis le 6 mai 2026, `develop` et le travail réel du serveur de recette ont av
 | 3 | Porter BoursierController.php et admin/boursiers/index.blade.php | P1 | Groupe 1 | ☐ | Dev | - |
 | 4 | Porter faq.blade.php et les petits fichiers admin isolés | P2 | Groupe 1 | ☐ | Dev | - |
 | 5 | ~~Réconcilier PartenaireManagementController.php~~ — develop l'emporte | P0 | Groupe 3 | ✅ | Dev | - |
-| 6 | Réappliquer le correctif d'inscription dans le formulaire en 2 étapes | P0 | Groupe 3 | 🟡 (PR #5 fusionnée ; correctif porté vers recette/ui-ux ; correctif d'urgence sur le serveur en cours) | Dev | - |
+| 6 | Réappliquer le correctif d'inscription dans le formulaire en 2 étapes | P0 | Groupe 3 | ✅ | Dev | - |
 | 7 | Réconcilier les fichiers de la refonte UI (forum, library, inbox, layouts, landing, mobile) | P1 | Groupe 2 | 🟡 (constat fait, portage restant) | Dev | - |
 | 8 | Déploiement contrôlé : remplacer le contenu du serveur par develop réconcilié | P0 | Déploiement | ☐ | Dev + Chef de projet | 2,3,4,5,6,7 |
 | 9 | Interdire les modifications directes sur le serveur à l'avenir | P1 | Processus | ☐ | Chef de projet | 8 |
@@ -106,11 +106,11 @@ Fichiers sans recoupement connu avec le travail de `develop` : `faq.blade.php` (
 - **4 vues jamais versionnées.** `SocialAuthController.php` sur `recette/ui-ux` appelle `view('auth.complete-profile-step1')` à `step4`, mais ces 4 fichiers Blade étaient absents du dépôt Git — aucun commit ne les créait. Vérification SSH sur le serveur : les fichiers existent bien sur le disque (créés le 6 mai 2026), mais apparaissaient en `Untracked files` depuis leur création. Sans eux, le parcours d'inscription en 4 étapes de la recette n'existait tout simplement pas dans l'historique Git. Récupérés depuis le serveur et ajoutés à `recette/ui-ux` (commit `6611248`).
 - **Corruption déjà réelle sur le serveur de recette**, pas seulement théorique : 7 profils bacheliers avec `piece_identite_file = '1'`, 7 avec `collante_bac_file = '1'`, 4 avec `photo_profil = '1'`. Les fichiers physiques existent sous des noms aléatoires dans `storage/app/public/temp/`, non reliés à un profil. Le bug touche donc déjà des candidats réels, et continue de corrompre chaque nouvelle inscription tant qu'aucun correctif n'est actif sur le serveur — le correctif ci-dessus n'atteint le serveur qu'au moment du déploiement complet (#8), pas immédiatement.
 
-- [ ] **Correctif chirurgical d'urgence sur le serveur** (exception documentée à M4, justifiée par la corruption en cours) : appliquer uniquement `moveTempFile()` — sans le changement `annee_bac`, non urgent — directement sur le fichier live du serveur, avec sauvegarde préalable (`emergency_patch_server.sh`). À remplacer par le déploiement propre (#8) dès que possible.
-- [ ] **Rattrapage des 7 profils déjà corrompus** : identifier les candidats concernés (`SELECT matricule_bac, email_eleve FROM bacheliers WHERE piece_identite_file = '1'`) et les recontacter pour qu'ils retéléchargent leurs documents.
+- [x] **Correctif chirurgical d'urgence sur le serveur** (exception documentée à M4, justifiée par la corruption en cours) : appliqué et testé — une inscription complète sur le serveur confirme des chemins corrects (`documents/pieces_identite/...`, `documents/collantes_bac/...`, `photos/profils/...`), plus aucune trace de la valeur `"1"`. Sauvegarde du fichier live conservée (`SocialAuthController.php.bak-20260929-020119`). À remplacer par le déploiement propre (#8) dès que possible.
+- [x] **Rattrapage des 7 profils déjà corrompus** : sans objet. La table `bacheliers` (112 lignes, avec les 177 comptes `users` liés) a été purgée le 29/09 après confirmation que son contenu était exclusivement des données de test d'inscription, sans lien avec le vrai palmarès BAC 2026 (qui vit sur la branche séparée `feature/palmares-2026`, jamais importée sur ce serveur). Les 7 profils corrompus faisaient partie de ce lot : aucun candidat réel à recontacter. Sauvegardes JSON conservées dans `/tmp/` sur le serveur.
 
 **Dépend de** : le portage vers `recette/ui-ux` a suivi la fusion de la PR #5, comme prévu.
-**Critère d'acceptation** : PR #5 fusionnée dans `develop` (✅) ; correctif et test portés sur `recette/ui-ux` (✅, en attente de confirmation post-exécution du script) ; correctif d'urgence actif sur le serveur (☐) ; 7 profils corrompus rattrapés (☐).
+**Critère d'acceptation** : PR #5 fusionnée dans `develop` (✅) ; correctif et test portés sur `recette/ui-ux` (✅) ; correctif d'urgence actif sur le serveur (✅, testé) ; 7 profils corrompus rattrapés (✅, sans objet — voir ci-dessus).
 
 **Signalement hors périmètre de ce document, toujours d'actualité** : la PR #1 (`hotfix/otp-bypass` → `main`, suppression du bypass OTP codé en dur) est toujours `open`, `merged: false`. Correctif de sécurité sur `main`, hors périmètre de cette réconciliation, mais toujours urgent.
 
@@ -149,8 +149,7 @@ Cette réconciliation n'a été nécessaire que parce que des mois de travail on
 
 ## Ordre de travail recommandé
 
-**Fait** : #1 (diagnostic), #5 (contrôleur partenaires) et, sur `develop`, la fusion de la PR #5 pour #6.
-**Urgent, en cours** : #6 — corruption de documents active sur le serveur de recette (7 profils déjà touchés). Correctif d'urgence à appliquer sur le serveur sans attendre le déploiement complet, en parallèle du portage propre vers `recette/ui-ux`.
+**Fait** : #1 (diagnostic), #5 (contrôleur partenaires), #6 (correctif d'inscription complet, correctif d'urgence serveur testé, données de test purgées).
 **Sans dépendance, à mener en parallèle** : #2, #3, #4 (groupe 1) et #7 (finir la vérification des fichiers restants, portage rapide).
 **Enfin** : #8 (déploiement complet, qui doit notamment remplacer le correctif d'urgence hors-git par le code versionné), puis #9 (processus, pour que ça ne se reproduise pas).
 
