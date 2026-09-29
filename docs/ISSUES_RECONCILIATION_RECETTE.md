@@ -29,7 +29,7 @@ Depuis le 6 mai 2026, `develop` et le travail réel du serveur de recette ont av
 | 2 | Porter RegionHelper.php dans develop | P1 | Groupe 1 | ☐ | Dev | - |
 | 3 | Porter BoursierController.php et admin/boursiers/index.blade.php | P1 | Groupe 1 | ☐ | Dev | - |
 | 4 | Porter faq.blade.php et les petits fichiers admin isolés | P2 | Groupe 1 | ☐ | Dev | - |
-| 5 | Réconcilier PartenaireManagementController.php | P0 | Groupe 3 | ☐ | Dev | - |
+| 5 | ~~Réconcilier PartenaireManagementController.php~~ — develop l'emporte | P0 | Groupe 3 | ✅ | Dev | - |
 | 6 | Réappliquer le correctif d'inscription dans le formulaire en 2 étapes | P0 | Groupe 3 | ☐ | Dev | - |
 | 7 | Réconcilier les fichiers de la refonte UI (forum, library, inbox, layouts, landing, mobile) | P1 | Groupe 2 | 🟡 (constat fait, portage restant) | Dev | - |
 | 8 | Déploiement contrôlé : remplacer le contenu du serveur par develop réconcilié | P0 | Déploiement | ☐ | Dev + Chef de projet | 2,3,4,5,6,7 |
@@ -74,27 +74,36 @@ Fichiers sans recoupement connu avec le travail de `develop` : `faq.blade.php` (
 - [ ] Porter tel quel.
 **Critère d'acceptation** : les 7 fichiers sont dans `develop`, sans régression visible sur les pages concernées.
 
-### #5 Réconcilier PartenaireManagementController.php
+### #5 Réconcilier PartenaireManagementController.php — ✅ develop l'emporte, rien à fusionner
 **Labels** : `groupe-3` `securite` `P0`
-Les deux côtés ont ajouté un `export()` indépendamment :
-- `develop` : neutralise les formules Excel dans les champs texte libres, compte les opportunités par `withCount`.
-- `recette/ui-ux` : aucune neutralisation de formule (un partenaire malveillant peut injecter une formule dans son nom d'organisation), comptage par chargement complet puis `count()` en PHP.
-La recette n'a pas de méthode `verify()` : elle utilise encore `toggleStatus()`, qui fait à peu près la même chose autrement.
-- [ ] Garder `export()` et `verify()` de `develop` (plus sûrs, plus efficaces).
-- [ ] Vérifier dans `routes/web.php` de la recette si le bouton « Vérifier » de l'admin pointe vers `toggleStatus()` ou vers autre chose.
-- [ ] Décider : supprimer `toggleStatus()` une fois `verify()`/`reject()` en place, ou les faire coexister avec un usage distinct.
-- [ ] Vérifier qu'aucune vue ne référence encore `toggleStatus()` avant de la supprimer.
-**Critère d'acceptation** : une seule implémentation d'`export()` (celle avec neutralisation des formules), le bouton « Vérifier » de l'admin fonctionne, pas de méthode morte.
+**Statut** : terminée. Conclusion : sur les trois fichiers concernés (contrôleur, routes, vue), `develop` est une amélioration stricte de la version de la recette — même verdict que pour le groupe 2 (#1/#7).
 
-### #6 Réappliquer le correctif d'inscription dans le formulaire en 2 étapes
-**Labels** : `groupe-3` `bug` `P0`
-La PR #5 (fusionnée dans `develop`) corrige `Storage::move()` qui renvoyait un booléen au lieu du chemin, et ajoute l'année 2026 — sur la version en une étape du formulaire. La recette a transformé `complete-profile.blade.php` et `SocialAuthController.php` en formulaire à deux étapes ; le même bug `move()` y a été confirmé présent (`git show recette/ui-ux:...` fait tout à l'heure).
-- [ ] Lire en entier la version à deux étapes de `SocialAuthController.php` et `complete-profile.blade.php`/`complete-profile-preview.blade.php` sur `recette/ui-ux`.
-- [ ] Retrouver l'équivalent des trois appels `move()` dans cette nouvelle structure et les remplacer par `moveTempFile()` (ou l'adapter si la structure des données temporaires a changé).
-- [ ] Vérifier si le sélecteur d'année existe encore sous la même forme dans le formulaire à deux étapes, et y ajouter 2026 si besoin.
-- [ ] Adapter ou dupliquer `CompleteProfileFilesTest.php` pour qu'il couvre le parcours à deux étapes.
-**Dépend de** : plus rien (dépendance à #1 levée, voir #1 : le constat est fait).
-**Critère d'acceptation** : le test de régression passe sur la version à deux étapes du formulaire, avec les mêmes vérifications que sur la version actuelle de `develop`.
+**Contrôleur** — `develop` a `export()` (neutralisation des formules Excel dans les champs texte libres, `withCount` pour compter les opportunités), `verify()`, `reject()` et `toggleStatus()`, qui coexistent proprement sur 3 routes distinctes. La recette n'a pas de `verify()` et un `export()` sans neutralisation de formule : un partenaire malveillant pourrait injecter une formule Excel via son nom d'organisation.
+
+**Routes** — `routes/web.php` de la recette contient deux blocs de routes admin partenaires en double. Laravel garde la dernière définition, si bien que la route nommée `verify` exécute en réalité `toggleStatus()`. Le bouton « Vérifier » de l'admin fonctionne donc côté recette, mais par accident de configuration plutôt que par conception.
+
+**Vue** (`admin/partenaires/index.blade.php`) — comparaison ligne à ligne des deux versions :
+- La recette compare `status_verification === 'en_attente'` pour afficher les boutons Vérifier/Rejeter, alors que la valeur réellement stockée est `'pending'` (confirmé dans le contrôleur, des deux côtés). Ces boutons ne s'affichent donc vraisemblablement jamais côté recette. `develop` compare correctement `=== 'pending'` — bug déjà corrigé par la PR #3 (`fix/partenaires-statut`), que la recette n'a jamais reçue.
+- Aucun bouton propre à `toggleStatus()` n'existe dans la vue, ni côté recette ni côté `develop` : rien à préserver en supprimant la méthode.
+- Le reste (en-têtes, statistiques, filtres, tableau, pagination, structure du modal de rejet) est identique au caractère près entre les deux versions. Seule différence mineure : `develop` utilise `route('admin.partenaires.export')` au lieu d'une URL en dur, et le libellé du motif de rejet précise « (non enregistré pour l'instant) » — honnête sur une limite déjà suivie séparément (`motif_rejet` pas encore persisté).
+
+**Décision** : adopter tel quel le contrôleur, les routes et la vue de `develop`. Aucune fusion manuelle n'est nécessaire pour cette issue.
+**Critère d'acceptation** : ✅ une seule implémentation d'`export()` (celle avec neutralisation des formules, déjà sur `develop`), le bouton « Vérifier » fonctionne par conception et non par accident, pas de méthode morte à conserver.
+
+### #6 Réappliquer le correctif d'inscription dans le formulaire en 2 étapes — ⚠️ correction importante (29/09, après-midi)
+**Labels** : `groupe-3` `bug` `P0` `securite-donnees`
+**Correction** : cette section indiquait précédemment que la PR #5 (`fix/inscription-fichiers`, commit `402c410`) était fusionnée dans `develop`. **Ce n'est pas le cas** — vérifié directement sur GitHub : la PR #5 est toujours à l'état `open`, `merged: false` (créée le 29/09 à 00h14, dernière activité à 00h41). L'historique du fichier `SocialAuthController.php` sur `develop` le confirme : son dernier commit est `6177cb9` (palmarès BAC 2026, 11h30), pas `402c410` (21h21, postérieur). La branche `fix/inscription-fichiers` existe toujours, séparée, avec son commit en attente.
+
+**Conséquence concrète** : le bug `Storage::move()` (qui renvoie un booléen au lieu du chemin final) est **actuellement actif sur `develop`**, pas seulement sur la recette. Tout bachelier qui complète son inscription dès maintenant via le parcours normal (prévisualisation puis confirmation) sur `develop` voit `piece_identite_file`, `collante_bac_file` et `photo_profil` enregistrés avec la valeur `"1"` au lieu du vrai chemin — documents orphelins sur le disque, introuvables par l'administration.
+
+- [ ] **Fusionner la PR #5 dans `develop`** dès que l'accès en écriture du connecteur GitHub est rétabli (voir blocage plus haut). Le correctif est déjà écrit, testé (`CompleteProfileFilesTest.php`, 2 tests, both passing), documenté dans la description de la PR — aucun travail supplémentaire nécessaire, juste la fusion.
+- [ ] Une fois fusionnée : porter le même correctif (`moveTempFile()`) sur la structure à deux étapes de la recette. Confirmé par lecture complète de `SocialAuthController.php` sur `recette/ui-ux` : les trois mêmes appels bruts à `Storage::disk('public')->move()` existent dans `completeProfile()`, branche `isset($validated['piece_identite_file_temp'])` (pièce d'identité, collante BAC, photo de profil) — structure identique à celle que corrige la PR #5, donc portage direct.
+- [ ] Année 2026 : confirmée manquante à trois endroits sur `recette/ui-ux` (toujours bornée à `min:2022|max:2025`) — `saveStep()` étape 2, `showPreview()`, et la branche de validation directe de `completeProfile()`. Sur `develop`, les règles de validation acceptent déjà `max:2026` (ajouté par la PR #2, palmarès), mais le `<select>` HTML de `complete-profile.blade.php` n'est corrigé que par la PR #5 (non fusionnée) — donc le sélecteur d'année de `develop` est probablement lui aussi encore bloqué visuellement à 2025 tant que la PR #5 n'est pas fusionnée.
+- [ ] Adapter ou dupliquer `CompleteProfileFilesTest.php` (déjà écrit dans la PR #5) pour qu'il couvre le parcours à deux étapes de la recette.
+**Dépend de** : la fusion de la PR #5 doit précéder le portage vers la recette (sinon on corrige un fichier qui va de toute façon être remplacé par la version fusionnée).
+**Critère d'acceptation** : PR #5 fusionnée dans `develop` ; le test de régression passe aussi sur la version à deux étapes du formulaire, avec les mêmes vérifications.
+
+**Signalement hors périmètre de ce document, découvert en vérifiant l'état des PR** : la PR #1 (`hotfix/otp-bypass` → `main`, suppression du bypass OTP codé en dur) est elle aussi `open`, `merged: false`. C'est un correctif de sécurité sur `main`, pas sur `develop` — hors périmètre de cette réconciliation, mais à signaler comme urgent séparément.
 
 ### #7 Réconcilier les fichiers de la refonte UI
 **Labels** : `groupe-2` `P1`
@@ -131,9 +140,9 @@ Cette réconciliation n'a été nécessaire que parce que des mois de travail on
 
 ## Ordre de travail recommandé
 
-**Fait** : #1 (diagnostic), fusionnée dans #7 — le constat est établi, la recette n'a pas reçu la refonte d'août.
+**Fait** : #1 (diagnostic) et #5 (contrôleur partenaires) — les deux conclus par « develop l'emporte, rien à fusionner ».
 **Sans dépendance, à mener en parallèle** : #2, #3, #4 (groupe 1) et #7 (finir la vérification des fichiers restants, portage rapide).
-**Le plus sensible** : #5 et #6 (sécurité de l'export, formulaire d'inscription en production).
+**Le plus sensible, à traiter maintenant** : #6 (formulaire d'inscription en production — même bug `Storage::move()` que la PR #5 déjà fusionnée, mais dans la structure à deux étapes).
 **Enfin** : #8 (déploiement), puis #9 (processus, pour que ça ne se reproduise pas).
 
 ## Commandes utiles
@@ -150,3 +159,4 @@ git switch -c integration/recette-ui-ux
 
 ## Pour créer les issues dans GitHub
 Si le connecteur GitHub reçoit un accès en écriture sur le dépôt : matérialiser d'abord les 22 issues de `docs/ISSUES_PALMARES_BAC_2026.md` (déjà référencées par plusieurs messages de commit), puis les 9 issues de ce document à la suite, pour que la numérotation GitHub ne rentre pas en collision avec les références existantes.
+
