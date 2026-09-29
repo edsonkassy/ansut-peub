@@ -59,6 +59,7 @@ Porté sur `integration/recette-ui-ux` (commit `170a8c9`). Vérifié par compara
 - [x] Dédoublonnage : plus aucune clé dupliquée dans `getRegionCoordinates`, `getCityCoordinates` (les 9 doublons hérités de `develop` supprimés) ni `mapOldRegionToNew`.
 - [x] **Nuance actée** : `Tengrela` (utilisée par `getCitiesForRegion`) et `Tingréla` coexistent toujours comme deux clés distinctes, mêmes coordonnées. Ce sont deux orthographes de la même ville gardées comme alias volontaires plutôt que fusionnées en une seule clé — décision : laisser les deux en l'état, aucun bug fonctionnel identifié, à revisiter seulement si un cas d'usage réel l'exige.
 - [ ] **Différé sur #23** : alignement des clés régionales avec `PeubScoringHelper` (tiret insécable vs tiret simple, `Loh-Djiboua`/`LohDjiboua`, `San-Pedro`). Aligner change mécaniquement des points de scoring déjà en place — nécessite l'arbitrage de Mamadou, pas un simple alignement de chaînes comme envisagé initialement.
+**Fusionné dans `develop`** via la PR #6 (squash, commit `c2b6a0e`, 29/09 15h01 UTC).
 **Critère d'acceptation** : `RegionHelper::getRegions()` ne contient plus `'Dictionnaire'` ni de doublon (✅) ; sert la même liste de régions que `PeubScoringHelper` (☐, différé sur #23).
 
 ### #3 Porter BoursierController.php et admin/boursiers/index.blade.php — ✅ fait
@@ -70,6 +71,8 @@ Porté sur `integration/recette-ui-ux` (commit `1a54369`) : `getBoursiersWithCoo
 - [x] Porter le regroupement par région dans `develop`.
 - [x] Porter la vue associée, testée visuellement.
 - [x] Échapper les valeurs issues de la base dans `showPanel()` et `displayBubbles()` (faille XSS trouvée en portant, pas dans le périmètre initial de l'issue).
+**Fusionné dans `develop`** via la PR #6 (squash, commit `c2b6a0e`, 29/09 15h01 UTC).
+**Défauts mineurs connus, non bloquants** (hérités de la vue de la recette, non corrigés dans ce portage) : deux bulles proches (ex. Abidjan et Grands-Ponts) se chevauchent sur la carte ; la pastille « Garçons » de la légende n'apparaît pas (classe `bg-blue-800` probablement absente du CSS compilé). À reprendre lors d'un futur lot de polish, sans urgence.
 **Critère d'acceptation** : ✅ la page admin des boursiers affiche le regroupement par région avec les compteurs, testé visuellement ; ✅ plus d'injection HTML possible via les champs boursier.
 
 ### #4 Porter faq.blade.php et les petits fichiers admin isolés — ✅ fait, 3 fichiers portés sur 7
@@ -87,6 +90,7 @@ Porté sur `integration/recette-ui-ux` (commit `b7c978c`). Sur les 7 fichiers li
 - `admin/analytics.blade.php` : libellé « Comptes en attente » erroné côté recette (affiche en réalité `Candidature::where('status','pending')->count()`, pas un compte de comptes en attente) — la clé PHP sous-jacente est identique des deux côtés, seul le libellé change, et il est faux. `develop` reste la version correcte.
 - [x] Relire chaque diff pour confirmer l'absence de recoupement avec un travail récent de `develop`.
 - [x] Porter les 3 fichiers sans réserve ; écarter les 4 autres avec justification (voir ci-dessus, et `welcome`/`actualite(s)` réintégrés dans le périmètre de #7).
+**Fusionné dans `develop`** via la PR #6 (squash, commit `c2b6a0e`, 29/09 15h01 UTC).
 **Critère d'acceptation** : les 3 fichiers sans recoupement sont dans `develop`, sans régression visible ; les 4 fichiers écartés le sont pour une raison documentée, pas par omission.
 
 ### #5 Réconcilier PartenaireManagementController.php — ✅ develop l'emporte, rien à fusionner
@@ -164,8 +168,8 @@ Cette réconciliation n'a été nécessaire que parce que des mois de travail on
 
 ## Ordre de travail recommandé
 
-**Fait** : #1 (diagnostic), #2 (RegionHelper, sauf alignement des clés différé sur #23), #3 (BoursierController + vue, avec correctif XSS trouvé au passage), #4 (3/7 fichiers, 4 écartés justifiés), #5 (contrôleur partenaires), #6 (correctif d'inscription complet, correctif d'urgence serveur testé, données de test purgées). #2, #3, #4 sont sur `integration/recette-ui-ux` (4 commits), pas encore fusionnés dans `develop` — une seule PR est prévue pour les trois.
-**Restant** : #7 (finir la vérification des fichiers restants de la refonte UI, portage rapide, plus `welcome.blade.php`/`actualite(s).blade.php` rattachés depuis #4).
+**Fait** : #1, #2, #3, #4, #5, #6 — tous fusionnés dans `develop` (#2/#3/#4 via la PR #6, squash, commit `c2b6a0e`, 29/09 15h01 UTC ; #5 et #6 directement).
+**Seul restant avant #8** : #7 (finir la vérification des fichiers non encore lus de la refonte UI, portage rapide, plus `welcome.blade.php`/`actualite(s).blade.php` rattachés depuis #4).
 **Enfin** : #8 (déploiement complet, qui doit notamment remplacer le correctif d'urgence hors-git par le code versionné), puis #9 (processus, pour que ça ne se reproduise pas).
 
 ## Commandes utiles
