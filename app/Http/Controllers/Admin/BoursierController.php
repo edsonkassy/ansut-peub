@@ -52,47 +52,45 @@ class BoursierController extends Controller
             ->whereIn('sexe', $selectedGenders)
             ->get();
 
-        $data = [];
+        $regionCoords = RegionHelper::getRegionCoordinates();
+        $regions = RegionHelper::getRegions();
+        
+        $grouped = [];
         foreach ($boursiers as $boursier) {
-            $commune = $boursier->commune ?? 'Abidjan';
             $region = $boursier->region ?? 'Abidjan';
-            
-            // Normaliser la région (mapper les anciennes vers les nouvelles)
             $normalizedRegion = RegionHelper::normalizeRegion($region);
+            $coords = $regionCoords[$normalizedRegion] ?? [-4.0167, 5.3167];
             
-            // Obtenir les coordonnées depuis le helper
-            $coords = RegionHelper::getCoordinates($commune);
-
-            $data[] = [
+            if (!isset($grouped[$normalizedRegion])) {
+                $grouped[$normalizedRegion] = [
+                    'region' => $normalizedRegion,
+                    'region_label' => $regions[$normalizedRegion] ?? $normalizedRegion,
+                    'lng' => $coords[0],
+                    'lat' => $coords[1],
+                    'total' => 0,
+                    'filles' => 0,
+                    'garcons' => 0,
+                    'boursiers' => [],
+                ];
+            }
+            
+            $grouped[$normalizedRegion]['total']++;
+            if ($boursier->sexe === 'F') $grouped[$normalizedRegion]['filles']++;
+            else $grouped[$normalizedRegion]['garcons']++;
+            
+            $grouped[$normalizedRegion]['boursiers'][] = [
                 'id' => $boursier->id,
                 'name' => $boursier->nom_complet,
                 'gender' => $boursier->sexe === 'F' ? 'female' : 'male',
-                'commune' => $commune,
-                'region' => $normalizedRegion, // Utiliser la région normalisée
+                'commune' => $boursier->commune ?? 'N/A',
                 'serie' => $boursier->serie_bac ?? 'N/A',
-                'note' => $boursier->note_bac ?? 0,
-                'annee' => $boursier->annee_bac ?? 2025,
-                'status' => $boursier->user->status ?? 'active',
-                'lng' => $coords[0],
-                'lat' => $coords[1],
                 'etablissement' => $boursier->etablissement_nom ?? 'N/A',
-                'phone' => $boursier->telephone_eleve ?? 'N/A',
-                'email' => $boursier->email_eleve ?? $boursier->user->email,
+                'email' => $boursier->email_eleve ?? ($boursier->user->email ?? 'N/A'),
+                'status' => $boursier->user->status ?? 'active',
             ];
         }
 
-        // Organiser par région
-        $result = [];
-        $regions = RegionHelper::getRegions();
-        
-        foreach ($regions as $region_key => $region_name) {
-            $result[$region_key] = collect($data)->where('region', $region_key)->values()->all();
-        }
-
-        // Ajouter "Toutes" pour afficher tous les boursiers
-        $result['Toutes'] = $data;
-
-        return $result;
+        return array_values($grouped);
     }
 
     /**
