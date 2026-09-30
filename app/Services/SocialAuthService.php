@@ -115,7 +115,7 @@ class SocialAuthService
     {
         // Calculer automatiquement la mention basée sur la note BAC (sur 400 points)
         // Mention officielle si fournie (bachelier vérifié dans le palmarès), sinon calcul depuis la note
-        $mention = $formData['mention'] ?? Bachelier::calculateMention($formData['note_bac']);
+        $mention = $formData['mention'] ?? Bachelier::calculateMention($formData['note_bac'], $formData['serie_bac'] ?? null);
         
         $bachelier = Bachelier::create([
             'user_id' => $user->id,

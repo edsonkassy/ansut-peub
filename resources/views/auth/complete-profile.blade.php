@@ -272,17 +272,17 @@
                         <div>
                             <label for="note_bac" class="block text-sm font-medium text-gray-700 required">Note BAC</label>
                             <div class="relative">
-                                <input type="number" step="0.01" min="0" max="400" name="note_bac" id="note_bac" required
+                                <input type="number" step="0.01" min="0" max="480" name="note_bac" id="note_bac" required
                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm pr-16"
                                        value="{{ $getValue('note_bac') }}" placeholder="Ex: 315.50">
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                    <span class="text-gray-400 text-sm">/400</span>
+                                    <span class="text-gray-400 text-sm" id="note-bac-total">/400</span>
                                 </div>
                             </div>
                             <div class="mt-2 flex items-center justify-between">
                                 <p class="text-xs text-[#0E7490] font-medium flex items-center gap-1">
                                     <i data-lucide="info" class="w-3 h-3"></i>
-                                    Note sur 400 points (système ivoirien)
+                                    <span id="note-bac-helper">Note sur 400 points (système ivoirien)</span>
                                 </p>
                                 <div id="mention-badge" class="hidden px-3 py-1 rounded-full text-xs font-bold"></div>
                             </div>
@@ -664,49 +664,77 @@
             currentChars.textContent = motivationField.value.length;
         }
         
-        // Calculateur de mention BAC en temps réel
+        // Séries du BAC technique (barème sur 480 points au lieu de 400)
+        const seriesTechniques = @json(\App\Models\Bachelier::SERIES_TECHNIQUES);
+
+        // Barème dynamique (400 ou 480) + mention en temps réel, selon la série choisie
+        const serieBacSelect = document.getElementById('serie_bac');
         const noteBacField = document.getElementById('note_bac');
+        const noteBacTotal = document.getElementById('note-bac-total');
+        const noteBacHelper = document.getElementById('note-bac-helper');
         const mentionBadge = document.getElementById('mention-badge');
-        
+
+        function getBaremeTotal() {
+            const serie = serieBacSelect ? serieBacSelect.value : '';
+            return seriesTechniques.includes(serie) ? 480 : 400;
+        }
+
+        function updateBaremeDisplay() {
+            const total = getBaremeTotal();
+            if (noteBacField) noteBacField.max = total;
+            if (noteBacTotal) noteBacTotal.textContent = `/${total}`;
+            if (noteBacHelper) noteBacHelper.textContent = `Note sur ${total} points (système ivoirien)`;
+        }
+
+        function updateMentionBadge() {
+            if (!noteBacField || !mentionBadge) return;
+
+            const note = parseFloat(noteBacField.value);
+            const ratio = getBaremeTotal() / 400;
+
+            if (isNaN(note) || note < 0) {
+                mentionBadge.classList.add('hidden');
+                return;
+            }
+
+            let mentionText = '';
+            let mentionClass = '';
+
+            if (note < 200 * ratio) {
+                mentionBadge.classList.add('hidden');
+                return;
+            } else if (note < 240 * ratio) {
+                mentionText = '🎓 Mention: PASSABLE';
+                mentionClass = 'bg-blue-100 text-blue-800';
+            } else if (note < 280 * ratio) {
+                mentionText = '🎓 Mention: ASSEZ BIEN';
+                mentionClass = 'bg-green-100 text-green-800';
+            } else if (note < 320 * ratio) {
+                mentionText = '🎓 Mention: BIEN';
+                mentionClass = 'bg-orange-100 text-orange-800';
+            } else {
+                mentionText = '🎓 Mention: TRÈS BIEN';
+                mentionClass = 'bg-purple-100 text-purple-800';
+            }
+
+            mentionBadge.textContent = mentionText;
+            mentionBadge.className = `px-3 py-1 rounded-full text-xs font-bold ${mentionClass}`;
+            mentionBadge.classList.remove('hidden');
+        }
+
         if (noteBacField && mentionBadge) {
-            noteBacField.addEventListener('input', function() {
-                const note = parseFloat(this.value);
-                
-                if (isNaN(note) || note < 0) {
-                    mentionBadge.classList.add('hidden');
-                    return;
-                }
-                
-                let mentionText = '';
-                let mentionClass = '';
-                
-                if (note < 240) {
-                    mentionBadge.classList.add('hidden');
-                } else if (note < 280) {
-                    mentionText = '🎓 Mention: PASSABLE';
-                    mentionClass = 'bg-blue-100 text-blue-800';
-                } else if (note < 320) {
-                    mentionText = '🎓 Mention: ASSEZ BIEN';
-                    mentionClass = 'bg-green-100 text-green-800';
-                } else if (note < 360) {
-                    mentionText = '🎓 Mention: BIEN';
-                    mentionClass = 'bg-orange-100 text-orange-800';
-                } else if (note <= 400) {
-                    mentionText = '🎓 Mention: TRÈS BIEN';
-                    mentionClass = 'bg-purple-100 text-purple-800';
-                } else {
-                    mentionBadge.classList.add('hidden');
-                    return;
-                }
-                
-                mentionBadge.textContent = mentionText;
-                mentionBadge.className = `px-3 py-1 rounded-full text-xs font-bold ${mentionClass}`;
-                mentionBadge.classList.remove('hidden');
-            });
-            
-            // Calculer la mention si une note existe déjà (old value)
+            if (serieBacSelect) {
+                serieBacSelect.addEventListener('change', function() {
+                    updateBaremeDisplay();
+                    updateMentionBadge();
+                });
+            }
+            noteBacField.addEventListener('input', updateMentionBadge);
+
+            // Initialiser à l'ouverture (barème + valeur pré-remplie ou ancienne saisie)
+            updateBaremeDisplay();
             if (noteBacField.value) {
-                noteBacField.dispatchEvent(new Event('input'));
+                updateMentionBadge();
             }
         }
         

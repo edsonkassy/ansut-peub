@@ -115,10 +115,7 @@
                                 Bien (14-15.99)
                             </option>
                             <option value="tres_bien" {{ $bachelier->mention == 'tres_bien' ? 'selected' : '' }}>
-                                Très Bien (16-17.99)
-                            </option>
-                            <option value="excellent" {{ $bachelier->mention == 'excellent' ? 'selected' : '' }}>
-                                Excellent (18-20)
+                                Très Bien (16-20)
                             </option>
                         </select>
                         @error('mention')
@@ -279,9 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (moyenne >= 18) {
-            mentionSelect.value = 'excellent';
-        } else if (moyenne >= 16) {
+        if (moyenne >= 16) {
             mentionSelect.value = 'tres_bien';
         } else if (moyenne >= 14) {
             mentionSelect.value = 'bien';
