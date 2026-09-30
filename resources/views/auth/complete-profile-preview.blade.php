@@ -38,7 +38,7 @@
         </div>
 
         <!-- Preview Card -->
-        <div class="bg-white shadow-2xl rounded-xl overflow-hidden border border-gray-100 mb-6">
+        <div class="bg-white shadow-2xl rounded-xl overflow-visible border border-gray-100 mb-6">
             <!-- Section 1: Informations générales -->
             <div class="border-b border-gray-200">
                 <div class="bg-gradient-to-r from-[#0E7490]/10 to-[#0c5f7a]/10 px-8 py-4">

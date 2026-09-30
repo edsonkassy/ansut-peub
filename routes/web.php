@@ -102,6 +102,13 @@ Route::prefix('auth')->name('auth.')->group(function () {
          ->where('provider', 'google|facebook|microsoft|linkedin');
     
     // Complete Profile after Social Login
+
+    // Complete profile multi-step
+    Route::get('/complete-profile/step/{step}', [\App\Http\Controllers\Auth\SocialAuthController::class, 'showStep'])
+         ->name('complete-profile.step');
+    Route::post('/complete-profile/step/{step}', [\App\Http\Controllers\Auth\SocialAuthController::class, 'saveStep'])
+         ->name('complete-profile.step.save');
+
     Route::get('/complete-profile', [\App\Http\Controllers\Auth\SocialAuthController::class, 'showCompleteProfile'])
          ->name('complete-profile')
          ->middleware('auth');
@@ -318,6 +325,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Gestion des Partenaires
         Route::prefix('partenaires')->name('partenaires.')->group(function () {
             Route::get('/', [PartenaireManagementController::class, 'index'])->name('index');
+            Route::get('/export', [PartenaireManagementController::class, 'export'])->name('export');
             Route::get('/{partenaire}', [PartenaireManagementController::class, 'show'])->name('show');
             Route::put('/{partenaire}/verify', [PartenaireManagementController::class, 'verify'])->name('verify');
             Route::put('/{partenaire}/reject', [PartenaireManagementController::class, 'reject'])->name('reject');
@@ -485,10 +493,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Gestion des partenaires
         Route::get('/partenaires', [PartenaireManagementController::class, 'index'])->name('partenaires.index');
+        Route::get('/partenaires/export', [PartenaireManagementController::class, 'export'])->name('partenaires.export');
         Route::get('/partenaires/{partenaire}', [PartenaireManagementController::class, 'show'])->name('partenaires.show');
         Route::get('/partenaires/{partenaire}/edit', [PartenaireManagementController::class, 'edit'])->name('partenaires.edit');
         Route::patch('/partenaires/{partenaire}', [PartenaireManagementController::class, 'update'])->name('partenaires.update');
         Route::patch('/partenaires/{partenaire}/toggle-status', [PartenaireManagementController::class, 'toggleStatus'])->name('partenaires.toggle-status');
+        Route::put('/partenaires/{partenaire}/verify', [PartenaireManagementController::class, 'toggleStatus'])->name('partenaires.verify');
+        Route::put('/partenaires/{partenaire}/reject', [PartenaireManagementController::class, 'reject'])->name('partenaires.reject');
     });
     
     /*

@@ -27,7 +27,7 @@
             </div>
 
             <!-- Carte Mapbox -->
-            <div id="map" class="w-full h-[600px] border border-gray-300 map-container"></div>
+            <!-- carte mapbox désactivée -->
 
             <!-- Tooltip pour les informations au hover -->
             <div id="tooltip" class="absolute bg-white p-3 shadow-lg border border-gray-200 rounded-lg pointer-events-none opacity-0 transition-opacity duration-200 z-50">
@@ -116,7 +116,7 @@
 
 <script>
 // Token Mapbox depuis l'environnement Laravel
-mapboxgl.accessToken = 'pk.eyJ1IjoibGFtaW5lYmFycm8iLCJhIjoiY20zZHMzOW9zMDc5dzJsczgwdWVoZ2NqYyJ9.3baMsQ3_mpKlnBdHCeu0kg';
+        mapboxgl.accessToken = '{{ config('services.mapbox.public_token') }}';
 
 let map;
 let markers = [];
@@ -146,9 +146,13 @@ function initMap() {
             attributionControl: false,
             logoPosition: 'bottom-right',
             maxZoom: 12,
-            minZoom: 5
+            minZoom: 5,
+            cooperativeGestures: true
         });
 
+        map.touchZoomRotate.disable();
+        map.touchPitch.disable();
+        map.dragPan.disable();
         map.on('load', function() {
             console.log('Carte Mapbox chargée avec succès');
             displayMarkers(currentCohort);

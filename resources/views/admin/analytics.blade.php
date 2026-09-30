@@ -130,7 +130,7 @@
             <div class="bg-white shadow-sm border border-gray-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900">En Attente</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">Comptes en attente</h3>
                         <p class="text-3xl font-bold text-yellow-600 mt-2">{{ $analytics['stats_simples']['candidatures_en_attente'] ?? 0 }}</p>
                     </div>
                     <div class="w-12 h-12 bg-yellow-100 flex items-center justify-center rounded-lg">

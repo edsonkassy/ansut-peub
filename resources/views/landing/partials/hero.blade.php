@@ -1,15 +1,7 @@
 <!-- Hero Section avec image en arrière-plan -->
-<section class="relative min-h-screen sm:h-[calc(100vh-4rem)] w-full flex items-center justify-center overflow-hidden">
-    <!-- Image en arrière-plan -->
-    <div class="absolute inset-0 w-full h-full z-0">
-        <img
-            src="{{ asset('images/hero-bg.png') }}"
-            alt="PEUB - Excellence Académique"
-            class="absolute inset-0 w-full h-full object-cover">
-
-        <!-- Overlay pour améliorer la lisibilité du texte -->
-        <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/45 z-10 pointer-events-none"></div>
-    </div>
+<section class="relative min-h-screen sm:h-[calc(100vh-4rem)] w-full flex items-center justify-center">
+    <!-- Arrière-plan gradient -->
+    <div class="absolute inset-0 w-full h-full z-0 bg-gradient-to-br from-[#0E7490] to-[#0c5f7a]"></div>
     
     <!-- Contenu de la section hero -->
     <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-0">

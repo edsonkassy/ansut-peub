@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Article Hero -->
-<section class="py-12 bg-white">
+<div class="py-12 bg-white">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Meta info -->
         <div class="flex items-center mb-6">
@@ -50,10 +50,10 @@
             </button>
         </div>
     </div>
-</section>
+</div>
 
 <!-- Article Content -->
-<section class="py-8 bg-white">
+<div class="py-8 bg-white">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Featured Image -->
         <div class="mb-12">
@@ -169,25 +169,25 @@
             
         </div>
     </div>
-</section>
+</div>
 
 
 <!-- Article Content Continued -->
-<section class="py-8 bg-white">
+<div class="py-8 bg-white">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="prose prose-lg prose-gray max-w-none">
         </div>
     </div>
-</section>
+</div>
 
 <!-- Related Articles -->
-<section class="py-16 bg-gray-50">
+<div class="py-16 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">Articles similaires</h2>
         
         <div class="grid md:grid-cols-3 gap-8">
             <!-- Related Article 1 -->
-            <article class="bg-white shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 overflow-hidden group">
+            <article class="bg-white shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 group">
                 <div class="h-48 relative overflow-hidden">
                     <img src="{{ asset("images/articles/article_2.webp") }}" 
                          alt="Partenariat universitaire" 
@@ -215,7 +215,7 @@
             </article>
             
             <!-- Related Article 2 -->
-            <article class="bg-white shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 overflow-hidden group">
+            <article class="bg-white shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 group">
                 <div class="h-48 relative overflow-hidden">
                     <img src="{{ asset("images/articles/article_3.webp") }}" 
                          alt="Webinaire en ligne" 
@@ -243,7 +243,7 @@
             </article>
             
             <!-- Related Article 3 -->
-            <article class="bg-white shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 overflow-hidden group">
+            <article class="bg-white shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 group">
                 <div class="h-48 relative overflow-hidden">
                     <img src="{{ asset("images/articles/article_4.webp") }}" 
                          alt="Cérémonie de remise de prix" 
@@ -280,5 +280,5 @@
             </a>
         </div>
     </div>
-</section>
+</div>
 @endsection

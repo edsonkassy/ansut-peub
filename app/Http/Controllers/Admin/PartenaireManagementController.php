@@ -117,8 +117,39 @@ class PartenaireManagementController extends Controller
      */
     public function export(Request $request)
     {
-        // TODO: Implémenter l'export
-        return back()->with('info', 'Fonctionnalité d\'export en cours de développement.');
+        $partenaires = Partenaire::with('opportunites')->get();
+        
+        $headers = [
+            "Content-type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=partenaires_" . date('Ymd') . ".csv",
+        ];
+        
+        $callback = function() use ($partenaires) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, ['Organisation', 'Type', 'Region', 'Contact', 'Email', 'Telephone', 'Statut', 'Opportunites'], ';');
+            foreach ($partenaires as $p) {
+                $statut = match($p->status_verification) {
+                    'verified' => 'Verifie',
+                    'pending' => 'En attente',
+                    'rejected' => 'Rejete',
+                    default => $p->status_verification
+                };
+                fputcsv($file, [
+                    $p->nom_organisation,
+                    $p->type_organisation,
+                    $p->region,
+                    $p->personne_contact_nom,
+                    $p->personne_contact_email,
+                    $p->personne_contact_telephone,
+                    $statut,
+                    $p->opportunites->count(),
+                ], ';');
+            }
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, $headers);
     }
 
     /**

@@ -12,7 +12,7 @@
         <nav class="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide" style="scrollbar-width: none; -ms-overflow-style: none;">
             <a href="{{ route('bachelier.library.index') }}" 
                class="px-4 py-2 rounded-full font-medium text-sm transition-colors whitespace-nowrap {{ request()->routeIs('bachelier.library.index') ? 'bg-[#00BFA5] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
-               style="touch-action: manipulation;">
+               style="">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="book-open" class="w-4 h-4"></i>
                     <span>Toutes les ressources</span>
@@ -21,7 +21,7 @@
             
             <a href="{{ route('bachelier.library.favorites') }}" 
                class="px-4 py-2 rounded-full font-medium text-sm transition-colors whitespace-nowrap {{ request()->routeIs('bachelier.library.favorites') ? 'bg-[#00BFA5] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
-               style="touch-action: manipulation;">
+               style="">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="heart" class="w-4 h-4"></i>
                     <span>Mes favoris</span>

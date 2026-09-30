@@ -1,10 +1,22 @@
+@push('styles')
+<style>
+html, body, main {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    height: auto !important;
+    min-height: 100% !important;
+}
+</style>
+@endpush
+
 @extends('layouts.guest')
 
 @section('title', 'Actualités PEUB')
 
 @section('content')
 <!-- Hero Section -->
-<section class="bg-white text-gray-900 py-20 border-b border-gray-100">
+<div class="bg-white text-gray-900 py-20 border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
             <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-900">Actualités PEUB</h1>
@@ -18,10 +30,10 @@
             </div>
         </div>
     </div>
-</section>
+</div>
 
 <!-- Filtres -->
-<section class="py-8 bg-white border-b border-gray-100">
+<div class="py-8 bg-white border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-wrap gap-4 justify-center">
             <a href="{{ route('actualites') }}" 
@@ -53,10 +65,10 @@
             </form>
         </div>
     </div>
-</section>
+</div>
 
 <!-- Articles -->
-<section class="py-16 bg-gray-50">
+<div class="py-16 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Articles à la une -->
@@ -65,7 +77,7 @@
                 <h2 class="text-2xl font-bold text-gray-900 mb-8">Articles à la une</h2>
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     @foreach($featuredArticles as $index => $article)
-                        <article class="{{ $index === 0 ? 'lg:col-span-2' : '' }} bg-white shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 overflow-hidden group">
+                        <article class="{{ $index === 0 ? 'lg:col-span-2' : '' }} bg-white shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 group">
                             @if($article->image_principale)
                                 <div class="h-64 relative overflow-hidden">
                                     <img src="{{ asset('storage/' . $article->image_principale) }}" 
@@ -111,7 +123,7 @@
                 <h2 class="text-2xl font-bold text-gray-900 mb-8">{{ request('categorie') ? 'Articles de la catégorie ' . $categories[request('categorie')] : 'Tous les articles' }}</h2>
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     @foreach($articles as $article)
-                        <article class="bg-white shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 overflow-hidden group">
+                        <article class="bg-white shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 group">
                             @if($article->image_principale)
                                 <div class="h-48 relative overflow-hidden">
                                     <img src="{{ asset('storage/' . $article->image_principale) }}" 
@@ -184,10 +196,10 @@
             </div>
         @endif
     </div>
-</section>
+</div>
 
 <!-- Newsletter -->
-<section class="py-16 bg-primary-600">
+<div class="py-16 bg-primary-600">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl font-bold text-white mb-4">Ne manquez aucune actualité</h2>
         <p class="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
@@ -204,5 +216,5 @@
             Vos données sont protégées et ne seront jamais partagées
         </p>
     </div>
-</section>
+</div>
 @endsection
