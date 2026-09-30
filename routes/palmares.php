@@ -20,4 +20,5 @@ Route::middleware(['auth', 'verified', 'role:admin', 'admin.no_mobile', 'admin.p
     ->prefix('admin')->name('admin.')->group(function () {
         Route::get('palmares', [PalmaresController::class, 'index'])->name('palmares.index');
         Route::get('palmares/export', [PalmaresController::class, 'export'])->name('palmares.export');
+        Route::get('palmares/carte-data', [PalmaresController::class, 'carteData'])->name('palmares.carte-data');
     });

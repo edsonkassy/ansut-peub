@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PalmaresBac;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Espace admin : consultation du palmarès officiel et suivi des inscriptions.
@@ -45,6 +46,69 @@ class PalmaresController extends Controller
             'annee' => $annee,
             'drenas' => PalmaresBac::where('annee_bac', $annee)->distinct()->orderBy('drena')->pluck('drena'),
             'series' => PalmaresBac::where('annee_bac', $annee)->distinct()->orderBy('serie')->pluck('serie'),
+        ]);
+    }
+
+    /**
+     * Données de la carte du palmarès (pastilles géolocalisées par DRENA), pour
+     * l'admin uniquement. Contrairement à LandingMapController (carte publique),
+     * les noms complets sont toujours affichés ici : pas de logique de consentement,
+     * l'admin a déjà accès à toutes les données des bacheliers. Respecte les mêmes
+     * filtres que le tableau (baseQuery), donc reflète toujours ce qui est affiché.
+     *
+     * Les DRENA absentes de config/drena.php (valeurs venant telles quelles du CSV
+     * DECO, non normalisées à l'import) sont loguées et renvoyées dans
+     * drenas_non_localisees plutôt que silencieusement ignorées.
+     */
+    public function carteData(Request $request)
+    {
+        $annee = (int) $request->get('annee', 2026);
+        $drenas = config('drena');
+
+        $rows = $this->baseQuery($request, $annee)->get();
+
+        $drenasNonLocalisees = [];
+        $markers = $rows->map(function ($p) use ($drenas, &$drenasNonLocalisees) {
+            $centre = $drenas[$p->drena] ?? null;
+            if (!$centre) {
+                if (!in_array($p->drena, $drenasNonLocalisees, true)) {
+                    $drenasNonLocalisees[] = $p->drena;
+                }
+                return null;
+            }
+
+            // Décalage stable (basé sur le matricule), comme sur la carte publique :
+            // les pastilles d'une même DRENA ne se superposent pas.
+            $h = crc32($p->matricule);
+            $angle = ($h % 360) * M_PI / 180;
+            $rayon = 0.03 + (($h >> 8) % 1000) / 1000 * 0.10;
+
+            return [
+                'name' => "{$p->nom} {$p->prenoms}",
+                'matricule' => $p->matricule,
+                'gender' => $p->sexe === 'F' ? 'female' : 'male',
+                'serie' => 'Série ' . $p->serie,
+                'drena' => $p->drena,
+                'rang' => (int) $p->rang_drena,
+                'mention' => $p->mention === 'ims' ? 'IMS' : ($p->mention ? ucfirst(str_replace('_', ' ', $p->mention)) : 'Sans mention'),
+                'points' => (int) $p->points,
+                'inscrit' => $p->bachelier_id !== null,
+                'bachelier_id' => $p->bachelier_id,
+                'lat' => round($centre['lat'] + sin($angle) * $rayon, 5),
+                'lng' => round($centre['lng'] + cos($angle) * $rayon, 5),
+            ];
+        })->filter()->values();
+
+        if (!empty($drenasNonLocalisees)) {
+            Log::warning('Carte palmarès admin : DRENA non reconnues (absentes de config/drena.php)', [
+                'annee' => $annee,
+                'drenas' => $drenasNonLocalisees,
+            ]);
+        }
+
+        return response()->json([
+            'markers' => $markers,
+            'drenas_non_localisees' => $drenasNonLocalisees,
         ]);
     }
 
