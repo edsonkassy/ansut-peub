@@ -106,17 +106,8 @@ class AuthController extends Controller
             }
         }
 
-        // Liste des emails de bacheliers du seeder qui bypasses l'OTP
-        $bypassEmails = [
-            'fatou.diallo@example.com',
-            'koffi.kouassi@example.com',
-            'alexdegny@gmail.com',
-            'kokouaserge3@gmail.com',
-            'marckouassi@innoving.io',
-            'traore.issa@peub-test.ansut.ci',
-            'admin@peub.ansut.ci',
-            'ifcorsaire@gmail.com'
-        ];
+        // Emails autorisés à se connecter sans OTP (vide par défaut, jamais en production)
+        $bypassEmails = $this->otpBypassEmails();
 
         // Si l'email est dans la liste de bypass, connecter directement
         if (in_array($request->email, $bypassEmails)) {
@@ -191,14 +182,8 @@ class AuthController extends Controller
 
         $user = User::where('email', $email)->first();
 
-        // Liste des emails de bacheliers du seeder qui bypasses l'OTP
-        $bypassEmails = [
-            'fatou.diallo@example.com',
-            'koffi.kouassi@example.com',
-            'alexdegny@gmail.com',
-            'kokouaserge3@gmail.com',
-            'marckouassi@innoving.io'
-        ];
+        // Emails autorisés à se connecter sans OTP (vide par défaut, jamais en production)
+        $bypassEmails = $this->otpBypassEmails();
 
         // Si l'email est dans la liste de bypass, on accepte n'importe quel OTP
         $otpValid = false;
@@ -262,4 +247,17 @@ class AuthController extends Controller
 
         return redirect()->route('landing')->with('success', 'Déconnexion réussie.');
     }
-} 
+
+    /**
+     * Emails autorisés à se connecter sans code OTP (tests uniquement).
+     * Vide par défaut et toujours vide en production : voir config/otp.php (variable OTP_BYPASS_EMAILS).
+     */
+    private function otpBypassEmails(): array
+    {
+        if (app()->environment('production')) {
+            return [];
+        }
+
+        return config('otp.bypass_emails', []);
+    }
+}
