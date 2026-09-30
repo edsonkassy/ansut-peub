@@ -28,6 +28,23 @@
     </div>
 </div>
 
+<!-- Carte -->
+<div class="bg-white border border-gray-300 p-6 mb-6">
+    <button type="button" id="toggle-carte" class="flex items-center justify-between w-full text-left">
+        <span class="text-sm font-medium text-gray-700">🗺️ Localisation géographique des bacheliers</span>
+        <span id="toggle-carte-label" class="text-sm text-primary-600 font-medium">Afficher la carte</span>
+    </button>
+    <div id="carte-wrapper" class="hidden mt-4">
+        <div id="carte-alerte" class="hidden mb-3 text-sm bg-yellow-50 border border-yellow-200 text-yellow-800 px-3 py-2 rounded"></div>
+        <div id="palmares-carte" class="w-full h-[500px] border border-gray-300"></div>
+        <div class="mt-2 flex items-center gap-4 text-xs text-gray-500">
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full inline-block" style="background:#ec4899"></span> Filles</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full inline-block" style="background:#2256a3"></span> Garçons</span>
+            <span>Opacité réduite = pas encore inscrit sur PEUB</span>
+        </div>
+    </div>
+</div>
+
 <!-- Filtres -->
 <div class="bg-white border border-gray-300 p-6 mb-6">
     <form method="GET" action="{{ route('admin.palmares.index') }}">
@@ -148,3 +165,113 @@
 
 <div class="mt-6">{{ $palmares->links() }}</div>
 @endsection
+
+@push('styles')
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+@endpush
+
+@push('scripts')
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const toggleBtn = document.getElementById('toggle-carte');
+    const wrapper = document.getElementById('carte-wrapper');
+    const label = document.getElementById('toggle-carte-label');
+    const alerteBox = document.getElementById('carte-alerte');
+    let carteInitialisee = false;
+    let map;
+
+    toggleBtn.addEventListener('click', function () {
+        const wasHidden = wrapper.classList.contains('hidden');
+        wrapper.classList.toggle('hidden');
+        label.textContent = wasHidden ? 'Masquer la carte' : 'Afficher la carte';
+
+        if (wasHidden && !carteInitialisee) {
+            carteInitialisee = true;
+            initCarte();
+        } else if (wasHidden && map) {
+            setTimeout(() => map.resize(), 50);
+        }
+    });
+
+    function initCarte() {
+        if (typeof mapboxgl === 'undefined') {
+            alerteBox.textContent = "Mapbox GL JS n'a pas pu être chargé.";
+            alerteBox.classList.remove('hidden');
+            return;
+        }
+
+        mapboxgl.accessToken = '{{ config('services.mapbox.public_token') }}';
+
+        map = new mapboxgl.Map({
+            container: 'palmares-carte',
+            style: 'mapbox://styles/mapbox/light-v11',
+            center: [-5.5, 7.5],
+            zoom: 6.2,
+            attributionControl: false,
+            logoPosition: 'bottom-right',
+            maxZoom: 12,
+            minZoom: 5
+        });
+
+        map.on('load', function () {
+            fetch("{{ route('admin.palmares.carte-data', array_merge(request()->query(), ['annee' => $annee])) }}")
+                .then(r => r.json())
+                .then(function (data) {
+                    const geojson = {
+                        type: 'FeatureCollection',
+                        features: (data.markers || []).map(function (p) {
+                            return { type: 'Feature', properties: p, geometry: { type: 'Point', coordinates: [p.lng, p.lat] } };
+                        })
+                    };
+
+                    map.addSource('palmares-admin', { type: 'geojson', data: geojson });
+                    map.addLayer({
+                        id: 'palmares-admin-pastilles',
+                        type: 'circle',
+                        source: 'palmares-admin',
+                        paint: {
+                            'circle-radius': 5,
+                            'circle-color': ['case', ['==', ['get', 'gender'], 'female'], '#ec4899', '#2256a3'],
+                            'circle-opacity': ['case', ['get', 'inscrit'], 1, 0.35],
+                            'circle-stroke-width': ['case', ['get', 'inscrit'], 2, 0],
+                            'circle-stroke-color': '#ffffff'
+                        }
+                    });
+
+                    if (data.drenas_non_localisees && data.drenas_non_localisees.length > 0) {
+                        alerteBox.textContent = 'DRENA non localisées (absentes de config/drena.php) : ' + data.drenas_non_localisees.join(', ');
+                        alerteBox.classList.remove('hidden');
+                    }
+
+                    const popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false });
+
+                    map.on('mousemove', 'palmares-admin-pastilles', function (e) {
+                        map.getCanvas().style.cursor = 'pointer';
+                        const p = e.features[0].properties;
+                        popup.setLngLat(e.lngLat)
+                            .setHTML(
+                                '<div class="text-sm"><strong>' + p.name + '</strong><br>' +
+                                p.matricule + ' · ' + p.serie + '<br>' +
+                                p.drena + ' · rang #' + p.rang + '<br>' +
+                                p.points + '/400 · ' + p.mention +
+                                (p.inscrit ? '<br><span style="color:#16a34a">Inscrit sur PEUB</span>' : '') +
+                                '</div>'
+                            )
+                            .addTo(map);
+                    });
+
+                    map.on('mouseleave', 'palmares-admin-pastilles', function () {
+                        map.getCanvas().style.cursor = '';
+                        popup.remove();
+                    });
+                })
+                .catch(function () {
+                    alerteBox.textContent = 'Impossible de charger les données de la carte.';
+                    alerteBox.classList.remove('hidden');
+                });
+        });
+    }
+});
+</script>
+@endpush
