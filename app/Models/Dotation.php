@@ -128,6 +128,11 @@ class Dotation extends Model
             'donnees_specifiques' => $donnees['donnees_specifiques'] ?? [],
         ]);
 
+        // Ordinateurs : le stock est tenu par ANSUT Stock (suivi à l'unité), pas de mouvement local.
+        if (! empty($donnees['stock_externe'])) {
+            return $attribution;
+        }
+
         // Créer le mouvement de stock
         DotationMouvementStock::creerSortie(
             $inventaireId,

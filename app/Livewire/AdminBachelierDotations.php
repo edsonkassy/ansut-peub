@@ -6,6 +6,9 @@ use Livewire\Component;
 use App\Models\Bachelier;
 use App\Models\DotationInventaire;
 use App\Models\Dotation;
+use App\Services\AnsutStockClient;
+use App\Services\AnsutStockException;
+use Illuminate\Support\Facades\DB;
 
 class AdminBachelierDotations extends Component
 {
@@ -13,6 +16,9 @@ class AdminBachelierDotations extends Component
     public $attributions = [];
     public $dotationsDisponibles = [];
     public $selectedInventaireId = '';
+    /** Point de retrait ANSUT Stock (code du site) : obligatoire pour un ordinateur portable. */
+    public $selectedPointRetrait = '';
+    public $pointsRetrait = [];
 
     public function mount(Bachelier $bachelier)
     {
@@ -23,9 +29,21 @@ class AdminBachelierDotations extends Component
     public function loadData()
     {
         $this->attributions = $this->bachelier->dotationsAttributions()->with('inventaire')->get();
-        $this->dotationsDisponibles = DotationInventaire::where('stock_disponible', '>', 0)
-            ->active()
+        // Avec ANSUT Stock configuré, les ordinateurs sont toujours proposés : la disponibilité est vérifiée
+        // par ANSUT Stock au point de retrait choisi. Sans configuration, fonctionnement d'avant (stock local).
+        $client = app(AnsutStockClient::class);
+        $this->dotationsDisponibles = DotationInventaire::active()
+            ->where(fn ($q) => $q->where('stock_disponible', '>', 0)
+                ->when($client->configured(), fn ($q) => $q->orWhere('type_dotation', 'ordinateur_portable')))
             ->get();
+        if ($client->configured()) {
+            try {
+                $this->pointsRetrait = $client->pointsDeRetrait();
+            } catch (\Throwable $e) {
+                $this->pointsRetrait = [];
+                $this->addError('pointsRetrait', 'Points de retrait indisponibles : ANSUT Stock ne répond pas.');
+            }
+        }
     }
 
     public function attribute()
@@ -49,7 +67,13 @@ class AdminBachelierDotations extends Component
             return;
         }
 
-        if ($inventaire->stock_disponible <= 0) {
+        $ordinateur = $inventaire->type_dotation === 'ordinateur_portable' && app(AnsutStockClient::class)->configured();
+        if ($ordinateur && ! $this->selectedPointRetrait) {
+            $this->addError('selectedPointRetrait', 'Choisissez le point de retrait de l\'ordinateur.');
+            return;
+        }
+
+        if (! $ordinateur && $inventaire->stock_disponible <= 0) {
             $this->addError('general', 'Cet article n\'est plus disponible en stock.');
             return;
         }
@@ -64,11 +88,34 @@ class AdminBachelierDotations extends Component
             return;
         }
 
-        Dotation::creerPourBachelier($this->bachelier->id, $inventaire->id, [
-            'attribue_par' => auth()->id(),
-        ]);
+        if ($ordinateur) {
+            // La dotation n'existe que si ANSUT Stock a réservé un appareil : sinon tout est annulé.
+            try {
+                DB::transaction(function () use ($inventaire) {
+                    $dotation = Dotation::creerPourBachelier($this->bachelier->id, $inventaire->id, [
+                        'attribue_par' => auth()->id(),
+                        'stock_externe' => true,
+                    ]);
+                    $reponse = app(AnsutStockClient::class)->attribuer($dotation, $this->selectedPointRetrait);
+                    $dotation->donnees_specifiques = ['ansut_stock' => [
+                        'numero' => $reponse['number'] ?? null,
+                        'point_retrait' => $this->selectedPointRetrait,
+                        'statut' => $reponse['status'] ?? null,
+                    ]];
+                    $dotation->save();
+                });
+            } catch (AnsutStockException $e) {
+                $this->addError('general', $e->getMessage());
+                return;
+            }
+        } else {
+            Dotation::creerPourBachelier($this->bachelier->id, $inventaire->id, [
+                'attribue_par' => auth()->id(),
+            ]);
+        }
 
         $this->selectedInventaireId = '';
+        $this->selectedPointRetrait = '';
         $this->loadData();
         $this->dispatch('dotationAttributed');
     }
