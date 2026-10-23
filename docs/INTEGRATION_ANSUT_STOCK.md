@@ -10,6 +10,8 @@ Les ordinateurs portables des boursiers sont gérés à l'unité par **ANSUT Sto
 Le stock local des ordinateurs n'est plus décompté par la PEUB (aucun mouvement de stock) : la disponibilité est celle d'ANSUT Stock.
 
 ## Configuration (`.env`)
+Sans ces variables, rien ne change : les ordinateurs restent gérés par le stock local de la PEUB. L'intégration s'active en les renseignant.
+
 ```
 ANSUT_STOCK_API_URL=https://api-recette.ansut.ci
 ANSUT_STOCK_TOKEN_URL=https://auth-recette.ansut.ci/realms/ansut/protocol/openid-connect/token

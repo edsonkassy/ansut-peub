@@ -29,11 +29,13 @@ class AdminBachelierDotations extends Component
     public function loadData()
     {
         $this->attributions = $this->bachelier->dotationsAttributions()->with('inventaire')->get();
-        // Ordinateurs : toujours proposés, la disponibilité est vérifiée par ANSUT Stock au point de retrait choisi.
-        $this->dotationsDisponibles = DotationInventaire::active()
-            ->where(fn ($q) => $q->where('stock_disponible', '>', 0)->orWhere('type_dotation', 'ordinateur_portable'))
-            ->get();
+        // Avec ANSUT Stock configuré, les ordinateurs sont toujours proposés : la disponibilité est vérifiée
+        // par ANSUT Stock au point de retrait choisi. Sans configuration, fonctionnement d'avant (stock local).
         $client = app(AnsutStockClient::class);
+        $this->dotationsDisponibles = DotationInventaire::active()
+            ->where(fn ($q) => $q->where('stock_disponible', '>', 0)
+                ->when($client->configured(), fn ($q) => $q->orWhere('type_dotation', 'ordinateur_portable')))
+            ->get();
         if ($client->configured()) {
             try {
                 $this->pointsRetrait = $client->pointsDeRetrait();
@@ -65,7 +67,7 @@ class AdminBachelierDotations extends Component
             return;
         }
 
-        $ordinateur = $inventaire->type_dotation === 'ordinateur_portable';
+        $ordinateur = $inventaire->type_dotation === 'ordinateur_portable' && app(AnsutStockClient::class)->configured();
         if ($ordinateur && ! $this->selectedPointRetrait) {
             $this->addError('selectedPointRetrait', 'Choisissez le point de retrait de l\'ordinateur.');
             return;

@@ -55,12 +55,13 @@
                         <option value="">-- Sélectionner un article de l'inventaire --</option>
                         @foreach($dotationsDisponibles as $item)
                             <option value="{{ $item->id }}" {{ $item->hasBeenAttributedTo($bachelier->id) ? 'disabled' : '' }}>
-                                {{ $item->nom }} ({{ $item->type_dotation === 'ordinateur_portable' ? 'stock ANSUT Stock' : $item->stock_disponible . ' dispo' }}) {{ $item->hasBeenAttributedTo($bachelier->id) ? '- Déjà attribué' : '' }}
+                                {{ $item->nom }} ({{ $item->type_dotation === 'ordinateur_portable' && count($pointsRetrait) > 0 ? 'stock ANSUT Stock' : $item->stock_disponible . ' dispo' }}) {{ $item->hasBeenAttributedTo($bachelier->id) ? '- Déjà attribué' : '' }}
                             </option>
                         @endforeach
                     </select>
                     @error('selectedInventaireId') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                 </div>
+                @if(count($pointsRetrait) > 0)
                 <div class="flex-grow">
                     <label for="selectedPointRetrait" class="sr-only">Point de retrait (ordinateur)</label>
                     <select wire:model="selectedPointRetrait" id="selectedPointRetrait" class="block w-full border-gray-300 focus:ring-primary-500 focus:border-primary-500">
@@ -70,8 +71,9 @@
                         @endforeach
                     </select>
                     @error('selectedPointRetrait') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    @error('pointsRetrait') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                 </div>
+                @endif
+                @error('pointsRetrait') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                 <div>
                     <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 flex items-center">
                         <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
