@@ -1,15 +1,23 @@
-name: Deploy to PEUB Server
+name: Déploiement recette PEUB
+
+# Le serveur de recette (Peub-rec-web-01) sert /var/www/ansut-peub sur la branche develop.
+# Les migrations NE sont PAS lancées ici : elles restent manuelles (voir docs/DEPLOIEMENT_PALMARES.md).
 
 on:
   push:
     branches:
-      - main
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-recette
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
+      - name: Déployer via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -17,9 +25,13 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd /var/www/peub
-            git pull origin main
-            composer install --no-dev --optimize-autoloader
+            set -e
+            cd /var/www/ansut-peub
+            git checkout develop
+            # --ff-only : échoue au lieu d'écraser des modifications faites à la main sur le serveur
+            git pull --ff-only origin develop
+            composer install --no-dev --no-interaction --optimize-autoloader
             php artisan config:cache
             php artisan view:cache
             php artisan route:cache
+            echo "Déployé : $(git log -1 --format='%h %s')"
