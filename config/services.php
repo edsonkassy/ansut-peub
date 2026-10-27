@@ -72,4 +72,13 @@ return [
         'redirect' => env('APP_URL') . '/auth/linkedin/callback',
     ],
 
+    // ANSUT Stock (gestion des stocks d'équipements) : attribution des ordinateurs portables et suivi de leur remise.
+    'ansut_stock' => [
+        'base_url' => env('ANSUT_STOCK_API_URL'),          // ex. https://api-recette.ansut.ci
+        'token_url' => env('ANSUT_STOCK_TOKEN_URL'),       // ex. https://auth-recette.ansut.ci/realms/ansut/protocol/openid-connect/token
+        'client_id' => env('ANSUT_STOCK_CLIENT_ID'),       // clé d'API partenaire créée dans ANSUT Stock (/admin/partenaires)
+        'client_secret' => env('ANSUT_STOCK_CLIENT_SECRET'),
+        'webhook_secret' => env('ANSUT_STOCK_WEBHOOK_SECRET'), // secret whsec_ du webhook créé dans ANSUT Stock (/admin/webhooks)
+    ],
+
 ];

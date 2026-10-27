@@ -17,6 +17,12 @@
                                 Attribuée le: {{ $attribution->date_attribution->format('d/m/Y') }}
                                 - Statut: <span class="font-medium">{{ ucfirst($attribution->status) }}</span>
                             </p>
+                            @if(!empty($attribution->donnees_specifiques['ansut_stock']['numero']))
+                                <p class="text-sm text-gray-500">
+                                    Retrait {{ $attribution->donnees_specifiques['ansut_stock']['numero'] }}
+                                    @if($attribution->identifiant_unique) - N° de série : {{ $attribution->identifiant_unique }} @endif
+                                </p>
+                            @endif
                         </div>
                         <div>
                             <span class="text-xs px-2 py-1 rounded-full {{ 
@@ -49,12 +55,25 @@
                         <option value="">-- Sélectionner un article de l'inventaire --</option>
                         @foreach($dotationsDisponibles as $item)
                             <option value="{{ $item->id }}" {{ $item->hasBeenAttributedTo($bachelier->id) ? 'disabled' : '' }}>
-                                {{ $item->nom }} ({{ $item->stock_disponible }} dispo) {{ $item->hasBeenAttributedTo($bachelier->id) ? '- Déjà attribué' : '' }}
+                                {{ $item->nom }} ({{ $item->type_dotation === 'ordinateur_portable' && count($pointsRetrait) > 0 ? 'stock ANSUT Stock' : $item->stock_disponible . ' dispo' }}) {{ $item->hasBeenAttributedTo($bachelier->id) ? '- Déjà attribué' : '' }}
                             </option>
                         @endforeach
                     </select>
                     @error('selectedInventaireId') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                 </div>
+                @if(count($pointsRetrait) > 0)
+                <div class="flex-grow">
+                    <label for="selectedPointRetrait" class="sr-only">Point de retrait (ordinateur)</label>
+                    <select wire:model="selectedPointRetrait" id="selectedPointRetrait" class="block w-full border-gray-300 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">-- Point de retrait (ordinateur) --</option>
+                        @foreach($pointsRetrait as $code => $nom)
+                            <option value="{{ $code }}">{{ $nom }}</option>
+                        @endforeach
+                    </select>
+                    @error('selectedPointRetrait') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                </div>
+                @endif
+                @error('pointsRetrait') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                 <div>
                     <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 flex items-center">
                         <i data-lucide="plus" class="w-4 h-4 mr-2"></i>

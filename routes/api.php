@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CandidatureController;
 use App\Http\Controllers\Api\LibraryController;
 use App\Http\Controllers\Api\ForumController;
 use App\Http\Controllers\Api\InboxController;
+use App\Http\Controllers\Webhooks\AnsutStockWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -170,10 +171,5 @@ Route::fallback(function () {
     ], 404);
 });
 
-
-
-
-
-
-
-
+// Webhooks d'ANSUT Stock (gestion des stocks) : signés HMAC, sans session ni jeton utilisateur.
+Route::post('/webhooks/ansut-stock', AnsutStockWebhookController::class)->middleware('throttle:120,1')->name('webhooks.ansut-stock');
