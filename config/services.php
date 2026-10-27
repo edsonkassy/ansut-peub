@@ -74,6 +74,7 @@ return [
 
     // ANSUT Stock (gestion des stocks d'équipements) : attribution des ordinateurs portables et suivi de leur remise.
     'ansut_stock' => [
+        'app_url' => env('ANSUT_STOCK_APP_URL'),          // application web Stoka, lien du back-office (ex. https://stock-recette.ansut.ci)
         'base_url' => env('ANSUT_STOCK_API_URL'),          // ex. https://api-recette.ansut.ci
         'token_url' => env('ANSUT_STOCK_TOKEN_URL'),       // ex. https://auth-recette.ansut.ci/realms/ansut/protocol/openid-connect/token
         'client_id' => env('ANSUT_STOCK_CLIENT_ID'),       // clé d'API partenaire créée dans ANSUT Stock (/admin/partenaires)

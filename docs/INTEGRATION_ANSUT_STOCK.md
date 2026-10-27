@@ -18,7 +18,9 @@ ANSUT_STOCK_TOKEN_URL=https://auth-recette.ansut.ci/realms/ansut/protocol/openid
 ANSUT_STOCK_CLIENT_ID=partner-peub-xxxxxx
 ANSUT_STOCK_CLIENT_SECRET=...
 ANSUT_STOCK_WEBHOOK_SECRET=whsec_...
+ANSUT_STOCK_APP_URL=https://...   # adresse de l'application web Stoka : lien « Stoka by ANSUT » dans le back-office
 ```
+Le lien apparaît dans le menu Opportunités & Dotations (nouvel onglet) pour les administrateurs ayant le droit de voir les dotations ou l'inventaire, seulement si `ANSUT_STOCK_APP_URL` est renseignée.
 Dans ANSUT Stock :
 - **/admin/partenaires** : partenaire PEUB (type plateforme) → créer une clé avec les droits `distribution:create`, `distribution:read`, `sites:read` → `CLIENT_ID` et `CLIENT_SECRET` (secret affiché une fois).
 - **/admin/webhooks** : webhook vers `https://<peub>/api/webhooks/ansut-stock`, événements `distribution.delivered`, `distribution.replaced`, `distribution.cancelled` → `WEBHOOK_SECRET` (affiché une fois).

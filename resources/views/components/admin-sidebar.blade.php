@@ -178,6 +178,15 @@
                                 Fournisseurs
                             </a>
                         @endif
+                        @if(config('services.ansut_stock.app_url') && (auth()->user()->hasAdminPermission('dotations.view') || auth()->user()->hasAdminPermission('inventaire.view')))
+                            <a href="{{ config('services.ansut_stock.app_url') }}" target="_blank" rel="noopener noreferrer"
+                               title="Ouvrir Stoka by ANSUT dans un nouvel onglet"
+                               class="group flex items-center px-2 py-2 text-sm text-primary-100 hover:text-white hover:bg-primary-700 transition-colors">
+                                <i data-lucide="warehouse" class="w-4 h-4 mr-3"></i>
+                                Stoka by ANSUT
+                                <i data-lucide="external-link" class="w-3 h-3 ml-auto opacity-70"></i>
+                            </a>
+                        @endif
                     </div>
                 </div>
             @endif
