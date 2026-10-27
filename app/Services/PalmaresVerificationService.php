@@ -21,7 +21,7 @@ class PalmaresVerificationService
     public function verify(array $data): array
     {
         $matricule = PalmaresBac::normalizeMatricule($data['matricule_bac'] ?? '');
-        $palmares = $matricule !== '' ? PalmaresBac::where('matricule', $matricule)->first() : null;
+        $palmares = $matricule !== '' ? PalmaresBac::where('matricule', $matricule)->orderBy('categorie')->first() : null;
 
         if (!$palmares) {
             return ['status' => 'absent', 'palmares' => null, 'official' => [], 'divergences' => [],

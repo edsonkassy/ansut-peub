@@ -49,11 +49,20 @@
 <div class="bg-white border border-gray-300 p-6 mb-6">
     <form method="GET" action="{{ route('admin.palmares.index') }}">
         <input type="hidden" name="annee" value="{{ $annee }}">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Recherche</label>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Nom, prénom, matricule..."
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Liste</label>
+                <select name="categorie" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="">Toutes</option>
+                    @foreach($categories as $code => $libelle)
+                        <option value="{{ $code }}" {{ request('categorie') === $code ? 'selected' : '' }}>{{ $libelle }}</option>
+                    @endforeach
+                </select>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">DRENA</label>
@@ -132,7 +141,12 @@
                 <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-6 py-4">
                         <div class="text-sm font-medium text-gray-900">{{ $p->drena }}</div>
-                        <div class="text-xs text-gray-500">Rang #{{ $p->rang_drena }} ({{ $p->sexe === 'F' ? 'filles' : 'garçons' }})</div>
+                        @if($p->categorie === 'handicap')
+                            <div class="text-xs text-gray-500">Rang national #{{ $p->rang_drena }}</div>
+                            <span class="inline-flex mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Handicap</span>
+                        @else
+                            <div class="text-xs text-gray-500">Rang #{{ $p->rang_drena }} ({{ $p->sexe === 'F' ? 'filles' : 'garçons' }})</div>
+                        @endif
                     </td>
                     <td class="px-6 py-4">
                         <div class="text-sm font-medium text-gray-900">{{ $p->nom }} {{ $p->prenoms }}</div>

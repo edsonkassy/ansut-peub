@@ -17,7 +17,7 @@ class LandingMapController extends Controller
 {
     public function index(int $annee)
     {
-        $data = Cache::remember("landing.carte.v3.{$annee}", now()->addMinutes(10), function () use ($annee) {
+        $data = Cache::remember("landing.carte.v4.{$annee}", now()->addMinutes(10), function () use ($annee) {
             $drenas = config('drena');
 
             return DB::table('palmares_bac')
@@ -26,6 +26,8 @@ class LandingMapController extends Controller
                          ->where('bacheliers.bac_verifie', true);
                 })
                 ->where('palmares_bac.annee_bac', $annee)
+                // La liste « handicap » n'apparaît jamais sur la carte publique (donnée de santé)
+                ->where('palmares_bac.categorie', 'drena')
                 ->get([
                     'palmares_bac.matricule', 'palmares_bac.prenoms', 'palmares_bac.nom',
                     'palmares_bac.sexe', 'palmares_bac.serie', 'palmares_bac.drena',

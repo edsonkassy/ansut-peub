@@ -80,3 +80,20 @@ Le nom (« Prénom + initiale ») n'apparaît sur la carte publique que pour les
 - [ ] Inscription test avec un matricule du fichier (nom + date corrects) : `bac_verifie = true`, note/mention officielles, pastille pleine sur la carte.
 - [ ] Inscription test avec nom ou date faux : statut « à revoir ». Avec un matricule hors liste : inscription acceptée, non vérifié.
 - [ ] Bac 2026 accepté dans le formulaire d'inscription.
+
+## Liste des bacheliers en situation de handicap (BAC 2026)
+32 bacheliers (liste nationale du ministère), chargés dans la même table `palmares_bac` avec `categorie = handicap`
+(la liste DRENA a `categorie = drena`). Pour cette liste, `rang_drena` contient le **rang national**.
+Un élève présent dans les deux listes a deux lignes ; la vérification à l'inscription retient la ligne DRENA.
+
+```bash
+php artisan migrate   # ajoute la colonne categorie (les 2 050 lignes existantes passent en « drena »)
+# CSV déposé hors git : storage/app/imports/palmares_handicap_2026.csv
+php artisan palmares:import storage/app/imports/palmares_handicap_2026.csv --categorie=handicap --dry-run
+php artisan palmares:import storage/app/imports/palmares_handicap_2026.csv --categorie=handicap
+```
+Correspondance des mentions du fichier source : `PASSABLE` → `passable`, `ABIEN` → `assez_bien`.
+
+- **Admin** : filtre « Liste » sur la page Palmarès, badge « Handicap » et rang national ; colonne « Liste » dans l'export.
+- **Carte publique** : la liste handicap n'y apparaît **jamais** (donnée de santé), même avec consentement.
+- Supprimer le CSV du serveur après l'import.

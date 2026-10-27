@@ -14,17 +14,25 @@ use Illuminate\Support\Facades\Validator;
  *
  *   php artisan palmares:import --dry-run
  *   php artisan palmares:import
+ *   php artisan palmares:import storage/app/imports/palmares_handicap_2026.csv --categorie=handicap
  */
 class ImportPalmaresBac extends Command
 {
     protected $signature = 'palmares:import
                             {file=storage/app/imports/palmares_bac_2026.csv : Chemin du CSV (relatif à la racine du projet)}
+                            {--categorie=drena : Liste importée (drena ou handicap)}
                             {--dry-run : Valide le fichier sans rien écrire}';
 
     protected $description = 'Importe le palmarès officiel des meilleurs bacheliers (référentiel de vérification)';
 
     public function handle(): int
     {
+        $categorie = (string) $this->option('categorie');
+        if (!array_key_exists($categorie, PalmaresBac::CATEGORIES)) {
+            $this->error("Catégorie inconnue : {$categorie} (attendu : " . implode(', ', array_keys(PalmaresBac::CATEGORIES)) . ')');
+            return self::FAILURE;
+        }
+
         $path = base_path($this->argument('file'));
         if (!is_readable($path)) {
             $this->error("Fichier introuvable : {$path}");
@@ -67,7 +75,7 @@ class ImportPalmaresBac extends Command
             }
 
             $now = now();
-            $rows[] = $data + ['created_at' => $now, 'updated_at' => $now];
+            $rows[] = $data + ['categorie' => $categorie, 'created_at' => $now, 'updated_at' => $now];
         }
         fclose($handle);
 
@@ -84,13 +92,13 @@ class ImportPalmaresBac extends Command
         foreach (array_chunk($rows, 500) as $chunk) {
             PalmaresBac::upsert(
                 $chunk,
-                ['matricule'],
+                ['matricule', 'categorie'],
                 ['nom', 'prenoms', 'date_naissance', 'lieu_naissance', 'drena', 'sexe', 'serie',
                  'mention', 'etablissement', 'points', 'rang_drena', 'annee_bac', 'updated_at']
             );
         }
 
-        $this->info('Import terminé : ' . PalmaresBac::count() . ' bacheliers en base.');
+        $this->info("Import terminé : " . PalmaresBac::where('categorie', $categorie)->count() . " bacheliers dans la liste « {$categorie} ».");
         return self::SUCCESS;
     }
 }

@@ -10,8 +10,11 @@ class PalmaresBac extends Model
 
     protected $fillable = [
         'matricule', 'nom', 'prenoms', 'date_naissance', 'lieu_naissance', 'drena',
-        'sexe', 'serie', 'mention', 'etablissement', 'points', 'rang_drena', 'annee_bac',
+        'sexe', 'serie', 'mention', 'etablissement', 'points', 'rang_drena', 'annee_bac', 'categorie',
     ];
+
+    /** Listes officielles : 25 F + 25 G par DRENA, et meilleurs bacheliers en situation de handicap (rang national). */
+    public const CATEGORIES = ['drena' => 'Palmarès DRENA', 'handicap' => 'Bacheliers en situation de handicap'];
 
     protected $casts = [
         'date_naissance' => 'date',

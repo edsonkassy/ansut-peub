@@ -24,7 +24,8 @@ class PalmaresController extends Controller
             ->paginate(50)
             ->withQueryString();
 
-        $base = PalmaresBac::where('annee_bac', $annee);
+        $base = PalmaresBac::where('annee_bac', $annee)
+            ->when($request->filled('categorie'), fn ($q) => $q->where('categorie', $request->categorie));
         $stats = [
             'total' => (clone $base)->count(),
             'femmes' => (clone $base)->where('sexe', 'F')->count(),
@@ -32,10 +33,12 @@ class PalmaresController extends Controller
             'inscrits' => DB::table('bacheliers')
                 ->join('palmares_bac', 'palmares_bac.id', '=', 'bacheliers.palmares_bac_id')
                 ->where('palmares_bac.annee_bac', $annee)
+                ->when($request->filled('categorie'), fn ($q) => $q->where('palmares_bac.categorie', $request->categorie))
                 ->where('bacheliers.bac_verifie', true)->count(),
             'a_revoir' => DB::table('bacheliers')
                 ->join('palmares_bac', 'palmares_bac.id', '=', 'bacheliers.palmares_bac_id')
                 ->where('palmares_bac.annee_bac', $annee)
+                ->when($request->filled('categorie'), fn ($q) => $q->where('palmares_bac.categorie', $request->categorie))
                 ->where('bacheliers.bac_verification_statut', 'divergent')->count(),
         ];
         $stats['non_inscrits'] = $stats['total'] - $stats['inscrits'] - $stats['a_revoir'];
@@ -46,6 +49,7 @@ class PalmaresController extends Controller
             'annee' => $annee,
             'drenas' => PalmaresBac::where('annee_bac', $annee)->distinct()->orderBy('drena')->pluck('drena'),
             'series' => PalmaresBac::where('annee_bac', $annee)->distinct()->orderBy('serie')->pluck('serie'),
+            'categories' => PalmaresBac::CATEGORIES,
         ]);
     }
 
@@ -90,6 +94,7 @@ class PalmaresController extends Controller
                 'serie' => 'Série ' . $p->serie,
                 'drena' => $p->drena,
                 'rang' => (int) $p->rang_drena,
+                'categorie' => $p->categorie,
                 'mention' => $p->mention === 'ims' ? 'IMS' : ($p->mention ? ucfirst(str_replace('_', ' ', $p->mention)) : 'Sans mention'),
                 'points' => (int) $p->points,
                 'inscrit' => $p->bachelier_id !== null,
@@ -120,11 +125,11 @@ class PalmaresController extends Controller
 
         $handle = fopen('php://memory', 'r+');
         fwrite($handle, "\xEF\xBB\xBF");
-        fputcsv($handle, ['DRENA', 'Rang', 'Matricule', 'Nom', 'Prénoms', 'Sexe', 'Date naissance', 'Série',
+        fputcsv($handle, ['Liste', 'DRENA', 'Rang', 'Matricule', 'Nom', 'Prénoms', 'Sexe', 'Date naissance', 'Série',
                           'Mention', 'Points /400', 'Établissement', 'Inscrit sur PEUB'], ';');
         foreach ($rows as $r) {
             fputcsv($handle, [
-                $r->drena, $r->rang_drena, $r->matricule, $r->nom, $r->prenoms, $r->sexe,
+                $r->categorie === 'handicap' ? 'Handicap (rang national)' : 'DRENA', $r->drena, $r->rang_drena, $r->matricule, $r->nom, $r->prenoms, $r->sexe,
                 $r->date_naissance, $r->serie, $r->mention === 'ims' ? 'IMS' : $r->mention, $r->points, $r->etablissement,
                 match ($r->bac_verification_statut) { 'verifie' => 'Oui (vérifié)', 'divergent' => 'À revoir', default => 'Non' },
             ], ';');
@@ -148,6 +153,9 @@ class PalmaresController extends Controller
 
         if ($request->filled('drena')) {
             $query->where('palmares_bac.drena', $request->drena);
+        }
+        if ($request->filled('categorie')) {
+            $query->where('palmares_bac.categorie', $request->categorie);
         }
         if ($request->filled('sexe')) {
             $query->where('palmares_bac.sexe', $request->sexe);
